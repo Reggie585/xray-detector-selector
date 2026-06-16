@@ -4,8 +4,8 @@ const steps = [
     { id: "pixel_size", short: "Pixel", hint: "Select" },
     { id: "performance", short: "Priority", hint: "Select" },
     { id: "installation", short: "Install", hint: "Select" },
-    { id: "contact", short: "Contact", hint: "Your info" },
     { id: "review", short: "Review", hint: "Summary" },
+    { id: "contact", short: "Contact", hint: "Your info" },
 ];
 
 const answers = {
@@ -24,6 +24,7 @@ const answers = {
 let currentStep = 0;
 let latestRecommendations = [];
 let latestConflict = null;
+let resultsGenerated = false;
 
 const ICONS = {
     diffraction: '<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M9 44h46"/><path d="M13 38h8l5-21 8 34 7-25 6 12h6"/><path d="M17 26l7 7"/><path d="M47 28l-7 7"/></svg>',
@@ -126,6 +127,33 @@ const els = {
     dialogEnergyValue: document.querySelector("#dialog-energy-value"),
     energyCancel: document.querySelector("#energy-cancel"),
     energySave: document.querySelector("#energy-save"),
+    aiOpen: document.querySelector("#ai-helper-open"),
+    aiClose: document.querySelector("#ai-helper-close"),
+    aiBackdrop: document.querySelector("#ai-helper-backdrop"),
+    aiPanel: document.querySelector("#ai-helper-panel"),
+    aiMessages: document.querySelector("#ai-helper-messages"),
+    aiInput: document.querySelector("#ai-helper-input"),
+    aiSubmit: document.querySelector("#ai-helper-submit"),
+    aiReset: document.querySelector("#ai-helper-reset"),
+    aiExtractedCard: document.querySelector("#ai-extracted-card"),
+    aiExtractedGrid: document.querySelector("#ai-extracted-grid"),
+    aiFollowupsCard: document.querySelector("#ai-followups-card"),
+    aiFollowupList: document.querySelector("#ai-followup-list"),
+    aiResultCard: document.querySelector("#ai-result-card"),
+    aiResultTitle: document.querySelector("#ai-result-title"),
+    aiResultNote: document.querySelector("#ai-result-note"),
+    aiResultList: document.querySelector("#ai-result-list"),
+    aiApply: document.querySelector("#ai-apply"),
+    aiViewFull: document.querySelector("#ai-view-full"),
+    aiAskAgain: document.querySelector("#ai-ask-again"),
+};
+
+const aiState = {
+    extracted: null,
+    answers: null,
+    missing: [],
+    recommendations: [],
+    confidence: 0,
 };
 
 function selectedLabels(groupId) {
@@ -199,6 +227,7 @@ function isSelected(groupId, choiceId) {
 function toggleChoice(groupId, choiceId) {
     const group = window.CHOICE_GROUPS[groupId];
     const maxChoices = group.max_choices || 1;
+    resultsGenerated = false;
 
     if (maxChoices === 1) {
         answers[groupId] = answers[groupId] === choiceId ? null : choiceId;
@@ -317,7 +346,7 @@ function renderQuestionStep() {
 function renderContactStep() {
     els.stepLabel.textContent = `Step ${currentStep + 1} of ${steps.length}`;
     els.questionTitle.textContent = "Who should the engineer contact?";
-    els.questionCopy.textContent = "Add contact details so the final recommendation can be prepared for engineer review later.";
+    els.questionCopy.textContent = "Leave contact details after reviewing the product matches. Sending is not connected yet.";
     els.cardsGrid.style.display = "none";
     els.exactEnergy.classList.remove("visible");
     els.reviewPanel.classList.remove("visible");
@@ -327,16 +356,16 @@ function renderContactStep() {
 }
 
 function renderReview() {
-    els.stepLabel.textContent = `Step ${steps.length} of ${steps.length}`;
+    els.stepLabel.textContent = `Step ${currentStep + 1} of ${steps.length}`;
     els.questionTitle.textContent = "Recommendation Review";
-    els.questionCopy.textContent = "Review the selected conditions before generating detector matches.";
+    els.questionCopy.textContent = "Review the selected conditions and generate detector matches before leaving contact information.";
     els.cardsGrid.style.display = "none";
     els.exactEnergy.classList.remove("visible");
     els.contactPanel.classList.remove("visible");
     els.reviewPanel.classList.add("visible");
     els.resultsPanel.classList.remove("visible");
 
-    const reviewGroups = ["application", "energy", "target", "pixel_size", "performance", "installation", "contact"];
+    const reviewGroups = ["application", "energy", "target", "pixel_size", "performance", "installation"];
     const choiceCards = reviewGroups
         .map((groupId) => {
             const labels = selectedLabels(groupId);
@@ -353,12 +382,32 @@ function renderReview() {
 
     const engineerCard = `
         <article class="review-card engineer-card">
-            <span>Engineer handoff</span>
-            <strong>Recommendation report will be prepared after results are generated.</strong>
+            <span>Next step</span>
+            <strong>Generate matches first, then add contact details in the final step.</strong>
         </article>
     `;
 
     els.reviewGrid.innerHTML = choiceCards + engineerCard;
+}
+
+function specStatusClass(item, key) {
+    const status = item.spec_quality?.[key]?.status || "unknown";
+    return `status-${status}`;
+}
+
+function specStatusNote(item, key) {
+    return item.spec_quality?.[key]?.note || "";
+}
+
+function specBlock(item, key, label, value) {
+    const note = specStatusNote(item, key);
+    return `
+        <div class="${specStatusClass(item, key)}">
+            <dt>${label}</dt>
+            <dd>${value || "N/A"}</dd>
+            ${note ? `<small>${note}</small>` : ""}
+        </div>
+    `;
 }
 
 function renderResultCard(item, index) {
@@ -374,12 +423,12 @@ function renderResultCard(item, index) {
                     <span class="score">${item.match_percent || 0}% match</span>
                 </div>
                 <dl class="spec-grid">
-                    <div><dt>Detector</dt><dd>${item.detector_principle || "N/A"}</dd></div>
-                    <div><dt>Energy</dt><dd>${item.energy_range || "N/A"}</dd></div>
-                    <div><dt>Pixel</dt><dd>${item.pixel_size || "N/A"}</dd></div>
-                    <div><dt>Active area</dt><dd>${item.active_area || "N/A"}</dd></div>
-                    <div><dt>Interface</dt><dd>${item.interface || "N/A"}</dd></div>
-                    <div><dt>Software</dt><dd>${item.software || "N/A"}</dd></div>
+                    ${specBlock(item, "detector", "Detector", item.detector_principle)}
+                    ${specBlock(item, "energy", "Energy", item.energy_range)}
+                    ${specBlock(item, "pixel", "Pixel", item.pixel_size)}
+                    ${specBlock(item, "active_area", "Active area", item.active_area)}
+                    ${specBlock(item, "interface", "Interface", item.interface)}
+                    ${specBlock(item, "software", "Software", item.software)}
                 </dl>
                 <p class="applications">${item.applications || ""}</p>
                 <div class="reason-list">
@@ -405,13 +454,13 @@ function parseEnergyToKev(value) {
     return number;
 }
 
-function selectionConflictStatus() {
-    const exactEnergyKev = answers.energy === "exact_energy" ? parseEnergyToKev(answers.exact_energy) : null;
+function selectionConflictStatus(source = answers) {
+    const exactEnergyKev = source.energy === "exact_energy" ? parseEnergyToKev(source.exact_energy) : null;
     const isHighOrHardEnergy =
-        ["higher_energy_lab", "hard_xray"].includes(answers.energy) ||
+        ["higher_energy_lab", "hard_xray"].includes(source.energy) ||
         (exactEnergyKev !== null && exactEnergyKev >= 17);
 
-    if (answers.pixel_size === "pixel_under_1" && isHighOrHardEnergy) {
+    if (source.pixel_size === "pixel_under_1" && isHighOrHardEnergy) {
         return {
             level: "block",
             message: "Conflicting choices: high/hard X-ray energy and under 1 micrometer pixel size are not a practical detector-selection pair. Please change either the energy range or the pixel-size requirement before viewing product matches.",
@@ -460,6 +509,14 @@ function showConfidenceMessage(status) {
     els.confidenceWarning.classList.toggle("blocking", status.level === "block");
 }
 
+function markResultsGenerated() {
+    resultsGenerated = true;
+    els.nextButton.innerHTML = "Next: Contact <span aria-hidden='true'>→</span>";
+    els.nextButton.disabled = false;
+    renderStepOverview();
+    renderFlowPosition();
+}
+
 async function loadRecommendations() {
     answers.exact_energy = els.energyValue.value.trim();
     els.resultsList.innerHTML = "<p class='loading'>Finding detector matches...</p>";
@@ -478,6 +535,7 @@ async function loadRecommendations() {
         latestConflict = conflict;
         latestRecommendations = [];
         els.resultsList.innerHTML = "<article class='info-empty'>Please revise the conflicting energy and pixel-size answers before showing product matches.</article>";
+        markResultsGenerated();
         return;
     }
 
@@ -487,6 +545,7 @@ async function loadRecommendations() {
     if (uncertainty.level === "block") {
         latestRecommendations = [];
         els.resultsList.innerHTML = "<article class='info-empty'>Need more information before showing product matches.</article>";
+        markResultsGenerated();
         return;
     }
 
@@ -502,10 +561,12 @@ async function loadRecommendations() {
         latestConflict = data.conflict;
         latestRecommendations = [];
         els.resultsList.innerHTML = "<article class='info-empty'>Please revise the conflicting answers before showing product matches.</article>";
+        markResultsGenerated();
         return;
     }
     latestRecommendations = data.recommendations || [];
     els.resultsList.innerHTML = latestRecommendations.map(renderResultCard).join("");
+    markResultsGenerated();
 }
 
 function prepareEngineerRequest() {
@@ -563,6 +624,509 @@ function renderComparison() {
     `;
 }
 
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+function normalizeAiText(value) {
+    return String(value || "")
+        .toLowerCase()
+        .replaceAll("α", "alpha")
+        .replaceAll("µ", "u")
+        .replaceAll("μ", "u")
+        .replace(/[‐‑‒–—]/g, "-");
+}
+
+function labelForChoice(groupId, choiceId) {
+    return window.CHOICE_GROUPS[groupId]?.choices.find((choice) => choice.id === choiceId)?.label || "";
+}
+
+function labelsForAiGroup(groupId, value) {
+    if (groupId === "performance") {
+        return (value || []).map((id) => labelForChoice(groupId, id)).filter(Boolean);
+    }
+    return value ? [labelForChoice(groupId, value)].filter(Boolean) : [];
+}
+
+function countChoiceTermHits(text, choice) {
+    return (choice.terms || []).reduce((score, term) => {
+        const normalized = normalizeAiText(term);
+        return normalized && text.includes(normalized) ? score + 1 : score;
+    }, 0);
+}
+
+function bestChoiceByTerms(groupId, text) {
+    const choices = window.CHOICE_GROUPS[groupId]?.choices || [];
+    let best = { id: null, score: 0 };
+
+    choices.forEach((choice) => {
+        if (choice.id.startsWith("not_sure")) return;
+        const score = countChoiceTermHits(text, choice);
+        if (score > best.score) {
+            best = { id: choice.id, score };
+        }
+    });
+
+    return best.score > 0 ? best.id : null;
+}
+
+function extractSampleText(text) {
+    const samples = [
+        "powder",
+        "crystal",
+        "thin film",
+        "wafer",
+        "polymer",
+        "alloy",
+        "metal",
+        "weld",
+        "pipe",
+        "battery",
+        "electronics",
+        "composite",
+        "casting",
+        "biological sample",
+        "radiation source",
+    ];
+    return samples.filter((sample) => text.includes(sample)).slice(0, 3).join(", ");
+}
+
+function outputTypeForApplication(applicationId) {
+    const map = {
+        xrd_saxs_waxs: "Diffraction pattern",
+        xafs_absorption: "Spectrum / absorption curve",
+        euv_soft_xray_spectroscopy: "Spectrum",
+        xray_euv_imaging: "2D image",
+        microscopy_metrology: "High-resolution image",
+        ct_3d: "CT volume",
+        industrial_ndt: "2D / CT / inspection image",
+        material_identification: "Material map",
+        radiation_particle: "Particle tracks / radiation map",
+        education_demo: "Demonstration result",
+    };
+    return map[applicationId] || "";
+}
+
+function extractEnergyFromText(text) {
+    const exactMatch = text.match(/(\d+(?:\.\d+)?)\s*(mev|kev|ev)\b/);
+    const exactEnergy = exactMatch ? `${exactMatch[1]} ${exactMatch[2]}` : "";
+
+    if (/\bcr\b|cr-k|5\.4/.test(text)) {
+        return { energy: "low_energy_lab", target: "cr_ka", exact_energy: exactEnergy || "5.4 keV" };
+    }
+    if (/\bcu\b|cu-k|8\.04/.test(text)) {
+        return { energy: "standard_xrd", target: "cu_ka", exact_energy: exactEnergy || "8.04 keV" };
+    }
+    if (/\bw-l\b|w-lalpha|8\.4/.test(text)) {
+        return { energy: "low_energy_lab", target: "w_la", exact_energy: exactEnergy || "8.4 keV" };
+    }
+    if (/\bmo\b|mo-k|17\.4/.test(text)) {
+        return { energy: "higher_energy_lab", target: "mo_ka", exact_energy: exactEnergy || "17.4 keV" };
+    }
+    if (/\brh\b|rh-k|20\.2/.test(text)) {
+        return { energy: "higher_energy_lab", target: "rh_ka", exact_energy: exactEnergy || "20.2 keV" };
+    }
+    if (/\bag\b|ag-k|22\.2/.test(text)) {
+        return { energy: "higher_energy_lab", target: "ag_ka", exact_energy: exactEnergy || "22.2 keV" };
+    }
+    if (/gamma|neutron|alpha particle|beta|cosmic|particle/.test(text)) {
+        return { energy: "gamma_neutron_particles", target: null, exact_energy: exactEnergy };
+    }
+    if (/euv|vuv|soft x-ray|sxr/.test(text)) {
+        return { energy: "euv_vuv_soft", target: null, exact_energy: exactEnergy };
+    }
+    if (/hard x-ray|hxr|high penetration|dense metal|30\s*kev|150\s*kev/.test(text)) {
+        return { energy: "hard_xray", target: null, exact_energy: exactEnergy };
+    }
+    if (exactMatch) {
+        const kev = parseEnergyToKev(exactEnergy);
+        if (kev !== null && kev < 1) return { energy: "euv_vuv_soft", target: null, exact_energy: exactEnergy };
+        if (kev !== null && kev > 30) return { energy: "hard_xray", target: null, exact_energy: exactEnergy };
+        return { energy: "exact_energy", target: null, exact_energy: exactEnergy };
+    }
+
+    return { energy: bestChoiceByTerms("energy", text), target: null, exact_energy: "" };
+}
+
+function extractPixelFromText(text) {
+    const submicron = /under\s*1|<\s*1|less than\s*1|submicron|sub-micron|nanometer|nm\b/.test(text);
+    if (submicron) return "pixel_under_1";
+
+    const pixelMatch = text.match(/(\d+(?:\.\d+)?)\s*(?:um|micron|micrometer|micrometers)\b/);
+    if (pixelMatch) {
+        const value = Number(pixelMatch[1]);
+        if (value < 1) return "pixel_under_1";
+        if (value <= 30) return "pixel_1_30";
+        if (value <= 100) return "pixel_30_100";
+    }
+
+    if (/large pixel|photon-counting|photon counting|timepix|medipix|high energy/.test(text)) {
+        return "pixel_30_100";
+    }
+    if (/small pixel|high resolution|scientific imaging|ccd|scmos/.test(text)) {
+        return "pixel_1_30";
+    }
+
+    return bestChoiceByTerms("pixel_size", text);
+}
+
+function extractPerformanceFromText(text) {
+    const choices = window.CHOICE_GROUPS.performance.choices
+        .filter((choice) => choice.id !== "not_sure_performance")
+        .map((choice) => {
+            let score = countChoiceTermHits(text, choice);
+            if (choice.id === "highest_resolution" && /high resolution|small pixel|submicron|microscopy/.test(text)) score += 2;
+            if (choice.id === "energy_resolved" && /energy-resolved|energy resolved|material|color x-ray|spectral/.test(text)) score += 2;
+            if (choice.id === "weak_signal_low_noise" && /weak signal|low noise|low flux|deep cooling|dark current/.test(text)) score += 2;
+            if (choice.id === "fast_imaging" && /fast|frame rate|real-time|high-throughput|dynamic/.test(text)) score += 2;
+            return { id: choice.id, score };
+        })
+        .filter((choice) => choice.score > 0)
+        .sort((a, b) => b.score - a.score);
+
+    return choices.slice(0, 2).map((choice) => choice.id);
+}
+
+function extractRequirementsFromText(rawText) {
+    const text = normalizeAiText(rawText);
+    const energyInfo = extractEnergyFromText(text);
+
+    return {
+        application: bestChoiceByTerms("application", text),
+        energy: energyInfo.energy,
+        target: energyInfo.target,
+        pixel_size: extractPixelFromText(text),
+        performance: extractPerformanceFromText(text),
+        installation: bestChoiceByTerms("installation", text),
+        exact_energy: energyInfo.exact_energy,
+        sample: extractSampleText(text),
+        output_type: "",
+        original_text: rawText.trim(),
+    };
+}
+
+function completeAiAnswers(extracted) {
+    return {
+        application: extracted.application || "not_sure_application",
+        energy: extracted.energy || "not_sure_energy",
+        target: extracted.target || null,
+        pixel_size: extracted.pixel_size || "not_sure_pixel",
+        performance: extracted.performance?.length ? extracted.performance : ["not_sure_performance"],
+        installation: extracted.installation || "not_sure_installation",
+        contact_name: answers.contact_name,
+        contact_email: answers.contact_email,
+        contact_info: answers.contact_info,
+        exact_energy: extracted.exact_energy || "",
+    };
+}
+
+function getAiMissingGroups(extracted) {
+    const missing = [];
+    if (!extracted.application) missing.push("application");
+    if (!extracted.energy) missing.push("energy");
+    if (!extracted.pixel_size) missing.push("pixel_size");
+    if (!extracted.performance?.length) missing.push("performance");
+    if (!extracted.installation) missing.push("installation");
+    return missing;
+}
+
+function calculateAiConfidence(extracted, recommendations = []) {
+    const weights = {
+        application: 20,
+        energy: 24,
+        pixel_size: 24,
+        performance: 18,
+        installation: 14,
+    };
+
+    let score = 0;
+    if (extracted.application) score += weights.application;
+    if (extracted.energy) score += weights.energy;
+    if (extracted.pixel_size) score += weights.pixel_size;
+    if (extracted.performance?.length) score += weights.performance;
+    if (extracted.installation) score += weights.installation;
+    if (recommendations[0]?.match_percent) {
+        score = Math.round((score * 0.75) + (Number(recommendations[0].match_percent) * 0.25));
+    }
+    return Math.min(100, score);
+}
+
+function renderAiMessages(userText) {
+    els.aiMessages.innerHTML = `
+        <article class="ai-message user">
+            <strong>Your request</strong>
+            <span>${escapeHtml(userText)}</span>
+        </article>
+        <article class="ai-message assistant">
+            <strong>I extracted the technical choices below.</strong>
+            <span>If anything is missing, answer the short follow-up cards, then I will refresh the possible matches.</span>
+        </article>
+    `;
+}
+
+function renderAiExtractedInfo() {
+    const extracted = aiState.extracted;
+    if (!extracted) {
+        els.aiExtractedCard.hidden = true;
+        return;
+    }
+
+    const applicationLabel = labelForChoice("application", extracted.application);
+    const energyLabel = labelForChoice("energy", extracted.energy);
+    const targetLabel = labelForChoice("target", extracted.target);
+    const pixelLabel = labelForChoice("pixel_size", extracted.pixel_size);
+    const performanceLabels = labelsForAiGroup("performance", extracted.performance);
+    const installationLabel = labelForChoice("installation", extracted.installation);
+    extracted.output_type = outputTypeForApplication(extracted.application);
+
+    const rows = [
+        ["Application", applicationLabel || "Missing"],
+        ["Sample / object", extracted.sample || "Not provided"],
+        ["Source / energy", [targetLabel, energyLabel, extracted.exact_energy].filter(Boolean).join(" · ") || "Missing"],
+        ["Output type", extracted.output_type || "Inferred after application"],
+        ["Pixel size", pixelLabel || "Missing"],
+        ["Performance priority", performanceLabels.join(", ") || "Missing"],
+        ["Environment", installationLabel || "Missing"],
+        ["AI confidence", `${aiState.confidence}%`],
+    ];
+
+    els.aiExtractedGrid.innerHTML = rows
+        .map(([label, value]) => `
+            <div>
+                <span>${escapeHtml(label)}</span>
+                <strong>${escapeHtml(value)}</strong>
+            </div>
+        `)
+        .join("");
+    els.aiExtractedCard.hidden = false;
+}
+
+function aiFollowupQuestion(groupId) {
+    const map = {
+        application: "What are you trying to measure?",
+        energy: "What X-ray source or energy are you using?",
+        pixel_size: "What pixel size range do you need?",
+        performance: "What matters most for your measurement?",
+        installation: "Where will the detector be used?",
+    };
+    return map[groupId] || window.CHOICE_GROUPS[groupId]?.question || "Choose the closest option.";
+}
+
+function renderAiFollowups() {
+    if (!aiState.missing.length) {
+        els.aiFollowupsCard.hidden = true;
+        els.aiFollowupList.innerHTML = "";
+        return;
+    }
+
+    els.aiFollowupList.innerHTML = aiState.missing
+        .map((groupId) => {
+            const choices = window.CHOICE_GROUPS[groupId].choices;
+            return `
+                <div class="ai-followup-group">
+                    <strong>${escapeHtml(aiFollowupQuestion(groupId))}</strong>
+                    <div class="ai-followup-options">
+                        ${choices.map((choice) => `
+                            <button type="button" data-ai-group="${groupId}" data-ai-choice="${choice.id}">
+                                ${escapeHtml(choice.label)}
+                            </button>
+                        `).join("")}
+                    </div>
+                </div>
+            `;
+        })
+        .join("");
+
+    document.querySelectorAll("[data-ai-group]").forEach((button) => {
+        button.addEventListener("click", () => {
+            applyAiFollowupChoice(button.dataset.aiGroup, button.dataset.aiChoice);
+        });
+    });
+
+    els.aiFollowupsCard.hidden = false;
+}
+
+function applyAiFollowupChoice(groupId, choiceId) {
+    if (!aiState.extracted) return;
+
+    if (groupId === "performance") {
+        if (choiceId === "not_sure_performance") {
+            aiState.extracted.performance = ["not_sure_performance"];
+        } else {
+            const selected = new Set((aiState.extracted.performance || []).filter((id) => id !== "not_sure_performance"));
+            selected.add(choiceId);
+            aiState.extracted.performance = Array.from(selected).slice(-2);
+        }
+    } else {
+        aiState.extracted[groupId] = choiceId;
+        if (groupId === "energy") {
+            if (choiceId === "exact_energy") {
+                const value = window.prompt("Enter the exact energy, for example 8.04 keV", aiState.extracted.exact_energy || "");
+                aiState.extracted.exact_energy = (value || "").trim();
+            } else {
+                aiState.extracted.exact_energy = aiState.extracted.exact_energy || "";
+            }
+        }
+    }
+
+    aiState.missing = getAiMissingGroups(aiState.extracted);
+    aiState.confidence = calculateAiConfidence(aiState.extracted, aiState.recommendations);
+    renderAiExtractedInfo();
+    renderAiFollowups();
+    runAiRecommendationPreview();
+}
+
+function renderAiRecommendationList(items) {
+    if (!items.length) {
+        return "<article class='ai-empty'>No possible product match was found from the current information.</article>";
+    }
+
+    return items.slice(0, 3).map((item) => `
+        <article class="ai-mini-result">
+            <div>
+                <strong>${escapeHtml(item.model_name_variant || item.product_id)}</strong>
+                <span>${escapeHtml(item.manufacturer || "Unknown manufacturer")}</span>
+            </div>
+            <b>${Number(item.match_percent || 0)}%</b>
+            <p>${escapeHtml((item.reasons || []).slice(0, 2).join(" · ") || "Possible database match")}</p>
+        </article>
+    `).join("");
+}
+
+function countUnknownInAiAnswers(aiAnswers) {
+    return [
+        aiAnswers.application,
+        aiAnswers.energy,
+        aiAnswers.pixel_size,
+        aiAnswers.installation,
+    ].filter(isUnknownAnswer).length + ((aiAnswers.performance || []).includes("not_sure_performance") ? 1 : 0);
+}
+
+async function runAiRecommendationPreview() {
+    if (!aiState.extracted) return;
+
+    const aiAnswers = completeAiAnswers(aiState.extracted);
+    aiState.answers = aiAnswers;
+    els.aiResultCard.hidden = false;
+    els.aiResultTitle.textContent = "Checking possible matches";
+    els.aiResultNote.textContent = "Using the same strict recommendation endpoint as the manual selector.";
+    els.aiResultList.innerHTML = "<p class='loading'>Finding possible detector matches...</p>";
+
+    const conflict = selectionConflictStatus(aiAnswers);
+    if (conflict.level === "block") {
+        aiState.recommendations = [];
+        aiState.confidence = calculateAiConfidence(aiState.extracted, []);
+        renderAiExtractedInfo();
+        els.aiResultTitle.textContent = "Engineer review recommended";
+        els.aiResultNote.textContent = `${conflict.message} A detector setup may still be possible, but the approach should be reviewed by an engineer.`;
+        els.aiResultList.innerHTML = "<article class='ai-empty'>Automatic product matching is paused because the selected requirements conflict.</article>";
+        return;
+    }
+
+    try {
+        const response = await fetch("/api/recommend", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(aiAnswers),
+        });
+        const data = await response.json();
+        aiState.recommendations = data.recommendations || [];
+        aiState.confidence = calculateAiConfidence(aiState.extracted, aiState.recommendations);
+        renderAiExtractedInfo();
+
+        const unknownCount = countUnknownInAiAnswers(aiAnswers);
+        const topMatch = Number(aiState.recommendations[0]?.match_percent || 0);
+        const needsReview = aiState.missing.length >= 2 || unknownCount >= 3 || aiState.confidence < 70 || topMatch < 55;
+
+        if (needsReview) {
+            els.aiResultTitle.textContent = "Engineer review recommended";
+            els.aiResultNote.textContent = "Possible matches are shown below, but the information is not strong enough for an automatic final recommendation. Add the missing details or ask an engineer to review the case.";
+        } else {
+            els.aiResultTitle.textContent = "Strong match preview";
+            els.aiResultNote.textContent = "The assistant found enough information to show controlled matches. You can apply these choices to the selector for the full result page.";
+        }
+
+        els.aiResultList.innerHTML = renderAiRecommendationList(aiState.recommendations);
+    } catch (error) {
+        els.aiResultTitle.textContent = "Assistant error";
+        els.aiResultNote.textContent = "The helper could not reach the recommendation endpoint. Check that the Flask app is running.";
+        els.aiResultList.innerHTML = "";
+    }
+}
+
+function openAiHelper() {
+    els.aiPanel.classList.add("visible");
+    els.aiBackdrop.classList.add("visible");
+    els.aiPanel.setAttribute("aria-hidden", "false");
+    els.aiInput.focus();
+}
+
+function closeAiHelper() {
+    els.aiPanel.classList.remove("visible");
+    els.aiBackdrop.classList.remove("visible");
+    els.aiPanel.setAttribute("aria-hidden", "true");
+}
+
+function resetAiHelper(keepInput = false) {
+    aiState.extracted = null;
+    aiState.answers = null;
+    aiState.missing = [];
+    aiState.recommendations = [];
+    aiState.confidence = 0;
+    if (!keepInput) els.aiInput.value = "";
+    els.aiMessages.innerHTML = `
+        <article class="ai-message assistant">
+            <strong>Start with a short measurement description.</strong>
+            <span>Include your application, source energy, pixel size or resolution need, performance priority, and environment if you know them.</span>
+        </article>
+    `;
+    els.aiExtractedCard.hidden = true;
+    els.aiFollowupsCard.hidden = true;
+    els.aiResultCard.hidden = true;
+}
+
+function applyAiChoicesToSelector() {
+    if (!aiState.answers) return;
+    Object.assign(answers, aiState.answers);
+    els.energyValue.value = answers.exact_energy || "";
+    resultsGenerated = false;
+    currentStep = steps.findIndex((step) => step.id === "review");
+    closeAiHelper();
+    render();
+}
+
+async function viewFullAiRecommendation() {
+    applyAiChoicesToSelector();
+    await loadRecommendations();
+}
+
+async function analyzeAiRequest() {
+    const text = els.aiInput.value.trim();
+    if (!text) {
+        els.aiMessages.innerHTML = `
+            <article class="ai-message assistant warning">
+                <strong>Please describe the measurement first.</strong>
+                <span>A short sentence is enough, for example: powder XRD with Cu-Kalpha in a normal lab.</span>
+            </article>
+        `;
+        return;
+    }
+
+    renderAiMessages(text);
+    aiState.extracted = extractRequirementsFromText(text);
+    aiState.missing = getAiMissingGroups(aiState.extracted);
+    aiState.confidence = calculateAiConfidence(aiState.extracted, []);
+    aiState.recommendations = [];
+    renderAiExtractedInfo();
+    renderAiFollowups();
+    await runAiRecommendationPreview();
+}
+
 function canGoNext() {
     const step = steps[currentStep];
     if (step.id === "review") return true;
@@ -589,14 +1153,21 @@ function renderFlowPosition() {
 }
 
 function render() {
+    const currentId = steps[currentStep].id;
     els.stepCount.textContent = currentStep + 1;
     els.stepTotal.textContent = steps.length;
     els.progressFill.style.width = `${((currentStep + 1) / steps.length) * 100}%`;
     els.backButton.disabled = currentStep === 0;
     els.backButton.innerHTML = "<span aria-hidden='true'>←</span> Back";
-    els.nextButton.innerHTML = currentStep === steps.length - 1
-        ? "Show results <span aria-hidden='true'>→</span>"
-        : `Next: ${steps[currentStep + 1].short} <span aria-hidden='true'>→</span>`;
+    if (currentId === "review") {
+        els.nextButton.innerHTML = resultsGenerated
+            ? "Next: Contact <span aria-hidden='true'>→</span>"
+            : "Show results <span aria-hidden='true'>→</span>";
+    } else if (currentId === "contact") {
+        els.nextButton.innerHTML = "Finish <span aria-hidden='true'>→</span>";
+    } else {
+        els.nextButton.innerHTML = `Next: ${steps[currentStep + 1].short} <span aria-hidden='true'>→</span>`;
+    }
     els.nextButton.disabled = !canGoNext() && currentStep !== steps.length - 1;
 
     document.querySelector(".subsection")?.remove();
@@ -619,7 +1190,16 @@ els.backButton.addEventListener("click", () => {
 
 els.nextButton.addEventListener("click", () => {
     if (steps[currentStep].id === "review") {
-        loadRecommendations();
+        if (resultsGenerated) {
+            currentStep = Math.min(steps.length - 1, currentStep + 1);
+            render();
+        } else {
+            loadRecommendations();
+        }
+        return;
+    }
+    if (steps[currentStep].id === "contact") {
+        prepareEngineerRequest();
         return;
     }
     currentStep = Math.min(steps.length - 1, currentStep + 1);
@@ -661,6 +1241,20 @@ els.dialogEnergyValue.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
         event.preventDefault();
         els.energySave.click();
+    }
+});
+els.aiOpen.addEventListener("click", openAiHelper);
+els.aiClose.addEventListener("click", closeAiHelper);
+els.aiBackdrop.addEventListener("click", closeAiHelper);
+els.aiSubmit.addEventListener("click", analyzeAiRequest);
+els.aiReset.addEventListener("click", () => resetAiHelper());
+els.aiApply.addEventListener("click", applyAiChoicesToSelector);
+els.aiViewFull.addEventListener("click", viewFullAiRecommendation);
+els.aiAskAgain.addEventListener("click", () => resetAiHelper(true));
+els.aiInput.addEventListener("keydown", (event) => {
+    if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+        event.preventDefault();
+        analyzeAiRequest();
     }
 });
 
