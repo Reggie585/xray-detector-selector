@@ -18,6 +18,10 @@
                     </div>
                 </div>
                 <div class="top-actions">
+                    <button class="ai-helper-trigger" id="ai-helper-open" type="button">
+                        <span class="ai-spark">✦</span>
+                        AI helper
+                    </button>
                     <details class="selector-info">
                         <summary><span class="info-mark">?</span> Need help choosing?</summary>
                         <div class="selector-info-panel">
@@ -93,6 +97,65 @@
             </footer>
         </section>
     </main>
+
+    <div class="ai-helper-backdrop" id="ai-helper-backdrop"></div>
+    <aside class="ai-helper-panel" id="ai-helper-panel" aria-hidden="true" aria-label="AI detector helper">
+        <header class="ai-helper-header">
+            <div>
+                <p class="eyebrow">AI assistant</p>
+                <h2>Describe your detector need</h2>
+                <p>The helper extracts requirements, checks missing information, and uses the same recommendation engine.</p>
+            </div>
+            <button class="ai-close" id="ai-helper-close" type="button" aria-label="Close AI helper">×</button>
+        </header>
+
+        <div class="ai-helper-messages" id="ai-helper-messages">
+            <article class="ai-message assistant">
+                <strong>Start with a short measurement description.</strong>
+                <span>Include your application, source energy, pixel size or resolution need, performance priority, and environment if you know them.</span>
+            </article>
+        </div>
+
+        <label class="ai-helper-input-label" for="ai-helper-input">
+            <span>Measurement description</span>
+            <textarea id="ai-helper-input" rows="6" placeholder="Example: I need a detector for powder XRD using Cu-Kα. I want high resolution and energy-resolved imaging. It will be used in a normal lab."></textarea>
+        </label>
+
+        <div class="ai-helper-actions">
+            <button class="primary-action" id="ai-helper-submit" type="button">Analyze request</button>
+            <button class="secondary-action" id="ai-helper-reset" type="button">Clear</button>
+        </div>
+
+        <section class="ai-card" id="ai-extracted-card" hidden>
+            <div class="ai-card-heading">
+                <p class="eyebrow">Extracted requirements</p>
+                <strong>What the assistant understood</strong>
+            </div>
+            <div class="ai-extracted-grid" id="ai-extracted-grid"></div>
+        </section>
+
+        <section class="ai-card" id="ai-followups-card" hidden>
+            <div class="ai-card-heading">
+                <p class="eyebrow">Missing information</p>
+                <strong>Answer only what is needed</strong>
+            </div>
+            <div class="ai-followup-list" id="ai-followup-list"></div>
+        </section>
+
+        <section class="ai-card" id="ai-result-card" hidden>
+            <div class="ai-card-heading">
+                <p class="eyebrow">AI result</p>
+                <strong id="ai-result-title">Recommendation preview</strong>
+            </div>
+            <p class="ai-result-note" id="ai-result-note"></p>
+            <div class="ai-result-list" id="ai-result-list"></div>
+            <div class="ai-result-actions">
+                <button class="primary-action" id="ai-apply" type="button">Apply these choices to selector</button>
+                <button class="secondary-action" id="ai-view-full" type="button">View full recommendation</button>
+                <button class="secondary-action" id="ai-ask-again" type="button">Ask another question</button>
+            </div>
+        </section>
+    </aside>
 
     <dialog class="energy-dialog" id="energy-dialog">
         <div class="dialog-card">
