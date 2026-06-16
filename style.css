@@ -990,6 +990,25 @@ h3 {
     background: rgba(0, 0, 0, 0.16);
 }
 
+.spec-grid div.status-good {
+    border-color: rgba(72, 220, 255, 0.26);
+    background: rgba(72, 220, 255, 0.055);
+}
+
+.spec-grid div.status-warn {
+    border-color: rgba(255, 216, 116, 0.54);
+    background: rgba(255, 216, 116, 0.11);
+}
+
+.spec-grid div.status-bad {
+    border-color: rgba(255, 154, 120, 0.62);
+    background: rgba(255, 128, 95, 0.13);
+}
+
+.spec-grid div.status-unknown {
+    border-color: rgba(123, 155, 216, 0.14);
+}
+
 .spec-grid dt {
     margin-bottom: 5px;
     color: var(--muted);
@@ -1001,6 +1020,22 @@ h3 {
 .spec-grid dd {
     margin: 0;
     overflow-wrap: anywhere;
+}
+
+.spec-grid small {
+    display: block;
+    margin-top: 7px;
+    color: var(--muted);
+    font-size: 0.78rem;
+    line-height: 1.35;
+}
+
+.spec-grid .status-warn small {
+    color: #ffe2a0;
+}
+
+.spec-grid .status-bad small {
+    color: var(--danger);
 }
 
 .applications {

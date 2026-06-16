@@ -4,8 +4,8 @@ const steps = [
     { id: "pixel_size", short: "Pixel", hint: "Select" },
     { id: "performance", short: "Priority", hint: "Select" },
     { id: "installation", short: "Install", hint: "Select" },
-    { id: "contact", short: "Contact", hint: "Your info" },
     { id: "review", short: "Review", hint: "Summary" },
+    { id: "contact", short: "Contact", hint: "Your info" },
 ];
 
 const answers = {
@@ -24,6 +24,7 @@ const answers = {
 let currentStep = 0;
 let latestRecommendations = [];
 let latestConflict = null;
+let resultsGenerated = false;
 
 const ICONS = {
     diffraction: '<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M9 44h46"/><path d="M13 38h8l5-21 8 34 7-25 6 12h6"/><path d="M17 26l7 7"/><path d="M47 28l-7 7"/></svg>',
@@ -226,6 +227,7 @@ function isSelected(groupId, choiceId) {
 function toggleChoice(groupId, choiceId) {
     const group = window.CHOICE_GROUPS[groupId];
     const maxChoices = group.max_choices || 1;
+    resultsGenerated = false;
 
     if (maxChoices === 1) {
         answers[groupId] = answers[groupId] === choiceId ? null : choiceId;
@@ -344,7 +346,7 @@ function renderQuestionStep() {
 function renderContactStep() {
     els.stepLabel.textContent = `Step ${currentStep + 1} of ${steps.length}`;
     els.questionTitle.textContent = "Who should the engineer contact?";
-    els.questionCopy.textContent = "Add contact details so the final recommendation can be prepared for engineer review later.";
+    els.questionCopy.textContent = "Leave contact details after reviewing the product matches. Sending is not connected yet.";
     els.cardsGrid.style.display = "none";
     els.exactEnergy.classList.remove("visible");
     els.reviewPanel.classList.remove("visible");
@@ -354,16 +356,16 @@ function renderContactStep() {
 }
 
 function renderReview() {
-    els.stepLabel.textContent = `Step ${steps.length} of ${steps.length}`;
+    els.stepLabel.textContent = `Step ${currentStep + 1} of ${steps.length}`;
     els.questionTitle.textContent = "Recommendation Review";
-    els.questionCopy.textContent = "Review the selected conditions before generating detector matches.";
+    els.questionCopy.textContent = "Review the selected conditions and generate detector matches before leaving contact information.";
     els.cardsGrid.style.display = "none";
     els.exactEnergy.classList.remove("visible");
     els.contactPanel.classList.remove("visible");
     els.reviewPanel.classList.add("visible");
     els.resultsPanel.classList.remove("visible");
 
-    const reviewGroups = ["application", "energy", "target", "pixel_size", "performance", "installation", "contact"];
+    const reviewGroups = ["application", "energy", "target", "pixel_size", "performance", "installation"];
     const choiceCards = reviewGroups
         .map((groupId) => {
             const labels = selectedLabels(groupId);
@@ -380,12 +382,32 @@ function renderReview() {
 
     const engineerCard = `
         <article class="review-card engineer-card">
-            <span>Engineer handoff</span>
-            <strong>Recommendation report will be prepared after results are generated.</strong>
+            <span>Next step</span>
+            <strong>Generate matches first, then add contact details in the final step.</strong>
         </article>
     `;
 
     els.reviewGrid.innerHTML = choiceCards + engineerCard;
+}
+
+function specStatusClass(item, key) {
+    const status = item.spec_quality?.[key]?.status || "unknown";
+    return `status-${status}`;
+}
+
+function specStatusNote(item, key) {
+    return item.spec_quality?.[key]?.note || "";
+}
+
+function specBlock(item, key, label, value) {
+    const note = specStatusNote(item, key);
+    return `
+        <div class="${specStatusClass(item, key)}">
+            <dt>${label}</dt>
+            <dd>${value || "N/A"}</dd>
+            ${note ? `<small>${note}</small>` : ""}
+        </div>
+    `;
 }
 
 function renderResultCard(item, index) {
@@ -401,12 +423,12 @@ function renderResultCard(item, index) {
                     <span class="score">${item.match_percent || 0}% match</span>
                 </div>
                 <dl class="spec-grid">
-                    <div><dt>Detector</dt><dd>${item.detector_principle || "N/A"}</dd></div>
-                    <div><dt>Energy</dt><dd>${item.energy_range || "N/A"}</dd></div>
-                    <div><dt>Pixel</dt><dd>${item.pixel_size || "N/A"}</dd></div>
-                    <div><dt>Active area</dt><dd>${item.active_area || "N/A"}</dd></div>
-                    <div><dt>Interface</dt><dd>${item.interface || "N/A"}</dd></div>
-                    <div><dt>Software</dt><dd>${item.software || "N/A"}</dd></div>
+                    ${specBlock(item, "detector", "Detector", item.detector_principle)}
+                    ${specBlock(item, "energy", "Energy", item.energy_range)}
+                    ${specBlock(item, "pixel", "Pixel", item.pixel_size)}
+                    ${specBlock(item, "active_area", "Active area", item.active_area)}
+                    ${specBlock(item, "interface", "Interface", item.interface)}
+                    ${specBlock(item, "software", "Software", item.software)}
                 </dl>
                 <p class="applications">${item.applications || ""}</p>
                 <div class="reason-list">
@@ -487,6 +509,14 @@ function showConfidenceMessage(status) {
     els.confidenceWarning.classList.toggle("blocking", status.level === "block");
 }
 
+function markResultsGenerated() {
+    resultsGenerated = true;
+    els.nextButton.innerHTML = "Next: Contact <span aria-hidden='true'>→</span>";
+    els.nextButton.disabled = false;
+    renderStepOverview();
+    renderFlowPosition();
+}
+
 async function loadRecommendations() {
     answers.exact_energy = els.energyValue.value.trim();
     els.resultsList.innerHTML = "<p class='loading'>Finding detector matches...</p>";
@@ -505,6 +535,7 @@ async function loadRecommendations() {
         latestConflict = conflict;
         latestRecommendations = [];
         els.resultsList.innerHTML = "<article class='info-empty'>Please revise the conflicting energy and pixel-size answers before showing product matches.</article>";
+        markResultsGenerated();
         return;
     }
 
@@ -514,6 +545,7 @@ async function loadRecommendations() {
     if (uncertainty.level === "block") {
         latestRecommendations = [];
         els.resultsList.innerHTML = "<article class='info-empty'>Need more information before showing product matches.</article>";
+        markResultsGenerated();
         return;
     }
 
@@ -529,10 +561,12 @@ async function loadRecommendations() {
         latestConflict = data.conflict;
         latestRecommendations = [];
         els.resultsList.innerHTML = "<article class='info-empty'>Please revise the conflicting answers before showing product matches.</article>";
+        markResultsGenerated();
         return;
     }
     latestRecommendations = data.recommendations || [];
     els.resultsList.innerHTML = latestRecommendations.map(renderResultCard).join("");
+    markResultsGenerated();
 }
 
 function prepareEngineerRequest() {
@@ -1060,7 +1094,8 @@ function applyAiChoicesToSelector() {
     if (!aiState.answers) return;
     Object.assign(answers, aiState.answers);
     els.energyValue.value = answers.exact_energy || "";
-    currentStep = steps.length - 1;
+    resultsGenerated = false;
+    currentStep = steps.findIndex((step) => step.id === "review");
     closeAiHelper();
     render();
 }
@@ -1118,14 +1153,21 @@ function renderFlowPosition() {
 }
 
 function render() {
+    const currentId = steps[currentStep].id;
     els.stepCount.textContent = currentStep + 1;
     els.stepTotal.textContent = steps.length;
     els.progressFill.style.width = `${((currentStep + 1) / steps.length) * 100}%`;
     els.backButton.disabled = currentStep === 0;
     els.backButton.innerHTML = "<span aria-hidden='true'>←</span> Back";
-    els.nextButton.innerHTML = currentStep === steps.length - 1
-        ? "Show results <span aria-hidden='true'>→</span>"
-        : `Next: ${steps[currentStep + 1].short} <span aria-hidden='true'>→</span>`;
+    if (currentId === "review") {
+        els.nextButton.innerHTML = resultsGenerated
+            ? "Next: Contact <span aria-hidden='true'>→</span>"
+            : "Show results <span aria-hidden='true'>→</span>";
+    } else if (currentId === "contact") {
+        els.nextButton.innerHTML = "Finish <span aria-hidden='true'>→</span>";
+    } else {
+        els.nextButton.innerHTML = `Next: ${steps[currentStep + 1].short} <span aria-hidden='true'>→</span>`;
+    }
     els.nextButton.disabled = !canGoNext() && currentStep !== steps.length - 1;
 
     document.querySelector(".subsection")?.remove();
@@ -1148,7 +1190,16 @@ els.backButton.addEventListener("click", () => {
 
 els.nextButton.addEventListener("click", () => {
     if (steps[currentStep].id === "review") {
-        loadRecommendations();
+        if (resultsGenerated) {
+            currentStep = Math.min(steps.length - 1, currentStep + 1);
+            render();
+        } else {
+            loadRecommendations();
+        }
+        return;
+    }
+    if (steps[currentStep].id === "contact") {
+        prepareEngineerRequest();
         return;
     }
     currentStep = Math.min(steps.length - 1, currentStep + 1);
