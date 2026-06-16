@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>X-ray Detector Selector</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <main class="app-shell">
+        <section class="wizard-panel">
+            <header class="topbar">
+                <div class="brand-lockup">
+                    <img class="brand-logo" src="{{ url_for('static', filename='top-unistar-logo.svg') }}" alt="Top Unistar">
+                    <div class="title-copy">
+                        <h1>X-ray Detector Selector</h1>
+                        <p class="title-subtitle">Find the right detector for your application in 7 simple steps.</p>
+                    </div>
+                </div>
+                <div class="top-actions">
+                    <details class="selector-info">
+                        <summary><span class="info-mark">?</span> Need help choosing?</summary>
+                        <div class="selector-info-panel">
+                            <h2>Find the right X-ray detector faster.</h2>
+                            <p>This research engine helps users choose suitable X-ray detectors based on their application, sample, source energy, resolution needs, sensitivity, speed, and installation environment. Instead of reading through many datasheets, users can answer a few guided questions or describe their needs to an AI helper. The system then compares their requirements with a structured detector database and recommends the best-matching products with clear reasons.</p>
+                        </div>
+                    </details>
+                    <div class="step-pill"><span id="step-count">1</span>/<span id="step-total">7</span></div>
+                </div>
+            </header>
+
+            <div class="progress-track">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+
+            <nav class="step-overview" id="step-overview"></nav>
+
+            <section class="question-block">
+                <p class="step-label" id="step-label"></p>
+                <h2 id="question-title"></h2>
+                <p class="question-copy" id="question-copy"></p>
+                <div class="exact-energy" id="exact-energy">
+                    <label for="energy-value">Exact energy</label>
+                    <input id="energy-value" type="text" placeholder="Example: 8.04 keV">
+                </div>
+            </section>
+
+            <section class="cards-grid" id="cards-grid"></section>
+            <section class="contact-panel" id="contact-panel">
+                <div class="contact-grid">
+                    <label>
+                        <span>Name</span>
+                        <input id="contact-name" type="text" placeholder="Your name">
+                    </label>
+                    <label>
+                        <span>Email</span>
+                        <input id="contact-email" type="email" placeholder="name@example.com">
+                    </label>
+                    <label class="contact-wide">
+                        <span>Contact info or notes</span>
+                        <textarea id="contact-info" rows="5" placeholder="Phone, company, preferred contact method, or anything the engineer should know"></textarea>
+                    </label>
+                </div>
+                <p class="contact-note">This step only prepares the recommendation for engineer review. Sending is not connected yet.</p>
+            </section>
+            <section class="review" id="review-panel">
+                <div class="review-grid" id="review-grid"></div>
+                <button class="primary-action" id="show-results" type="button">Show recommended detectors</button>
+            </section>
+
+            <section class="results" id="results-panel">
+                <div class="results-header">
+                    <div>
+                        <p class="eyebrow">Recommendation output</p>
+                        <h2>Best matches</h2>
+                    </div>
+                    <button class="ghost-action" id="compare-top" type="button">Compare top 3</button>
+                </div>
+                <p class="confidence-warning" id="confidence-warning"></p>
+                <p class="engineer-note" id="engineer-note"></p>
+                <div class="results-list" id="results-list"></div>
+                <div class="engineer-action-row">
+                    <button class="engineer-action" id="engineer-contact" type="button">Contact engineer to discuss alternative ways</button>
+                    <p class="engineer-action-status" id="engineer-action-status"></p>
+                </div>
+                <div class="compare-grid" id="compare-grid"></div>
+            </section>
+
+            <footer class="wizard-actions">
+                <button class="secondary-action" id="back-button" type="button">Previous</button>
+                <div class="flow-position" id="flow-position"></div>
+                <button class="primary-action" id="next-button" type="button">Next</button>
+            </footer>
+        </section>
+    </main>
+
+    <dialog class="energy-dialog" id="energy-dialog">
+        <div class="dialog-card">
+            <p class="eyebrow">Exact energy</p>
+            <h2>Enter the source energy</h2>
+            <p class="question-copy">Use eV, keV, or MeV. If no unit is typed, the app assumes keV.</p>
+            <label for="dialog-energy-value">Energy value</label>
+            <input id="dialog-energy-value" type="text" placeholder="Example: 8.04 keV">
+            <div class="dialog-actions">
+                <button class="secondary-action" id="energy-cancel" type="button">Cancel</button>
+                <button class="primary-action" id="energy-save" type="button">Use energy</button>
+            </div>
+        </div>
+    </dialog>
+
+    <script>
+        window.CHOICE_GROUPS = {{ choice_groups | tojson }};
+    </script>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

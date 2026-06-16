@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 120" role="img" aria-labelledby="title">
+  <title id="title">Top Unistar</title>
+  <g fill="#2F3437">
+    <path d="M12 78 58 60 85 8 76 63 212 10 98 75 92 112 68 81z" opacity=".92"/>
+    <path d="M26 14 65 49 120 32 86 67 106 102 66 80 24 98 45 64z" opacity=".82"/>
+    <circle cx="68" cy="64" r="13"/>
+  </g>
+  <g fill="#3A3F42" font-family="Arial Black, Arial, Helvetica, sans-serif" font-style="italic" font-weight="900">
+    <text x="268" y="65" font-size="30" text-anchor="middle">Top</text>
+    <text x="242" y="98" font-size="41" text-anchor="middle">Unistar</text>
+  </g>
+</svg>
