@@ -9,27 +9,52 @@
 <body>
     <main class="app-shell">
         <section class="wizard-panel">
-            <header class="topbar">
-                <div class="brand-lockup">
-                    <img class="brand-logo" src="{{ url_for('static', filename='top-unistar-logo.svg') }}" alt="Top Unistar">
-                    <div class="title-copy">
-                        <h1>X-ray Detector Selector</h1>
-                        <p class="title-subtitle">Find the right detector for your application in 7 simple steps.</p>
+            <header class="site-header">
+                <nav class="site-nav" aria-label="Top Unistar navigation">
+                    <a class="nav-logo" href="#" aria-label="Top Unistar home">
+                        <img class="brand-logo" src="{{ url_for('static', filename='top-unistar-logo.svg') }}" alt="Top Unistar">
+                    </a>
+                    <div class="nav-links" aria-hidden="true">
+                        <span>Home</span>
+                        <span>Products</span>
+                        <span>Solutions</span>
+                        <span>Services</span>
+                        <span>Resources</span>
+                        <span>About</span>
+                        <span>Support</span>
                     </div>
-                </div>
-                <div class="top-actions">
-                    <button class="ai-helper-trigger" id="ai-helper-open" type="button">
-                        <span class="ai-spark">✦</span>
-                        AI helper
-                    </button>
-                    <details class="selector-info">
-                        <summary><span class="info-mark">?</span> Need help choosing?</summary>
-                        <div class="selector-info-panel">
-                            <h2>Find the right X-ray detector faster.</h2>
-                            <p>This research engine helps users choose suitable X-ray detectors based on their application, sample, source energy, resolution needs, sensitivity, speed, and installation environment. Instead of reading through many datasheets, users can answer a few guided questions or describe their needs to an AI helper. The system then compares their requirements with a structured detector database and recommends the best-matching products with clear reasons.</p>
-                        </div>
-                    </details>
-                    <div class="step-pill"><span id="step-count">1</span>/<span id="step-total">7</span></div>
+                    <div class="nav-actions" aria-hidden="true">
+                        <span class="nav-icon">
+                            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path d="m16.5 16.5 4 4"></path></svg>
+                        </span>
+                        <span class="nav-icon">
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18"></path><path d="M12 3c3 3 3 15 0 18"></path><path d="M12 3c-3 3-3 15 0 18"></path></svg>
+                        </span>
+                        <span class="nav-lang">EN</span>
+                        <span class="nav-contact">Contact Us</span>
+                    </div>
+                </nav>
+
+                <div class="hero-band">
+                    <div class="hero-copy">
+                        <h1>X-ray Detector Selector</h1>
+                        <p class="hero-cn">X 射线探测器选型工具</p>
+                        <p class="title-subtitle">Answer a few questions and we will help you find the detector that best fits your application.</p>
+                    </div>
+                    <div class="top-actions">
+                        <button class="ai-helper-trigger" id="ai-helper-open" type="button">
+                            <span class="ai-spark">✦</span>
+                            AI helper
+                        </button>
+                        <details class="selector-info">
+                            <summary><span class="info-mark">?</span> Need help choosing?</summary>
+                            <div class="selector-info-panel">
+                                <h2>Find the right X-ray detector faster.</h2>
+                                <p>This research engine helps users choose suitable X-ray detectors based on their application, sample, source energy, resolution needs, sensitivity, speed, and installation environment. Instead of reading through many datasheets, users can answer a few guided questions or describe their needs to an AI helper. The system then compares their requirements with a structured detector database and recommends the best-matching products with clear reasons.</p>
+                            </div>
+                        </details>
+                        <div class="step-pill"><span id="step-count">1</span>/<span id="step-total">7</span></div>
+                    </div>
                 </div>
             </header>
 
