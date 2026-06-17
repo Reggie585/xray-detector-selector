@@ -63,6 +63,13 @@ const LANGUAGE_TEXT = {
             showResultsNext: "Show results",
             nextContact: "Next: Contact",
             secureNote: "Your information is secure and will only be used to recommend the best solution.",
+            flowTitle: "Research flow",
+            summaryTitle: "Live requirements summary",
+            summaryNotSet: "Not set",
+            summaryApplication: "Application",
+            summaryEnergy: "Source",
+            summaryPixel: "Pixel",
+            summaryInstallation: "Environment",
             loading: "Finding detector matches...",
             noContact: "No contact details were added. The recommendation can still be reviewed here.",
             contactPrepared: "Engineer review prepared with the contact details from the previous step. Sending is not connected yet.",
@@ -205,6 +212,13 @@ const LANGUAGE_TEXT = {
             showResultsNext: "查看结果",
             nextContact: "下一步：联系信息",
             secureNote: "你的信息只会用于推荐最合适的方案。",
+            flowTitle: "选型流程",
+            summaryTitle: "实时需求摘要",
+            summaryNotSet: "未设置",
+            summaryApplication: "应用",
+            summaryEnergy: "射线源",
+            summaryPixel: "像素",
+            summaryInstallation: "环境",
             loading: "正在查找匹配的探测器...",
             noContact: "未填写联系方式。你仍然可以在这里查看推荐结果。",
             contactPrepared: "已使用上一步填写的联系方式准备工程师复核信息。当前还没有真正发送。",
@@ -385,6 +399,8 @@ let latestRecommendations = [];
 let latestConflict = null;
 let resultsGenerated = false;
 
+const SIMPLIFIED_INSTALLATION_IDS = ["simple_lab", "vacuum_uhv", "not_sure_installation"];
+
 const ICONS = {
     diffraction: '<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M9 44h46"/><path d="M13 38h8l5-21 8 34 7-25 6 12h6"/><path d="M17 26l7 7"/><path d="M47 28l-7 7"/></svg>',
     spectrum: '<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M10 42h8l4-10 6 18 6-26 7 16 4-8 7 10"/><path d="M13 50h38"/><path d="M15 34h3"/><path d="M48 34h3"/></svg>',
@@ -504,6 +520,17 @@ const els = {
     dialogTitle: document.querySelector("#dialog-title"),
     dialogCopy: document.querySelector("#dialog-copy"),
     dialogEnergyLabel: document.querySelector("#dialog-energy-label"),
+    sidebarFlowTitle: document.querySelector("#sidebar-flow-title"),
+    sidebarCurrentTitle: document.querySelector("#sidebar-current-title"),
+    liveSummaryTitle: document.querySelector("#live-summary-title"),
+    summaryApplicationLabel: document.querySelector("#summary-application-label"),
+    summaryEnergyLabel: document.querySelector("#summary-energy-label"),
+    summaryPixelLabel: document.querySelector("#summary-pixel-label"),
+    summaryInstallationLabel: document.querySelector("#summary-installation-label"),
+    summaryApplication: document.querySelector("#summary-application"),
+    summaryEnergy: document.querySelector("#summary-energy"),
+    summaryPixel: document.querySelector("#summary-pixel"),
+    summaryInstallation: document.querySelector("#summary-installation"),
     stepCount: document.querySelector("#step-count"),
     stepTotal: document.querySelector("#step-total"),
     progressFill: document.querySelector("#progress-fill"),
@@ -602,8 +629,26 @@ function translatedChoice(groupId, choice) {
 }
 
 function translatedChoiceById(groupId, choiceId) {
-    const choice = window.CHOICE_GROUPS[groupId]?.choices.find((item) => item.id === choiceId);
+    const choice = visibleChoicesForGroup(groupId).find((item) => item.id === choiceId);
     return choice ? translatedChoice(groupId, choice) : null;
+}
+
+function visibleChoicesForGroup(groupId) {
+    const choices = window.CHOICE_GROUPS[groupId]?.choices || [];
+    if (groupId !== "installation") return choices;
+    return choices.filter((choice) => SIMPLIFIED_INSTALLATION_IDS.includes(choice.id));
+}
+
+function sanitizeInstallationAnswer() {
+    if (answers.installation && !SIMPLIFIED_INSTALLATION_IDS.includes(answers.installation)) {
+        answers.installation = null;
+    }
+    if (aiState.extracted?.installation && !SIMPLIFIED_INSTALLATION_IDS.includes(aiState.extracted.installation)) {
+        aiState.extracted.installation = null;
+    }
+    if (aiState.answers?.installation && !SIMPLIFIED_INSTALLATION_IDS.includes(aiState.answers.installation)) {
+        aiState.answers.installation = "not_sure_installation";
+    }
 }
 
 function setText(element, value) {
@@ -657,6 +702,12 @@ function renderStaticLanguageText() {
     setText(els.dialogTitle, ui("dialogTitle"));
     setText(els.dialogCopy, ui("dialogCopy"));
     setText(els.dialogEnergyLabel, ui("dialogEnergyLabel"));
+    setText(els.sidebarFlowTitle, ui("flowTitle"));
+    setText(els.liveSummaryTitle, ui("summaryTitle"));
+    setText(els.summaryApplicationLabel, ui("summaryApplication"));
+    setText(els.summaryEnergyLabel, ui("summaryEnergy"));
+    setText(els.summaryPixelLabel, ui("summaryPixel"));
+    setText(els.summaryInstallationLabel, ui("summaryInstallation"));
     setPlaceholder(els.dialogEnergyValue, ui("exactEnergyPlaceholder"));
     setText(els.energyCancel, ui("dialogCancel"));
     setText(els.energySave, ui("dialogSave"));
@@ -691,6 +742,22 @@ function translateBackendText(value) {
         "Weak Match": "弱匹配",
         "Engineer Review Required": "需要工程师复核",
         "Engineer Review Recommended": "建议工程师复核",
+        "Application & Result: spectroscopy": "应用与结果：光谱",
+        "Application & Result: spectral imaging": "应用与结果：光谱成像",
+        "Application & Result: material": "应用与结果：材料识别",
+        "Application & Result: imaging": "应用与结果：成像",
+        "Application & Result: microscopy": "应用与结果：显微 / 计量",
+        "Application & Result: xrd": "应用与结果：XRD / 衍射",
+        "Source Energy & Sample: cr": "射线源与能量：Cr 靶材",
+        "Source Energy & Sample: cu": "射线源与能量：Cu 靶材",
+        "Source Energy & Sample: w": "射线源与能量：W 靶材",
+        "Source Energy & Sample: mo": "射线源与能量：Mo 靶材",
+        "Source Energy & Sample: rh": "射线源与能量：Rh 靶材",
+        "Source Energy & Sample: ag": "射线源与能量：Ag 靶材",
+        "Installation & Control: ethernet": "安装环境与控制：以太网",
+        "Installation & Control: usb": "安装环境与控制：USB",
+        "Installation & Control: lab": "安装环境与控制：实验室",
+        "Installation & Control: vacuum": "安装环境与控制：真空",
         "broad match": "宽泛匹配",
         "broad result because no strong filters were selected": "由于筛选条件较少，结果较宽泛",
         "Conflict check: selected answers need engineer review": "冲突检查：所选答案需要工程师复核",
@@ -714,6 +781,7 @@ function translateBackendText(value) {
         [/^Source Energy & Sample: (.+)$/i, "射线源与能量：$1"],
         [/^Performance: (.+)$/i, "性能优先级：$1"],
         [/^Installation fit: (.+)$/i, "安装环境匹配：$1"],
+        [/^Installation & Control: (.+)$/i, "安装环境与控制：$1"],
         [/^Environment fit: (.+)$/i, "使用环境匹配：$1"],
         [/^Interface support: (.+)$/i, "接口支持：$1"],
         [/^Conflict: (.+)$/i, "冲突：$1"],
@@ -724,6 +792,7 @@ function translateBackendText(value) {
         "Source Energy & Sample": "射线源与能量",
         "Performance": "性能优先级",
         "Installation": "安装环境",
+        "Control": "控制",
         "Detector": "探测器",
         "Energy": "能量",
         "Pixel": "像素",
@@ -745,12 +814,21 @@ function translateBackendText(value) {
         "make it relevant": "使它相关",
         "Medical X-ray imaging": "医学 X 射线成像",
         "material analysis": "材料分析",
+        "material identification": "材料识别",
         "radiation monitoring": "辐射监测",
         "gamma spectral imaging": "伽马光谱成像",
         "gamma camera": "伽马相机",
         "isotope imaging": "同位素成像",
         "particle physics research": "粒子物理研究",
         "Industrial-system integration": "工业系统集成",
+        "spectroscopy": "光谱",
+        "spectral imaging": "光谱成像",
+        "material": "材料",
+        "imaging": "成像",
+        "microscopy": "显微",
+        "ethernet": "以太网",
+        "Ethernet": "以太网",
+        "usb": "USB",
         "Low-energy lab X-ray": "低能实验室 X 射线",
         "Standard XRD source": "标准 XRD 射线源",
         "Higher-energy lab X-ray": "较高能实验室 X 射线",
@@ -782,7 +860,7 @@ function translateBackendText(value) {
         translated = translated.replaceAll(english, chinese);
     });
     return translated
-        .replace(/(\d+(?:\.\d+)?(?:\s*[×x]\s*\d+(?:\.\d+)?)?)\s*[µμ]m\b/g, "$1 微米")
+        .replace(/(\d+(?:\.\d+)?(?:\s*[×x]\s*\d+(?:\.\d+)?)?)\s*(?:[µμ]m|um)\b/g, "$1 微米")
         .replace(/mm²/g, "平方毫米")
         .replace(/(\d+(?:\.\d+)?(?:\s*[×x]\s*\d+(?:\.\d+)?)?)\s*mm\b/g, "$1 毫米");
 }
@@ -837,7 +915,22 @@ function translateProductText(value) {
         "specific software not consistently listed": "具体软件未完全统一列出",
         "basic tools": "基础工具",
         "SDK included": "包含 SDK",
+        "Si up to": "Si 最高",
+        "CdTe up to": "CdTe 最高",
+        "up to": "最高",
+        "in datasheet": "（数据表）",
+        "datasheet": "数据表",
+        "product summaries often list": "产品摘要通常列出",
         "EUV lithography": "EUV 光刻",
+        "CT imaging": "CT 成像",
+        "X-ray spectroscopy": "X 射线光谱",
+        "material-sensitive imaging": "材料敏感成像",
+        "low-density material/soft tissue defect detection": "低密度材料 / 软组织缺陷检测",
+        "NDT": "无损检测",
+        "mineral/geology inspection": "矿物 / 地质检测",
+        "industrial radiography": "工业射线照相",
+        "high-energy X-ray/gamma imaging": "高能 X 射线 / gamma 成像",
+        "electronics/light-part inspection": "电子器件 / 轻质部件检测",
         "Medical X-ray imaging": "医学 X 射线成像",
         "X-ray tomography": "X 射线断层成像",
         "Fourier-transform holography": "傅里叶变换全息成像",
@@ -865,6 +958,15 @@ function translateProductText(value) {
         "isotope imaging": "同位素成像",
         "particle physics research": "粒子物理研究",
         "Industrial-system integration": "工业系统集成",
+        "phase identification": "物相识别",
+        "compositional analysis": "成分分析",
+        "defect detection": "缺陷检测",
+        "inspection": "检测",
+        "controlled laboratory environment": "受控实验室环境",
+        "portable": "便携",
+        "field": "现场",
+        "vacuum": "真空",
+        "laboratory": "实验室",
         "commonly used for": "常用于",
         "X-rays": "X 射线",
         "X-ray micron/submicron microscopy": "X 射线微米 / 亚微米显微",
@@ -880,13 +982,13 @@ function translateProductText(value) {
         "API tablet distribution": "API 药片分布",
     };
 
-    let translated = translateBackendText(text);
+    let translated = text;
     Object.entries(phraseMap).forEach(([english, chinese]) => {
         translated = translated.replaceAll(english, chinese);
     });
 
     return translated
-        .replace(/(\d+(?:\.\d+)?(?:\s*[×x]\s*\d+(?:\.\d+)?)?)\s*[µμ]m\b/g, "$1 微米")
+        .replace(/(\d+(?:\.\d+)?(?:\s*[×x]\s*\d+(?:\.\d+)?)?)\s*(?:[µμ]m|um)\b/g, "$1 微米")
         .replace(/mm²/g, "平方毫米")
         .replace(/(\d+(?:\.\d+)?(?:\s*[×x]\s*\d+(?:\.\d+)?)?)\s*mm\b/g, "$1 毫米");
 }
@@ -913,6 +1015,20 @@ function selectedLabels(groupId) {
     }
 
     return labels;
+}
+
+function summaryLabelFor(groupId) {
+    const labels = selectedLabels(groupId);
+    return labels.length ? labels.join(", ") : ui("summaryNotSet");
+}
+
+function renderRequirementsSummary() {
+    const current = steps[currentStep];
+    setText(els.sidebarCurrentTitle, `${currentStep + 1}. ${stepText(current.id, "short")}`);
+    setText(els.summaryApplication, summaryLabelFor("application"));
+    setText(els.summaryEnergy, summaryLabelFor("energy"));
+    setText(els.summaryPixel, summaryLabelFor("pixel_size"));
+    setText(els.summaryInstallation, summaryLabelFor("installation"));
 }
 
 function iconForChoice(groupId, choiceId) {
@@ -999,7 +1115,8 @@ function choiceCard(groupId, choice) {
 
 function renderChoiceCards(groupId) {
     const group = window.CHOICE_GROUPS[groupId];
-    els.cardsGrid.innerHTML = group.choices.map((choice) => choiceCard(groupId, choice)).join("");
+    sanitizeInstallationAnswer();
+    els.cardsGrid.innerHTML = visibleChoicesForGroup(groupId).map((choice) => choiceCard(groupId, choice)).join("");
     els.cardsGrid.classList.toggle("compact", groupId === "performance");
 
     document.querySelectorAll(".choice-card").forEach((button) => {
@@ -1044,7 +1161,7 @@ function renderOptionalTarget() {
         <div class="subsection">
             <p class="subsection-title">${ui("knownTarget")}</p>
             <div class="mini-card-grid">
-                ${group.choices.map((choice) => choiceCard("target", choice)).join("")}
+                ${visibleChoicesForGroup("target").map((choice) => choiceCard("target", choice)).join("")}
             </div>
         </div>
     `;
@@ -1301,6 +1418,7 @@ function markResultsGenerated() {
 }
 
 async function loadRecommendations() {
+    renderStaticLanguageText();
     answers.exact_energy = els.energyValue.value.trim();
     els.resultsList.innerHTML = `<p class='loading'>${ui("loading")}</p>`;
     els.compareGrid.innerHTML = "";
@@ -1455,7 +1573,7 @@ function countChoiceTermHits(text, choice) {
 }
 
 function bestChoiceByTerms(groupId, text) {
-    const choices = window.CHOICE_GROUPS[groupId]?.choices || [];
+    const choices = visibleChoicesForGroup(groupId);
     let best = { id: null, score: 0 };
 
     choices.forEach((choice) => {
@@ -1701,7 +1819,7 @@ function renderAiFollowups() {
 
     els.aiFollowupList.innerHTML = aiState.missing
         .map((groupId) => {
-            const choices = window.CHOICE_GROUPS[groupId].choices.map((choice) => translatedChoice(groupId, choice));
+            const choices = visibleChoicesForGroup(groupId).map((choice) => translatedChoice(groupId, choice));
             return `
                 <div class="ai-followup-group">
                     <strong>${escapeHtml(aiFollowupQuestion(groupId))}</strong>
@@ -1954,6 +2072,7 @@ function render() {
     document.querySelector(".subsection")?.remove();
     renderStepOverview();
     renderFlowPosition();
+    renderRequirementsSummary();
 
     if (steps[currentStep].id === "review") {
         renderReview();
@@ -2012,6 +2131,7 @@ els.contactInfo.addEventListener("input", () => {
 });
 els.energyValue.addEventListener("input", () => {
     answers.exact_energy = els.energyValue.value.trim();
+    renderRequirementsSummary();
 });
 els.energySave.addEventListener("click", () => {
     answers.exact_energy = els.dialogEnergyValue.value.trim();
