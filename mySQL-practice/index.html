@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>X 射线探测器选型工具</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <main class="app-shell">
+        <section class="wizard-panel">
+            <header class="site-header">
+                <div class="hero-band">
+                    <div class="hero-copy">
+                        <h1 id="hero-title">X 射线探测器选型工具</h1>
+                        <p class="hero-cn" id="hero-kicker">X-ray Detector Selector</p>
+                        <p class="title-subtitle" id="hero-subtitle">回答几个问题，我们会帮助你找到最适合应用场景的探测器。</p>
+                    </div>
+                    <div class="top-actions">
+                        <button class="language-toggle" id="language-toggle" type="button" aria-label="Switch language">
+                            <span class="language-icon" aria-hidden="true">◎</span>
+                            <span id="language-toggle-label">EN</span>
+                        </button>
+                        <button class="ai-helper-trigger" id="ai-helper-open" type="button">
+                            <span class="ai-spark">✦</span>
+                            <span id="ai-helper-open-text">AI 助手</span>
+                        </button>
+                        <details class="selector-info">
+                            <summary><span class="info-mark">?</span> <span id="selector-info-summary">这是什么工具？</span></summary>
+                            <div class="selector-info-panel">
+                                <h2 id="selector-info-title">更快找到合适的 X 射线探测器。</h2>
+                                <p id="selector-info-copy">这个选型工具会根据应用场景、样品、射线源能量、分辨率需求、灵敏度、速度和安装环境，帮助用户选择合适的 X 射线探测器。用户不需要逐页阅读数据手册，只需回答几个引导问题，或向 AI 助手描述需求。系统会将需求与结构化探测器数据库进行比较，并给出最匹配的产品和清晰理由。</p>
+                            </div>
+                        </details>
+                        <div class="step-pill"><span id="step-count">1</span>/<span id="step-total">7</span></div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="progress-track">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+
+            <nav class="step-overview" id="step-overview"></nav>
+
+            <section class="question-block">
+                <p class="step-label" id="step-label"></p>
+                <h2 id="question-title"></h2>
+                <p class="question-copy" id="question-copy"></p>
+                <div class="exact-energy" id="exact-energy">
+                    <label for="energy-value" id="energy-value-label">精确能量</label>
+                    <input id="energy-value" type="text" placeholder="示例：8.04 keV">
+                </div>
+            </section>
+
+            <section class="cards-grid" id="cards-grid"></section>
+            <section class="contact-panel" id="contact-panel">
+                <div class="contact-grid">
+                    <label>
+                        <span id="contact-name-label">姓名</span>
+                        <input id="contact-name" type="text" placeholder="你的姓名">
+                    </label>
+                    <label>
+                        <span id="contact-email-label">邮箱</span>
+                        <input id="contact-email" type="email" placeholder="name@example.com">
+                    </label>
+                    <label class="contact-wide">
+                        <span id="contact-info-label">联系方式或备注</span>
+                        <textarea id="contact-info" rows="5" placeholder="电话、公司、首选联系方式，或工程师需要了解的其他信息"></textarea>
+                    </label>
+                </div>
+                <p class="contact-note" id="contact-note">这一步只会为工程师复核准备推荐信息，暂时还没有真正发送。</p>
+            </section>
+            <section class="review" id="review-panel">
+                <div class="review-grid" id="review-grid"></div>
+                <button class="primary-action" id="show-results" type="button">查看推荐探测器</button>
+            </section>
+
+            <section class="results" id="results-panel">
+                <div class="results-header">
+                    <div>
+                        <p class="eyebrow" id="results-eyebrow">推荐结果</p>
+                        <h2 id="results-title">最佳匹配</h2>
+                    </div>
+                    <button class="ghost-action" id="compare-top" type="button">对比前三项</button>
+                </div>
+                <p class="confidence-warning" id="confidence-warning"></p>
+                <div class="conflict-check" id="conflict-check"></div>
+                <p class="engineer-note" id="engineer-note"></p>
+                <div class="results-list" id="results-list"></div>
+                <div class="engineer-action-row">
+                    <button class="engineer-action" id="engineer-contact" type="button">联系工程师讨论其他实现方式</button>
+                    <p class="engineer-action-status" id="engineer-action-status"></p>
+                </div>
+                <div class="compare-grid" id="compare-grid"></div>
+            </section>
+
+            <footer class="wizard-actions">
+                <button class="secondary-action" id="back-button" type="button">上一步</button>
+                <div class="flow-position" id="flow-position"></div>
+                <button class="primary-action" id="next-button" type="button">下一步</button>
+            </footer>
+        </section>
+    </main>
+
+    <div class="ai-helper-backdrop" id="ai-helper-backdrop"></div>
+    <aside class="ai-helper-panel" id="ai-helper-panel" aria-hidden="true" aria-label="AI detector helper">
+        <header class="ai-helper-header">
+            <div>
+                <p class="eyebrow" id="ai-panel-eyebrow">AI 助手</p>
+                <h2 id="ai-panel-title">描述你的探测器需求</h2>
+                <p id="ai-panel-copy">AI 助手会提取需求、检查缺失信息，并使用同一套推荐算法。</p>
+            </div>
+            <button class="ai-close" id="ai-helper-close" type="button" aria-label="Close AI helper">×</button>
+        </header>
+
+        <div class="ai-helper-messages" id="ai-helper-messages">
+            <article class="ai-message assistant">
+                <strong>先简单描述你的测量需求。</strong>
+                <span>如果知道，请写出应用场景、射线源能量、像素尺寸或分辨率需求、性能优先级和使用环境。</span>
+            </article>
+        </div>
+
+        <label class="ai-helper-input-label" for="ai-helper-input">
+            <span id="ai-input-label">测量需求描述</span>
+            <textarea id="ai-helper-input" rows="6" placeholder="示例：我需要一个用于 Cu-Kα 粉末 XRD 的探测器，希望高分辨率和能量分辨成像，会在普通实验室使用。"></textarea>
+        </label>
+
+        <div class="ai-helper-actions">
+            <button class="primary-action" id="ai-helper-submit" type="button">分析需求</button>
+            <button class="secondary-action" id="ai-helper-reset" type="button">清空</button>
+        </div>
+
+        <section class="ai-card" id="ai-extracted-card" hidden>
+            <div class="ai-card-heading">
+                <p class="eyebrow" id="ai-extracted-eyebrow">提取的需求</p>
+                <strong id="ai-extracted-title">AI 理解到的信息</strong>
+            </div>
+            <div class="ai-extracted-grid" id="ai-extracted-grid"></div>
+        </section>
+
+        <section class="ai-card" id="ai-followups-card" hidden>
+            <div class="ai-card-heading">
+                <p class="eyebrow" id="ai-followups-eyebrow">缺失信息</p>
+                <strong id="ai-followups-title">只回答必要的问题</strong>
+            </div>
+            <div class="ai-followup-list" id="ai-followup-list"></div>
+        </section>
+
+        <section class="ai-card" id="ai-result-card" hidden>
+            <div class="ai-card-heading">
+                <p class="eyebrow" id="ai-result-eyebrow">AI 结果</p>
+                <strong id="ai-result-title">推荐预览</strong>
+            </div>
+            <p class="ai-result-note" id="ai-result-note"></p>
+            <div class="ai-result-list" id="ai-result-list"></div>
+            <div class="ai-result-actions">
+                <button class="primary-action" id="ai-apply" type="button">应用到选型流程</button>
+                <button class="secondary-action" id="ai-view-full" type="button">查看完整推荐</button>
+                <button class="secondary-action" id="ai-ask-again" type="button">重新提问</button>
+            </div>
+        </section>
+    </aside>
+
+    <dialog class="energy-dialog" id="energy-dialog">
+        <div class="dialog-card">
+            <p class="eyebrow" id="dialog-eyebrow">精确能量</p>
+            <h2 id="dialog-title">输入射线源能量</h2>
+            <p class="question-copy" id="dialog-copy">可使用 eV、keV 或 MeV。如果没有输入单位，系统会默认按 keV 处理。</p>
+            <label for="dialog-energy-value" id="dialog-energy-label">能量数值</label>
+            <input id="dialog-energy-value" type="text" placeholder="示例：8.04 keV">
+            <div class="dialog-actions">
+                <button class="secondary-action" id="energy-cancel" type="button">取消</button>
+                <button class="primary-action" id="energy-save" type="button">使用该能量</button>
+            </div>
+        </div>
+    </dialog>
+
+    <script>
+        window.CHOICE_GROUPS = {{ choice_groups | tojson }};
+    </script>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
