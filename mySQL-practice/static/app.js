@@ -113,6 +113,7 @@ const els = {
     reviewGrid: document.querySelector("#review-grid"),
     resultsPanel: document.querySelector("#results-panel"),
     confidenceWarning: document.querySelector("#confidence-warning"),
+    conflictCheck: document.querySelector("#conflict-check"),
     engineerNote: document.querySelector("#engineer-note"),
     engineerContact: document.querySelector("#engineer-contact"),
     engineerActionStatus: document.querySelector("#engineer-action-status"),
@@ -462,8 +463,8 @@ function selectionConflictStatus(source = answers) {
 
     if (source.pixel_size === "pixel_under_1" && isHighOrHardEnergy) {
         return {
-            level: "block",
-            message: "Conflicting choices: high/hard X-ray energy and under 1 micrometer pixel size are not a practical detector-selection pair. Please change either the energy range or the pixel-size requirement before viewing product matches.",
+            level: "warn",
+            message: "Possible conflict: high/hard X-ray energy and under 1 micrometer pixel size may require custom optics, scintillator coupling, or engineer review.",
         };
     }
 
@@ -509,6 +510,38 @@ function showConfidenceMessage(status) {
     els.confidenceWarning.classList.toggle("blocking", status.level === "block");
 }
 
+function renderConflictCheck(conflict) {
+    if (!els.conflictCheck) return;
+
+    const details = conflict?.details || [];
+    if (!details.length) {
+        els.conflictCheck.classList.remove("visible");
+        els.conflictCheck.innerHTML = "";
+        return;
+    }
+
+    els.conflictCheck.classList.add("visible");
+    els.conflictCheck.innerHTML = `
+        <div class="conflict-check-heading">
+            <p class="eyebrow">Conflict check</p>
+            <h3>${escapeHtml(conflict.title || "Possible matches, but review the answers")}</h3>
+            <p>${escapeHtml(conflict.message || "Some answers point toward different detector families.")}</p>
+        </div>
+        <div class="conflict-list">
+            ${details
+                .map((detail) => `
+                    <article class="conflict-item">
+                        <strong>${escapeHtml(detail.title)}</strong>
+                        <span>${escapeHtml(detail.selected)}</span>
+                        <p>${escapeHtml(detail.issue)}</p>
+                        <small>${escapeHtml(detail.suggestion)}</small>
+                    </article>
+                `)
+                .join("")}
+        </div>
+    `;
+}
+
 function markResultsGenerated() {
     resultsGenerated = true;
     els.nextButton.innerHTML = "Next: Contact <span aria-hidden='true'>→</span>";
@@ -522,6 +555,7 @@ async function loadRecommendations() {
     els.resultsList.innerHTML = "<p class='loading'>Finding detector matches...</p>";
     els.compareGrid.innerHTML = "";
     els.engineerActionStatus.textContent = "";
+    renderConflictCheck(null);
     latestConflict = null;
     const conflict = selectionConflictStatus();
     const contactLine = answers.contact_email || answers.contact_name || answers.contact_info;
@@ -534,6 +568,7 @@ async function loadRecommendations() {
         showConfidenceMessage(conflict);
         latestConflict = conflict;
         latestRecommendations = [];
+        renderConflictCheck(null);
         els.resultsList.innerHTML = "<article class='info-empty'>Please revise the conflicting energy and pixel-size answers before showing product matches.</article>";
         markResultsGenerated();
         return;
@@ -544,6 +579,7 @@ async function loadRecommendations() {
 
     if (uncertainty.level === "block") {
         latestRecommendations = [];
+        renderConflictCheck(null);
         els.resultsList.innerHTML = "<article class='info-empty'>Need more information before showing product matches.</article>";
         markResultsGenerated();
         return;
@@ -557,12 +593,20 @@ async function loadRecommendations() {
 
     const data = await response.json();
     if (data.conflict?.has_conflict) {
-        showConfidenceMessage({ level: "block", message: data.conflict.message });
+        showConfidenceMessage({
+            level: data.conflict.blocking ? "block" : "warn",
+            message: data.conflict.message,
+        });
         latestConflict = data.conflict;
-        latestRecommendations = [];
-        els.resultsList.innerHTML = "<article class='info-empty'>Please revise the conflicting answers before showing product matches.</article>";
-        markResultsGenerated();
-        return;
+        renderConflictCheck(data.conflict);
+        if (data.conflict.blocking) {
+            latestRecommendations = [];
+            els.resultsList.innerHTML = "<article class='info-empty'>Please revise the conflicting answers before showing product matches.</article>";
+            markResultsGenerated();
+            return;
+        }
+    } else {
+        renderConflictCheck(null);
     }
     latestRecommendations = data.recommendations || [];
     els.resultsList.innerHTML = latestRecommendations.map(renderResultCard).join("");
@@ -576,7 +620,7 @@ function prepareEngineerRequest() {
         : "Add an email or contact note in Step 6 so an engineer can follow up.";
 
     if (latestConflict) {
-        els.engineerActionStatus.textContent = `${contactHint} Engineering review prepared to discuss alternative ways to reach the measurement goal, because the selected energy and pixel size conflict with standard detector matches. Sending is not connected yet.`;
+        els.engineerActionStatus.textContent = `${contactHint} Engineering review prepared to discuss alternative ways to reach the measurement goal, because some selected answers point toward different detector families. Sending is not connected yet.`;
         return;
     }
 

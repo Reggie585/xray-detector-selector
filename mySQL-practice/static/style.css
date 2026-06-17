@@ -1079,6 +1079,75 @@ h3 {
     background: var(--danger-soft);
 }
 
+.conflict-check {
+    display: none;
+    width: min(1180px, 100%);
+    margin-top: 16px;
+    padding: 18px;
+    border: 1px solid rgba(255, 216, 116, 0.42);
+    border-radius: 8px;
+    background:
+        linear-gradient(135deg, rgba(255, 216, 116, 0.12), transparent 42%),
+        rgba(8, 18, 39, 0.92);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+}
+
+.conflict-check.visible {
+    display: block;
+}
+
+.conflict-check-heading h3 {
+    margin: 0 0 8px;
+    font-size: 1.25rem;
+}
+
+.conflict-check-heading p {
+    margin-bottom: 14px;
+    color: var(--muted-2);
+    line-height: 1.55;
+}
+
+.conflict-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.conflict-item {
+    padding: 14px;
+    border: 1px solid rgba(255, 216, 116, 0.32);
+    border-radius: 8px;
+    background: rgba(255, 216, 116, 0.08);
+}
+
+.conflict-item strong,
+.conflict-item span,
+.conflict-item small {
+    display: block;
+}
+
+.conflict-item strong {
+    margin-bottom: 7px;
+    color: #ffe6a6;
+}
+
+.conflict-item span {
+    margin-bottom: 10px;
+    color: #ffffff;
+    font-weight: 800;
+}
+
+.conflict-item p {
+    margin-bottom: 10px;
+    color: var(--muted-2);
+    line-height: 1.45;
+}
+
+.conflict-item small {
+    color: #ffe2a0;
+    line-height: 1.4;
+}
+
 .engineer-action-row {
     display: grid;
     gap: 10px;
