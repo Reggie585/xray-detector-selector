@@ -465,11 +465,11 @@ SEARCH_FIELDS = {
 
 GROUP_WEIGHTS = {
     "application": 10,
-    "energy": 14,
+    "energy": 24,
     "target": 8,
-    "pixel_size": 14,
+    "pixel_size": 24,
     "performance": 5,
-    "installation": 2,
+    "installation": 20,
 }
 
 STRICT_MATCH_WEIGHTS = {
@@ -477,16 +477,15 @@ STRICT_MATCH_WEIGHTS = {
     "pixel_size": 30,
     "application": 22,
     "performance": 12,
-    "installation": 6,
+    "installation": 26,
 }
 
 
 LAB_XRD_ENERGY_IDS = {"low_energy_lab", "standard_xrd", "higher_energy_lab"}
 LAB_TARGET_IDS = {"cr_ka", "cu_ka", "w_la", "mo_ka", "rh_ka", "ag_ka"}
 HIGH_HARD_ENERGY_IDS = {"higher_energy_lab", "hard_xray"}
-EXACT_ENERGY_WEIGHT = 8
-SAME_BRAND_ADVANTAGE_PERCENT = 8
-SAME_BRAND_ADVANTAGE_SCORE = 2
+ENERGY_FIT_WEIGHT = GROUP_WEIGHTS["energy"] + GROUP_WEIGHTS["target"]
+PIXEL_FIT_WEIGHT = GROUP_WEIGHTS["pixel_size"]
 ENERGY_FIELDS = [
     "minimum_energy_threshold",
     "detectable_energy_radiation_range",
@@ -495,6 +494,69 @@ ENERGY_FIELDS = [
     "typical_applications",
     "industry_tags",
 ]
+
+ENERGY_REQUIREMENTS = {
+    "euv_vuv_soft": {
+        "range": (0.001, 1),
+        "label": "EUV / VUV / Soft X-ray",
+        "terms": ["euv", "vuv", "soft x-ray", "sxr", "50 ev", "ev"],
+        "hard_exclude_terms": ["gamma", "neutron", "particle only"],
+    },
+    "low_energy_lab": {
+        "range": (5, 9),
+        "label": "Low-energy lab X-ray",
+        "terms": ["5.4", "8.04", "8.4", "cr", "cu", "w-l", "x-ray", "kev"],
+        "hard_exclude_terms": ["gamma", "neutron", "particle only"],
+    },
+    "standard_xrd": {
+        "range": (8, 18),
+        "label": "Standard XRD source",
+        "terms": ["xrd", "diffraction", "cu", "mo", "8.04", "17.4", "kev"],
+        "hard_exclude_terms": ["gamma", "neutron", "particle only"],
+    },
+    "higher_energy_lab": {
+        "range": (17, 23),
+        "label": "Higher-energy lab X-ray",
+        "terms": ["17.4", "20.2", "22.2", "mo", "rh", "ag", "hxr", "kev"],
+        "hard_exclude_terms": ["euv only", "vuv only", "gamma", "neutron", "particle only"],
+    },
+    "hard_xray": {
+        "range": (30, 150),
+        "label": "Hard X-ray / High penetration",
+        "terms": ["hard", "hxr", "30", "150", "cdte", "high penetration", "kev"],
+        "hard_exclude_terms": ["euv only", "vuv only"],
+    },
+    "gamma_neutron_particles": {
+        "range": (150, 1000000),
+        "label": "Gamma / Neutron / Particles",
+        "terms": ["gamma", "neutron", "alpha", "beta", "particle", "timepix"],
+        "hard_exclude_terms": ["euv only", "vuv only", "soft x-ray only"],
+    },
+}
+
+TARGET_ENERGIES_KEV = {
+    "cr_ka": 5.4,
+    "cu_ka": 8.04,
+    "w_la": 8.4,
+    "mo_ka": 17.4,
+    "rh_ka": 20.2,
+    "ag_ka": 22.2,
+}
+
+PIXEL_REQUIREMENTS = {
+    "pixel_under_1": {
+        "range": (0, 1),
+        "label": "Under 1 micrometer",
+    },
+    "pixel_1_30": {
+        "range": (1, 30),
+        "label": "1 to 30 micrometers",
+    },
+    "pixel_30_100": {
+        "range": (30, 100),
+        "label": "30 to 100 micrometers",
+    },
+}
 
 
 def is_lab_xrd_request(answers):
@@ -524,24 +586,53 @@ def is_ccd_camera(product):
     return "ccd" in text
 
 
+def is_vacuum_or_uhv_product(product):
+    text = field_text(
+        product,
+        [
+            "vacuum_compatibility",
+            "cooling_temperature_control",
+            "connector_type",
+            "dimensions",
+            "target_market_intended_use",
+            "typical_applications",
+            "source_page_notes",
+        ],
+    )
+    return any(
+        term in text
+        for term in [
+            "vacuum",
+            "uhv",
+            "flange",
+            "cf",
+            "10^-",
+            "10-",
+            "bake",
+            "euv",
+            "vuv",
+            "soft x-ray",
+            "beamline",
+        ]
+    )
+
+
 def should_exclude_product(product, answers):
+    # Step 5 is a practical-use gate. A simple in-air lab setup should not
+    # return CCD camera families that normally imply vacuum/deep-cooled setups.
+    if answers.get("installation") == "simple_lab" and is_ccd_camera(product):
+        return True
+
     # For lab XRD/SAXS/WAXS source selection, users normally expect diffraction
     # or photon-counting detectors, not broad scientific CCD camera families.
     if is_lab_xrd_request(answers) and is_ccd_camera(product):
         return True
 
-    energy_fit = exact_energy_fit(product, answers)
-    if energy_fit["known_incompatible"]:
+    energy_fit = energy_range_fit(product, answers)
+    if energy_fit["hard_exclude"]:
         return True
 
     return False
-
-
-def get_brand_key(product):
-    raw = first_value(product, "brand", "manufacturer")
-    raw = re.split(r"[/|;,()]", raw.lower())[0]
-    key = re.sub(r"[^a-z0-9]+", "", raw)
-    return key or normalize(product.get("manufacturer"))
 
 
 def parse_energy_to_kev(value):
@@ -573,7 +664,7 @@ def extract_energy_ranges(text):
     cleaned = cleaned.replace("–", "-").replace("—", "-").replace("－", "-")
     cleaned = cleaned.replace("至", "-").replace("到", "-")
     pattern = re.compile(
-        r"(\d+(?:\.\d+)?)\s*(mev|kev|ev)?\s*(?:-|~|to)\s*"
+        r"(\d+(?:\.\d+)?)\s*(mev|kev|ev)?(?:\s*\([^)]*\))?\s*(?:-|~|to)\s*"
         r"(\d+(?:\.\d+)?)\s*(mev|kev|ev)"
     )
 
@@ -589,64 +680,157 @@ def extract_energy_ranges(text):
     return ranges
 
 
-def text_energy_family_matches(text, energy_kev):
-    if energy_kev is None:
-        return False
-    if energy_kev < 1:
-        return any(term in text for term in ["euv", "vuv", "soft x-ray", "sxr"])
-    if energy_kev <= 30:
-        return any(term in text for term in ["x-ray", "xrd", "saxs", "waxs", "sxr", "hxr", "kev"])
-    return any(term in text for term in ["hard", "hxr", "high", "gamma", "cdte", "500 kev", "mev"])
+def requested_energy_range(answers):
+    target_energy = TARGET_ENERGIES_KEV.get(answers.get("target"))
+    if target_energy is not None:
+        margin = max(0.15, target_energy * 0.03)
+        return {
+            "range": (target_energy - margin, target_energy + margin),
+            "label": get_choice("target", answers.get("target"))["label"],
+            "exact": target_energy,
+            "terms": [],
+        }
+
+    if answers.get("energy") == "exact_energy":
+        exact_energy = parse_energy_to_kev(answers.get("exact_energy"))
+        if exact_energy is None:
+            return None
+        margin = max(0.05, exact_energy * 0.05)
+        return {
+            "range": (max(0, exact_energy - margin), exact_energy + margin),
+            "label": f"{exact_energy:g} keV",
+            "exact": exact_energy,
+            "terms": [],
+        }
+
+    requirement = ENERGY_REQUIREMENTS.get(answers.get("energy"))
+    if not requirement:
+        return None
+
+    return {
+        **requirement,
+        "exact": None,
+    }
 
 
-def exact_energy_fit(product, answers):
-    if answers.get("energy") != "exact_energy":
+def ranges_overlap(first, second):
+    return max(first[0], second[0]) <= min(first[1], second[1])
+
+
+def overlap_fraction(first, second):
+    overlap = max(0, min(first[1], second[1]) - max(first[0], second[0]))
+    width = max(first[1] - first[0], 0.000001)
+    return overlap / width
+
+
+def range_gap(first, second):
+    if ranges_overlap(first, second):
+        return 0
+    if first[1] < second[0]:
+        return second[0] - first[1]
+    return first[0] - second[1]
+
+
+def energy_text_has_only_soft_family(text):
+    has_soft = any(term in text for term in ["euv", "vuv", "soft x-ray", "sxr", "50 ev"])
+    has_hard_or_lab = any(term in text for term in ["hxr", "hard", "kev", "x-ray", "xrd", "cdte", "30 kev", "150 kev"])
+    return has_soft and not has_hard_or_lab
+
+
+def energy_text_has_conflicting_family(text, requirement):
+    energy_label = normalize(requirement.get("label"))
+    if "hard" in energy_label or "higher" in energy_label:
+        return energy_text_has_only_soft_family(text)
+    if "euv" in energy_label or "soft" in energy_label:
+        return any(term in text for term in ["gamma", "neutron", "particle only"])
+    if "gamma" in energy_label or "neutron" in energy_label:
+        return energy_text_has_only_soft_family(text)
+    return False
+
+
+def energy_range_fit(product, answers):
+    requirement = requested_energy_range(answers)
+    if not requirement:
         return {
             "matched": 0,
             "possible": 0,
             "reason": None,
-            "known_incompatible": False,
+            "status": "unknown",
+            "note": "Energy not requested",
+            "hard_exclude": False,
         }
 
-    energy_kev = parse_energy_to_kev(answers.get("exact_energy"))
-    if energy_kev is None:
-        return {
-            "matched": 0,
-            "possible": EXACT_ENERGY_WEIGHT,
-            "reason": None,
-            "known_incompatible": False,
-        }
+    weight = ENERGY_FIT_WEIGHT
+    product_text = field_text(product, ENERGY_FIELDS)
+    ranges = extract_energy_ranges(product_text)
+    requested = requirement["range"]
+    product_range_label = first_value(product, "detectable_energy_radiation_range", "minimum_energy_threshold")
+    requested_label = requirement["label"]
 
-    text = field_text(product, ENERGY_FIELDS)
-    ranges = extract_energy_ranges(text)
     if ranges:
-        if any(low <= energy_kev <= high for low, high in ranges):
+        best_overlap = max((overlap_fraction(requested, product_range) for product_range in ranges), default=0)
+        if best_overlap >= 0.95 or any(
+            requirement.get("exact") is not None and low <= requirement["exact"] <= high
+            for low, high in ranges
+        ):
             return {
-                "matched": EXACT_ENERGY_WEIGHT,
-                "possible": EXACT_ENERGY_WEIGHT,
-                "reason": f"Exact energy fits documented range: {answers.get('exact_energy')}",
-                "known_incompatible": False,
+                "matched": weight,
+                "possible": weight,
+                "reason": f"Energy fit: {requested_label} fits {product_range_label}",
+                "status": "good",
+                "note": f"Fits requested energy: {requested_label}",
+                "hard_exclude": False,
             }
+        if best_overlap > 0:
+            return {
+                "matched": round(weight * 0.62, 2),
+                "possible": weight,
+                "reason": f"Partial energy fit: {requested_label} overlaps {product_range_label}",
+                "status": "warn",
+                "note": f"Partial overlap with requested energy: {requested_label}",
+                "hard_exclude": False,
+            }
+
+        nearest_gap = min(range_gap(requested, product_range) for product_range in ranges)
+        requested_width = max(requested[1] - requested[0], 0.1)
+        huge_gap = nearest_gap > max(10, requested_width * 2.5, requested[1] * 0.75)
         return {
             "matched": 0,
-            "possible": EXACT_ENERGY_WEIGHT,
+            "possible": weight,
             "reason": None,
-            "known_incompatible": True,
+            "status": "bad",
+            "note": f"Energy range is far from requested {requested_label}",
+            "hard_exclude": huge_gap,
         }
 
-    if text_energy_family_matches(text, energy_kev):
+    text_matches = count_term_matches(product_text, requirement.get("terms", []))
+    if text_matches:
         return {
-            "matched": EXACT_ENERGY_WEIGHT // 2,
-            "possible": EXACT_ENERGY_WEIGHT,
-            "reason": f"Energy family appears compatible with {answers.get('exact_energy')}",
-            "known_incompatible": False,
+            "matched": round(weight * 0.82, 2),
+            "possible": weight,
+            "reason": f"Energy family fit: {', '.join(text_matches[:3])}",
+            "status": "good",
+            "note": f"Energy family appears compatible with {requested_label}",
+            "hard_exclude": False,
+        }
+
+    if energy_text_has_conflicting_family(product_text, requirement):
+        return {
+            "matched": 0,
+            "possible": weight,
+            "reason": None,
+            "status": "bad",
+            "note": f"Energy family conflicts with requested {requested_label}",
+            "hard_exclude": True,
         }
 
     return {
-        "matched": 0,
-        "possible": EXACT_ENERGY_WEIGHT,
+        "matched": round(weight * 0.32, 2),
+        "possible": weight,
         "reason": None,
-        "known_incompatible": False,
+        "status": "warn",
+        "note": f"Energy compatibility is not clearly documented for {requested_label}",
+        "hard_exclude": False,
     }
 
 
@@ -844,34 +1028,202 @@ def parse_pixel_size_micrometers(value):
     return number
 
 
+def distance_from_range(value, expected_range):
+    low, high = expected_range
+    if low <= value <= high:
+        return 0
+    if value < low:
+        return low - value
+    return value - high
+
+
 def pixel_size_fit(product, answers):
     choice = get_choice("pixel_size", answers.get("pixel_size"))
+    requirement = PIXEL_REQUIREMENTS.get(answers.get("pixel_size"))
+    if not choice or not requirement:
+        return {
+            "matched": 0,
+            "possible": 0,
+            "reason": None,
+            "status": "unknown",
+            "note": "Pixel size not requested",
+        }
+
+    weight = PIXEL_FIT_WEIGHT
+    pixel_value = parse_pixel_size_micrometers(product.get("pixel_size"))
+    text = field_text(product, SEARCH_FIELDS["pixel_size"])
+    expected_range = requirement["range"]
+    label = requirement["label"]
+    listed_pixel = product.get("pixel_size") or "pixel size not listed"
+
+    if pixel_value is not None:
+        if expected_range[0] <= pixel_value <= expected_range[1]:
+            return {
+                "matched": weight,
+                "possible": weight,
+                "reason": f"Pixel fit: {label} ({listed_pixel})",
+                "status": "good",
+                "note": f"Fits requested pixel range: {label}",
+            }
+
+        distance = distance_from_range(pixel_value, expected_range)
+        range_width = max(expected_range[1] - expected_range[0], 1)
+        close_limit = max(2, range_width * 0.45)
+        if choice["id"] == "pixel_under_1":
+            close_limit = 2
+
+        if distance <= close_limit:
+            closeness = max(0.38, 1 - (distance / (close_limit * 1.7)))
+            return {
+                "matched": round(weight * closeness, 2),
+                "possible": weight,
+                "reason": f"Pixel is close but not exact: requested {label}, product has {listed_pixel}",
+                "status": "warn",
+                "note": f"Close to requested pixel range: {label}",
+            }
+
+        return {
+            "matched": round(weight * 0.08, 2),
+            "possible": weight,
+            "reason": None,
+            "status": "bad",
+            "note": f"Pixel size is far from requested {label}",
+        }
+
+    matches = count_term_matches(text, choice["terms"])
+    if matches:
+        return {
+            "matched": round(weight * 0.55, 2),
+            "possible": weight,
+            "reason": f"Pixel family fit: {', '.join(matches[:3])}",
+            "status": "warn",
+            "note": f"Pixel range inferred from product text: {label}",
+        }
+
+    return {
+        "matched": round(weight * 0.2, 2),
+        "possible": weight,
+        "reason": None,
+        "status": "warn",
+        "note": f"Pixel size is not clearly documented for requested {label}",
+    }
+
+
+def installation_fit(product, answers):
+    choice = get_choice("installation", answers.get("installation"))
     if not choice or not choice.get("terms"):
         return {
             "matched": 0,
             "possible": 0,
             "reason": None,
+            "status": "unknown",
+            "note": "Installation not requested",
+            "tie_bonus": 0,
         }
 
-    pixel_value = parse_pixel_size_micrometers(product.get("pixel_size"))
-    text = field_text(product, SEARCH_FIELDS["pixel_size"])
-    matched = False
+    weight = GROUP_WEIGHTS["installation"]
+    product_text = field_text(product, SEARCH_FIELDS["installation"])
+    matches = count_term_matches(product_text, choice["terms"])
+    ccd_camera = is_ccd_camera(product)
+    vacuum_product = is_vacuum_or_uhv_product(product)
 
-    if choice["id"] == "pixel_under_1":
-        matched = pixel_value is not None and pixel_value < 1
-    elif choice["id"] == "pixel_1_30":
-        matched = pixel_value is not None and 1 <= pixel_value <= 30
-    elif choice["id"] == "pixel_30_100":
-        matched = pixel_value is not None and 30 <= pixel_value <= 100
+    if choice["id"] == "simple_lab":
+        if ccd_camera:
+            return {
+                "matched": 0,
+                "possible": weight,
+                "reason": None,
+                "status": "bad",
+                "note": "Simple lab setup excludes CCD camera products",
+                "tie_bonus": -10,
+            }
 
-    if not matched:
-        matches = count_term_matches(text, choice["terms"])
-        matched = bool(matches)
+        if matches:
+            return {
+                "matched": weight,
+                "possible": weight,
+                "reason": f"Installation fit: simple lab setup ({', '.join(matches[:3])})",
+                "status": "good",
+                "note": "Fits simple lab setup; CCD camera products were excluded",
+                "tie_bonus": 3,
+            }
+
+        if vacuum_product:
+            return {
+                "matched": round(weight * 0.2, 2),
+                "possible": weight,
+                "reason": None,
+                "status": "bad",
+                "note": "Product appears vacuum/beamline-oriented, not a simple lab setup",
+                "tie_bonus": -4,
+            }
+
+        return {
+            "matched": round(weight * 0.62, 2),
+            "possible": weight,
+            "reason": "Installation fit: non-CCD product kept for simple lab setup",
+            "status": "warn",
+            "note": "Not a CCD camera; simple-lab interface details are not fully documented",
+            "tie_bonus": 1,
+        }
+
+    if choice["id"] == "vacuum_uhv":
+        if ccd_camera and vacuum_product:
+            return {
+                "matched": weight,
+                "possible": weight,
+                "reason": "Installation fit: CCD camera with vacuum/UHV indicators",
+                "status": "good",
+                "note": "Vacuum/UHV selected; CCD camera products are prioritized",
+                "tie_bonus": 8,
+            }
+
+        if ccd_camera:
+            return {
+                "matched": round(weight * 0.78, 2),
+                "possible": weight,
+                "reason": "Installation fit: CCD camera family",
+                "status": "warn",
+                "note": "CCD camera is preferred for vacuum/UHV, but vacuum details are not fully documented",
+                "tie_bonus": 5,
+            }
+
+        if vacuum_product or matches:
+            return {
+                "matched": round(weight * 0.45, 2),
+                "possible": weight,
+                "reason": f"Installation fit: vacuum/UHV indicators ({', '.join(matches[:3])})" if matches else "Installation fit: vacuum/UHV indicators",
+                "status": "warn",
+                "note": "Vacuum/UHV indicators found, but product is not a CCD camera family",
+                "tie_bonus": -1,
+            }
+
+        return {
+            "matched": 0,
+            "possible": weight,
+            "reason": None,
+            "status": "bad",
+            "note": "Vacuum/UHV fit is not documented",
+            "tie_bonus": -5,
+        }
+
+    if matches:
+        return {
+            "matched": weight,
+            "possible": weight,
+            "reason": f"{CHOICE_GROUPS['installation']['title']}: {', '.join(matches[:3])}",
+            "status": "good",
+            "note": "Installation/interface text matches the selected environment",
+            "tie_bonus": min(len(matches), 3) * 0.1,
+        }
 
     return {
-        "matched": GROUP_WEIGHTS["pixel_size"] if matched else 0,
-        "possible": GROUP_WEIGHTS["pixel_size"],
-        "reason": f"Pixel fit: {choice['label']} ({product.get('pixel_size') or 'pixel size not listed'})" if matched else None,
+        "matched": 0,
+        "possible": weight,
+        "reason": None,
+        "status": "warn",
+        "note": "Installation/interface fit is not clearly documented",
+        "tie_bonus": -1,
     }
 
 
@@ -921,6 +1273,14 @@ def score_product(product, answers):
         "performance": {"matched": 0, "possible": 0},
         "installation": {"matched": 0, "possible": 0},
     }
+    spec_quality = {
+        "detector": {"status": "unknown", "note": "Application fit not evaluated"},
+        "energy": {"status": "unknown", "note": "Energy not requested"},
+        "pixel": {"status": "unknown", "note": "Pixel size not requested"},
+        "active_area": {"status": "unknown", "note": "Not scored by current answers"},
+        "interface": {"status": "unknown", "note": "Not scored by current answers"},
+        "software": {"status": "unknown", "note": "Not scored by current answers"},
+    }
     selected_performance_ids = set(answers.get("performance") or [])
     matched_performance_ids = set()
 
@@ -935,47 +1295,70 @@ def score_product(product, answers):
             tie_breaker += 0.3
             if app_fit["reason"]:
                 reasons.append(app_fit["reason"])
+            spec_quality["detector"] = {
+                "status": "good",
+                "note": "Detector type/application matches the request",
+            }
+        else:
+            spec_quality["detector"] = {
+                "status": "bad",
+                "note": "Detector type/application is not close to the selected application",
+            }
 
-    for group_id in ["energy", "target", "installation"]:
-        choice = get_choice(group_id, answers.get(group_id))
-        if not choice or not choice.get("terms"):
-            continue
-
-        bucket = "energy" if group_id == "target" else group_id
-        weight = GROUP_WEIGHTS[group_id]
-        possible_points += weight
-        breakdown[bucket]["possible"] += weight
-        text = field_text(product, SEARCH_FIELDS[group_id])
-        matches = count_term_matches(text, choice["terms"])
-        if matches:
-            match_points += weight
-            score += weight
-            breakdown[bucket]["matched"] += weight
-            tie_breaker += min(len(matches), 3) * 0.1
-            reasons.append(f"{CHOICE_GROUPS[group_id]['title']}: {', '.join(matches[:3])}")
-
-    energy_fit = exact_energy_fit(product, answers)
+    energy_fit = energy_range_fit(product, answers)
     if energy_fit["possible"]:
         possible_points += energy_fit["possible"]
         breakdown["energy"]["possible"] += energy_fit["possible"]
-        if energy_fit["matched"]:
-            match_points += energy_fit["matched"]
-            score += energy_fit["matched"]
-            breakdown["energy"]["matched"] += energy_fit["matched"]
-            if energy_fit["reason"]:
-                reasons.append(energy_fit["reason"])
+        match_points += energy_fit["matched"]
+        score += energy_fit["matched"]
+        breakdown["energy"]["matched"] += energy_fit["matched"]
+        spec_quality["energy"] = {
+            "status": energy_fit["status"],
+            "note": energy_fit["note"],
+        }
+        if energy_fit["status"] == "good":
+            tie_breaker += 0.6
+        elif energy_fit["status"] == "warn":
+            tie_breaker -= 0.4
+        elif energy_fit["status"] == "bad":
+            tie_breaker -= 2.0
+        if energy_fit["reason"]:
+            reasons.append(energy_fit["reason"])
 
     pixel_fit = pixel_size_fit(product, answers)
     if pixel_fit["possible"]:
         possible_points += pixel_fit["possible"]
         breakdown["pixel_size"]["possible"] += pixel_fit["possible"]
-        if pixel_fit["matched"]:
-            match_points += pixel_fit["matched"]
-            score += pixel_fit["matched"]
-            breakdown["pixel_size"]["matched"] += pixel_fit["matched"]
-            tie_breaker += 0.4
-            if pixel_fit["reason"]:
-                reasons.append(pixel_fit["reason"])
+        match_points += pixel_fit["matched"]
+        score += pixel_fit["matched"]
+        breakdown["pixel_size"]["matched"] += pixel_fit["matched"]
+        spec_quality["pixel"] = {
+            "status": pixel_fit["status"],
+            "note": pixel_fit["note"],
+        }
+        if pixel_fit["status"] == "good":
+            tie_breaker += 0.5
+        elif pixel_fit["status"] == "warn":
+            tie_breaker -= 0.3
+        elif pixel_fit["status"] == "bad":
+            tie_breaker -= 1.6
+        if pixel_fit["reason"]:
+            reasons.append(pixel_fit["reason"])
+
+    install_fit = installation_fit(product, answers)
+    if install_fit["possible"]:
+        possible_points += install_fit["possible"]
+        breakdown["installation"]["possible"] += install_fit["possible"]
+        match_points += install_fit["matched"]
+        score += install_fit["matched"]
+        breakdown["installation"]["matched"] += install_fit["matched"]
+        tie_breaker += install_fit["tie_bonus"]
+        spec_quality["interface"] = {
+            "status": install_fit["status"],
+            "note": install_fit["note"],
+        }
+        if install_fit["reason"]:
+            reasons.append(install_fit["reason"])
 
     for choice in get_choices("performance", answers.get("performance")):
         if not choice.get("terms"):
@@ -1013,7 +1396,7 @@ def score_product(product, answers):
         reasons.append("broad result because no strong filters were selected")
 
     rank_score = score + tie_breaker
-    return rank_score, reasons, match_points, possible_points, breakdown
+    return rank_score, reasons, match_points, possible_points, breakdown, spec_quality
 
 
 def has_specific_answers(answers):
@@ -1026,11 +1409,6 @@ def has_specific_answers(answers):
         *(answers.get("performance") or []),
     ]
     return any(value and "not_sure" not in value and value != "balanced" for value in selected)
-
-
-def has_meaningful_performance_priority(answers):
-    ignored = {"balanced", "not_sure_performance"}
-    return any(choice_id not in ignored for choice_id in (answers.get("performance") or []))
 
 
 def fit_percent(bucket):
@@ -1105,89 +1483,20 @@ def strict_match_percent(answers, breakdown):
     return max(0, min(round((matched / total) * 100), 100))
 
 
-def apply_priority_filters(candidates, answers, limit):
-    if answers.get("energy") == "exact_energy":
-        energy_matches = [item for item in candidates if item["energy_percent"] > 0]
-        if len(energy_matches) >= min(limit, len(candidates)):
-            candidates = energy_matches
-
-    if answers.get("pixel_size") and answers.get("pixel_size") != "not_sure_pixel":
-        pixel_matches = [
-            item for item in candidates if item["pixel_percent"] > 0
-        ]
-        if len(pixel_matches) >= min(limit, len(candidates)):
-            candidates = pixel_matches
-
-    if answers.get("application") and answers.get("application") != "not_sure_application":
-        application_matches = [
-            item for item in candidates if item["application_percent"] > 0
-        ]
-        if application_matches:
-            candidates = application_matches
-
-    if has_meaningful_performance_priority(answers):
-        performance_matches = [
-            item for item in candidates if item["performance_percent"] > 0
-        ]
-        if len(performance_matches) >= min(limit, len(candidates)):
-            candidates = performance_matches
-
-    return candidates
-
-
-def select_brand_diverse(candidates, limit):
-    selected = []
-    selected_ids = set()
-    selected_brands = set()
-
-    for candidate in candidates:
-        if len(selected) >= limit:
-            break
-        if candidate["product_id"] in selected_ids:
-            continue
-
-        brand_key = candidate["brand_key"]
-        if brand_key in selected_brands:
-            comparisons = [
-                other for other in selected
-                if other["brand_key"] != brand_key
-            ]
-            comparisons.extend([
-                other for other in candidates
-                if other["product_id"] not in selected_ids
-                and other["brand_key"] not in selected_brands
-            ])
-            best_other_brand = comparisons[0] if comparisons else None
-            if best_other_brand:
-                percent_advantage = (
-                    candidate["match_percent"] - best_other_brand["match_percent"]
-                )
-                score_advantage = candidate["rank_score"] - best_other_brand["rank_score"]
-                if (
-                    percent_advantage < SAME_BRAND_ADVANTAGE_PERCENT
-                    and score_advantage < SAME_BRAND_ADVANTAGE_SCORE
-                ):
-                    continue
-
-        selected.append(candidate)
-        selected_ids.add(candidate["product_id"])
-        selected_brands.add(brand_key)
-
-    return selected
-
-
 def get_recommendations(answers, limit=3):
     if get_selection_conflict(answers)["has_conflict"]:
         return []
 
     products = get_products()
     candidates = []
+    eligible_products = []
 
     for product in products:
         if should_exclude_product(product, answers):
             continue
+        eligible_products.append(product)
 
-        score, reasons, match_points, possible_points, breakdown = score_product(product, answers)
+        score, reasons, match_points, possible_points, breakdown, spec_quality = score_product(product, answers)
         if score > 0:
             match_percent = strict_match_percent(answers, breakdown)
             candidates.append(
@@ -1196,9 +1505,9 @@ def get_recommendations(answers, limit=3):
                     "rank_score": score,
                     "product": product,
                     "product_id": product.get("product_id"),
-                    "brand_key": get_brand_key(product),
                     "reasons": reasons,
                     "breakdown": breakdown,
+                    "spec_quality": spec_quality,
                     "performance_percent": fit_percent(breakdown["performance"]),
                     "energy_percent": fit_percent(breakdown["energy"]),
                     "pixel_percent": fit_percent(breakdown["pixel_size"]),
@@ -1207,40 +1516,38 @@ def get_recommendations(answers, limit=3):
                 }
             )
 
-    if not candidates:
+    if not candidates and eligible_products:
         candidates = [
             {
                 "match_percent": 0,
                 "rank_score": 1,
                 "product": product,
                 "product_id": product.get("product_id"),
-                "brand_key": get_brand_key(product),
                 "reasons": ["broad match"],
                 "breakdown": {},
+                "spec_quality": {},
                 "performance_percent": 0,
                 "energy_percent": 0,
                 "pixel_percent": 0,
                 "application_percent": 0,
                 "installation_percent": 0,
             }
-            for product in products[:limit]
+            for product in eligible_products[:limit]
         ]
 
-    candidates = apply_priority_filters(candidates, answers, limit)
     candidates.sort(
         key=lambda item: (
-            item["energy_percent"] + item["pixel_percent"],
+            item["match_percent"],
+            item["rank_score"],
             item["energy_percent"],
             item["pixel_percent"],
             item["application_percent"],
             item["performance_percent"],
             item["installation_percent"],
-            item["match_percent"],
-            item["rank_score"],
         ),
         reverse=True,
     )
-    selected = select_brand_diverse(candidates, limit)
+    selected = candidates[:limit]
 
     results = []
     for candidate in selected:
@@ -1253,6 +1560,7 @@ def get_recommendations(answers, limit=3):
                 "pixel_percent": candidate["pixel_percent"],
                 "application_percent": candidate["application_percent"],
                 "installation_percent": candidate["installation_percent"],
+                "spec_quality": candidate["spec_quality"],
                 "score": round(candidate["rank_score"], 2),
                 "product_id": product.get("product_id"),
                 "manufacturer": product.get("manufacturer"),
