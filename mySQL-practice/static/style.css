@@ -192,7 +192,8 @@ h3 {
     position: relative;
 }
 
-.selector-info summary {
+.selector-info summary,
+.language-toggle {
     display: flex;
     align-items: center;
     gap: 11px;
@@ -207,9 +208,29 @@ h3 {
     cursor: pointer;
 }
 
-.selector-info summary:hover {
+.selector-info summary:hover,
+.language-toggle:hover {
     border-color: rgba(72, 220, 255, 0.72);
     background: rgba(12, 30, 66, 0.82);
+}
+
+.language-toggle {
+    min-width: 88px;
+    justify-content: center;
+    color: #ffffff;
+    font-weight: 900;
+}
+
+.language-icon {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border: 1px solid rgba(72, 220, 255, 0.8);
+    border-radius: 50%;
+    color: var(--blue-2);
+    font-size: 0.95rem;
+    line-height: 1;
 }
 
 .selector-info summary::-webkit-details-marker {
@@ -1654,6 +1675,7 @@ body::after {
     margin-top: 10px;
 }
 
+.language-toggle,
 .ai-helper-trigger,
 .selector-info summary {
     min-height: 56px;
@@ -1665,6 +1687,10 @@ body::after {
 
 .ai-helper-trigger {
     border-color: rgba(0, 168, 255, 0.45);
+}
+
+.language-toggle {
+    border-color: rgba(72, 220, 255, 0.42);
 }
 
 .selector-info summary {
@@ -2094,6 +2120,7 @@ body::after {
         width: 100%;
     }
 
+    .language-toggle,
     .ai-helper-trigger,
     .selector-info summary {
         width: 100%;

@@ -8,6 +8,365 @@ const steps = [
     { id: "contact", short: "Contact", hint: "Your info" },
 ];
 
+const LANGUAGE_STORAGE_KEY = "detectorSelectorLanguage";
+let currentLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY) === "en" ? "en" : "zh";
+
+const LANGUAGE_TEXT = {
+    en: {
+        langAttr: "en",
+        toggleLabel: "中文",
+        steps: {
+            application: { short: "Application", hint: "Select" },
+            energy: { short: "Energy", hint: "Select" },
+            pixel_size: { short: "Pixel", hint: "Select" },
+            performance: { short: "Priority", hint: "Select" },
+            installation: { short: "Install", hint: "Select" },
+            review: { short: "Review", hint: "Summary" },
+            contact: { short: "Contact", hint: "Your info" },
+        },
+        ui: {
+            documentTitle: "X-ray Detector Selector",
+            heroTitle: "X-ray Detector Selector",
+            heroKicker: "X 射线探测器选型工具",
+            heroSubtitle: "Answer a few questions and we will help you find the detector that best fits your application.",
+            aiHelperOpen: "AI helper",
+            infoSummary: "What's the selector?",
+            infoTitle: "Find the right X-ray detector faster.",
+            infoCopy: "This research engine helps users choose suitable X-ray detectors based on their application, sample, source energy, resolution needs, sensitivity, speed, and installation environment. Instead of reading through many datasheets, users can answer a few guided questions or describe their needs to an AI helper. The system then compares their requirements with a structured detector database and recommends the best-matching products with clear reasons.",
+            chooseClosest: "Choose the closest option.",
+            choosePriorities: "Choose up to 2 priorities.",
+            stepOf: "Step {current} of {total}",
+            knownTarget: "Known target",
+            exactEnergy: "Exact energy",
+            exactEnergyPlaceholder: "Example: 8.04 keV",
+            exactEnergyPrompt: "Enter the exact energy, for example 8.04 keV",
+            contactTitle: "Who should the engineer contact?",
+            contactCopy: "Leave contact details after reviewing the product matches. Sending is not connected yet.",
+            contactName: "Name",
+            contactNamePlaceholder: "Your name",
+            contactEmail: "Email",
+            contactInfo: "Contact info or notes",
+            contactInfoPlaceholder: "Phone, company, preferred contact method, or anything the engineer should know",
+            contactNote: "This step only prepares the recommendation for engineer review. Sending is not connected yet.",
+            reviewTitle: "Recommendation Review",
+            reviewCopy: "Review the selected conditions and generate detector matches before leaving contact information.",
+            nextStep: "Next step",
+            engineerCard: "Generate matches first, then add contact details in the final step.",
+            showResults: "Show recommended detectors",
+            resultsEyebrow: "Recommendation output",
+            resultsTitle: "Best matches",
+            compareTop: "Compare top 3",
+            engineerAction: "Contact engineer to discuss alternative ways",
+            previous: "Back",
+            next: "Next",
+            finish: "Finish",
+            showResultsNext: "Show results",
+            nextContact: "Next: Contact",
+            secureNote: "Your information is secure and will only be used to recommend the best solution.",
+            loading: "Finding detector matches...",
+            noContact: "No contact details were added. The recommendation can still be reviewed here.",
+            contactPrepared: "Engineer review prepared with the contact details from the previous step. Sending is not connected yet.",
+            needMoreInfo: "Need more information before showing product matches.",
+            reviseConflict: "Please revise the conflicting answers before showing product matches.",
+            infoEmptyConflict: "Please revise the conflicting energy and pixel-size answers before showing product matches.",
+            needMoreInfoMessage: "Need more information. Please choose at least an application, energy range, or pixel size before requesting detector matches.",
+            lowInfoWarning: "This recommendation might not be accurate because several answers are unknown. Please add more information for a stronger match.",
+            possibleConflict: "Possible conflict: high/hard X-ray energy and under 1 micrometer pixel size may require custom optics, scintillator coupling, or engineer review.",
+            conflictCheck: "Conflict check",
+            conflictFallbackTitle: "Possible matches, but review the answers",
+            conflictFallbackMessage: "Some answers point toward different detector families.",
+            product: "Product",
+            detector: "Detector",
+            energy: "Energy",
+            pixel: "Pixel",
+            activeArea: "Active area",
+            interface: "Interface",
+            software: "Software",
+            unknownManufacturer: "Unknown manufacturer",
+            match: "match",
+            notAvailable: "N/A",
+            contactHintWithContact: "Contact: {contact}.",
+            contactHintNoContact: "Add an email or contact note in Step 6 so an engineer can follow up.",
+            engineerAlternativePrepared: "Engineering review prepared to discuss alternative ways to reach the measurement goal, because some selected answers point toward different detector families. Sending is not connected yet.",
+            engineerProductsPrepared: "Engineering review prepared for these recommended products: {products}. Sending is not connected yet.",
+            engineerGenericPrepared: "Engineering review prepared. Generate recommendations first, or revise the answers if the current choices are blocked. Sending is not connected yet.",
+            aiPanelEyebrow: "AI assistant",
+            aiPanelTitle: "Describe your detector need",
+            aiPanelCopy: "The helper extracts requirements, checks missing information, and uses the same recommendation engine.",
+            aiStartTitle: "Start with a short measurement description.",
+            aiStartCopy: "Include your application, source energy, pixel size or resolution need, performance priority, and environment if you know them.",
+            aiInputLabel: "Measurement description",
+            aiInputPlaceholder: "Example: I need a detector for powder XRD using Cu-Kalpha. I want high resolution and energy-resolved imaging. It will be used in a normal lab.",
+            aiAnalyze: "Analyze request",
+            aiClear: "Clear",
+            aiExtractedEyebrow: "Extracted requirements",
+            aiExtractedTitle: "What the assistant understood",
+            aiFollowupsEyebrow: "Missing information",
+            aiFollowupsTitle: "Answer only what is needed",
+            aiResultEyebrow: "AI result",
+            aiResultTitle: "Recommendation preview",
+            aiApply: "Apply these choices to selector",
+            aiViewFull: "View full recommendation",
+            aiAskAgain: "Ask another question",
+            aiUserRequest: "Your request",
+            aiExtractedMessageTitle: "I extracted the technical choices below.",
+            aiExtractedMessageCopy: "If anything is missing, answer the short follow-up cards, then I will refresh the possible matches.",
+            aiDescribeFirstTitle: "Please describe the measurement first.",
+            aiDescribeFirstCopy: "A short sentence is enough, for example: powder XRD with Cu-Kalpha in a normal lab.",
+            aiCheckingTitle: "Checking possible matches",
+            aiCheckingCopy: "Using the same strict recommendation endpoint as the manual selector.",
+            aiEngineerReview: "Engineer review recommended",
+            aiStrongMatch: "Strong match preview",
+            aiStrongMatchCopy: "The assistant found enough information to show controlled matches. You can apply these choices to the selector for the full result page.",
+            aiNeedsReviewCopy: "Possible matches are shown below, but the information is not strong enough for an automatic final recommendation. Add the missing details or ask an engineer to review the case.",
+            aiConflictPaused: "Automatic product matching is paused because the selected requirements conflict.",
+            aiNoMatch: "No possible product match was found from the current information.",
+            aiPossibleDatabaseMatch: "Possible database match",
+            aiErrorTitle: "Assistant error",
+            aiErrorCopy: "The helper could not reach the recommendation endpoint. Check that the Flask app is running.",
+            missing: "Missing",
+            notProvided: "Not provided",
+            inferredAfterApplication: "Inferred after application",
+            sampleObject: "Sample / object",
+            sourceEnergy: "Source / energy",
+            outputType: "Output type",
+            pixelSize: "Pixel size",
+            performancePriority: "Performance priority",
+            environment: "Environment",
+            aiConfidence: "AI confidence",
+            dialogEyebrow: "Exact energy",
+            dialogTitle: "Enter the source energy",
+            dialogCopy: "Use eV, keV, or MeV. If no unit is typed, the app assumes keV.",
+            dialogEnergyLabel: "Energy value",
+            dialogCancel: "Cancel",
+            dialogSave: "Use energy",
+        },
+        outputTypes: {
+            xrd_saxs_waxs: "Diffraction pattern",
+            xafs_absorption: "Spectrum / absorption curve",
+            euv_soft_xray_spectroscopy: "Spectrum",
+            xray_euv_imaging: "2D image",
+            microscopy_metrology: "High-resolution image",
+            ct_3d: "CT volume",
+            industrial_ndt: "2D / CT / inspection image",
+            material_identification: "Material map",
+            radiation_particle: "Particle tracks / radiation map",
+            education_demo: "Demonstration result",
+        },
+    },
+    zh: {
+        langAttr: "zh-CN",
+        toggleLabel: "EN",
+        steps: {
+            application: { short: "应用", hint: "请选择" },
+            energy: { short: "能量", hint: "请选择" },
+            pixel_size: { short: "像素", hint: "请选择" },
+            performance: { short: "优先级", hint: "请选择" },
+            installation: { short: "环境", hint: "请选择" },
+            review: { short: "结果", hint: "汇总" },
+            contact: { short: "联系", hint: "你的信息" },
+        },
+        ui: {
+            documentTitle: "X 射线探测器选型工具",
+            heroTitle: "X 射线探测器选型工具",
+            heroKicker: "X-ray Detector Selector",
+            heroSubtitle: "回答几个问题，我们会帮助你找到最适合应用场景的探测器。",
+            aiHelperOpen: "AI 助手",
+            infoSummary: "这是什么工具？",
+            infoTitle: "更快找到合适的 X 射线探测器。",
+            infoCopy: "这个选型工具会根据应用场景、样品、射线源能量、分辨率需求、灵敏度、速度和安装环境，帮助用户选择合适的 X 射线探测器。用户不需要逐页阅读数据手册，只需回答几个引导问题，或向 AI 助手描述需求。系统会将需求与结构化探测器数据库进行比较，并给出最匹配的产品和清晰理由。",
+            chooseClosest: "请选择最接近的一项。",
+            choosePriorities: "最多选择 2 个优先级。",
+            stepOf: "第 {current} 步，共 {total} 步",
+            knownTarget: "已知靶材",
+            exactEnergy: "精确能量",
+            exactEnergyPlaceholder: "示例：8.04 keV",
+            exactEnergyPrompt: "请输入精确能量，例如 8.04 keV",
+            contactTitle: "工程师应该联系谁？",
+            contactCopy: "在查看产品匹配结果之后留下联系方式。当前还没有真正发送功能。",
+            contactName: "姓名",
+            contactNamePlaceholder: "你的姓名",
+            contactEmail: "邮箱",
+            contactInfo: "联系方式或备注",
+            contactInfoPlaceholder: "电话、公司、首选联系方式，或工程师需要了解的其他信息",
+            contactNote: "这一步只会为工程师复核准备推荐信息，暂时还没有真正发送。",
+            reviewTitle: "推荐结果确认",
+            reviewCopy: "请先确认已选择的条件，并生成探测器匹配结果，然后再留下联系方式。",
+            nextStep: "下一步",
+            engineerCard: "先生成匹配结果，最后一步再添加联系方式。",
+            showResults: "查看推荐探测器",
+            resultsEyebrow: "推荐结果",
+            resultsTitle: "最佳匹配",
+            compareTop: "对比前三项",
+            engineerAction: "联系工程师讨论其他实现方式",
+            previous: "上一步",
+            next: "下一步",
+            finish: "完成",
+            showResultsNext: "查看结果",
+            nextContact: "下一步：联系信息",
+            secureNote: "你的信息只会用于推荐最合适的方案。",
+            loading: "正在查找匹配的探测器...",
+            noContact: "未填写联系方式。你仍然可以在这里查看推荐结果。",
+            contactPrepared: "已使用上一步填写的联系方式准备工程师复核信息。当前还没有真正发送。",
+            needMoreInfo: "需要更多信息后才能显示产品匹配结果。",
+            reviseConflict: "请先修改存在冲突的答案，再查看产品匹配结果。",
+            infoEmptyConflict: "请先修改冲突的能量和像素尺寸答案，再查看产品匹配结果。",
+            needMoreInfoMessage: "需要更多信息。请至少选择应用场景、能量范围或像素尺寸中的一项，再请求探测器匹配。",
+            lowInfoWarning: "由于多个答案为“不确定”，本次推荐可能不够准确。请补充更多信息以获得更强的匹配结果。",
+            possibleConflict: "可能存在冲突：高能/硬 X 射线与小于 1 微米像素尺寸的组合，可能需要定制光学、闪烁体耦合或工程师复核。",
+            conflictCheck: "冲突检查",
+            conflictFallbackTitle: "可以显示可能匹配项，但请复核答案",
+            conflictFallbackMessage: "部分答案指向不同的探测器类型。",
+            product: "产品",
+            detector: "探测器",
+            energy: "能量",
+            pixel: "像素",
+            activeArea: "有效面积",
+            interface: "接口",
+            software: "软件",
+            unknownManufacturer: "未知厂商",
+            match: "匹配",
+            notAvailable: "N/A",
+            contactHintWithContact: "联系方式：{contact}。",
+            contactHintNoContact: "请在第 6 步添加邮箱或备注，方便工程师后续联系。",
+            engineerAlternativePrepared: "已准备工程师复核信息，用于讨论其他实现测量目标的方式。因为部分答案指向不同探测器类型，建议工程师确认。当前还没有真正发送。",
+            engineerProductsPrepared: "已为以下推荐产品准备工程师复核信息：{products}。当前还没有真正发送。",
+            engineerGenericPrepared: "已准备工程师复核信息。请先生成推荐结果，或修改当前被阻止的答案。当前还没有真正发送。",
+            aiPanelEyebrow: "AI 助手",
+            aiPanelTitle: "描述你的探测器需求",
+            aiPanelCopy: "AI 助手会提取需求、检查缺失信息，并使用同一套推荐算法。",
+            aiStartTitle: "先简单描述你的测量需求。",
+            aiStartCopy: "如果知道，请写出应用场景、射线源能量、像素尺寸或分辨率需求、性能优先级和使用环境。",
+            aiInputLabel: "测量需求描述",
+            aiInputPlaceholder: "示例：我需要一个用于 Cu-Kα 粉末 XRD 的探测器，希望高分辨率和能量分辨成像，会在普通实验室使用。",
+            aiAnalyze: "分析需求",
+            aiClear: "清空",
+            aiExtractedEyebrow: "提取的需求",
+            aiExtractedTitle: "AI 理解到的信息",
+            aiFollowupsEyebrow: "缺失信息",
+            aiFollowupsTitle: "只回答必要的问题",
+            aiResultEyebrow: "AI 结果",
+            aiResultTitle: "推荐预览",
+            aiApply: "应用到选型流程",
+            aiViewFull: "查看完整推荐",
+            aiAskAgain: "重新提问",
+            aiUserRequest: "你的需求",
+            aiExtractedMessageTitle: "我提取出了下面这些技术选项。",
+            aiExtractedMessageCopy: "如果有信息缺失，请回答简短的补充问题，我会刷新可能匹配项。",
+            aiDescribeFirstTitle: "请先描述测量需求。",
+            aiDescribeFirstCopy: "一句简短描述就可以，例如：普通实验室中使用 Cu-Kα 做粉末 XRD。",
+            aiCheckingTitle: "正在检查可能匹配项",
+            aiCheckingCopy: "正在使用与手动选型相同的严格推荐接口。",
+            aiEngineerReview: "建议工程师复核",
+            aiStrongMatch: "强匹配预览",
+            aiStrongMatchCopy: "AI 助手已获得足够信息，可以显示受控匹配结果。你可以将这些选择应用到选型流程，查看完整结果页。",
+            aiNeedsReviewCopy: "下面会显示可能匹配项，但信息还不足以作为自动最终推荐。请补充缺失信息，或让工程师复核该案例。",
+            aiConflictPaused: "由于所选需求之间存在冲突，自动产品匹配已暂停。",
+            aiNoMatch: "根据当前信息，没有找到可能匹配的产品。",
+            aiPossibleDatabaseMatch: "数据库中的可能匹配项",
+            aiErrorTitle: "AI 助手错误",
+            aiErrorCopy: "AI 助手无法连接推荐接口。请检查 Flask 应用是否正在运行。",
+            missing: "缺失",
+            notProvided: "未提供",
+            inferredAfterApplication: "选择应用后推断",
+            sampleObject: "样品 / 对象",
+            sourceEnergy: "射线源 / 能量",
+            outputType: "输出类型",
+            pixelSize: "像素尺寸",
+            performancePriority: "性能优先级",
+            environment: "使用环境",
+            aiConfidence: "AI 置信度",
+            dialogEyebrow: "精确能量",
+            dialogTitle: "输入射线源能量",
+            dialogCopy: "可使用 eV、keV 或 MeV。如果没有输入单位，系统会默认按 keV 处理。",
+            dialogEnergyLabel: "能量数值",
+            dialogCancel: "取消",
+            dialogSave: "使用该能量",
+        },
+        outputTypes: {
+            xrd_saxs_waxs: "衍射图样",
+            xafs_absorption: "光谱 / 吸收曲线",
+            euv_soft_xray_spectroscopy: "光谱",
+            xray_euv_imaging: "二维图像",
+            microscopy_metrology: "高分辨率图像",
+            ct_3d: "CT 三维体数据",
+            industrial_ndt: "二维 / CT / 检测图像",
+            material_identification: "材料分辨图",
+            radiation_particle: "粒子轨迹 / 辐射分布图",
+            education_demo: "教学演示结果",
+        },
+    },
+};
+
+const CHOICE_TRANSLATIONS = {
+    zh: {
+        application: {
+            xrd_saxs_waxs: { label: "XRD / SAXS / WAXS", description: "用于粉末、晶体、薄膜、聚合物、合金或结构材料样品的衍射图样。" },
+            xafs_absorption: { label: "XAFS / 吸收光谱", description: "用于 XANES、EXAFS、吸收边扫描、透射或吸收测量。" },
+            euv_soft_xray_spectroscopy: { label: "EUV / 软 X 射线光谱", description: "用于 EUV、VUV、软 X 射线、等离子体发射、HHG 或弱信号光谱。" },
+            xray_euv_imaging: { label: "X 射线 / EUV 成像", description: "用于二维图像采集、XRF 成像、CDI、ptychography 或通用科学成像。" },
+            microscopy_metrology: { label: "X 射线显微 / 计量", description: "用于微米或亚微米成像、小样品、高分辨率 CT 或尺寸检测。" },
+            ct_3d: { label: "CT / 三维成像", description: "用于重建样品或部件的三维体数据。" },
+            industrial_ndt: { label: "工业无损检测", description: "用于焊缝、管道、阀门、电池、电子器件、复合材料、铸件或工业部件。" },
+            material_identification: { label: "材料识别", description: "用于能量分辨或彩色 X 射线成像，以区分不同材料。" },
+            radiation_particle: { label: "辐射监测 / 粒子追踪", description: "用于 alpha、beta、gamma、中子、宇宙射线、源定位或粒子轨迹。" },
+            education_demo: { label: "教学 / 演示", description: "用于课堂实验、简单辐射可视化或粒子物理教学。" },
+            not_sure_application: { label: "不确定", description: "先保持应用筛选较宽，继续回答后续问题。" },
+        },
+        energy: {
+            euv_vuv_soft: { label: "EUV / VUV / 软 X 射线", description: "低于约 1 keV、真空实验或软 X 射线实验。" },
+            low_energy_lab: { label: "低能实验室 X 射线", description: "Cr-Kalpha、Cu-Kalpha、W-Lalpha 或类似 5-9 keV 射线源。" },
+            standard_xrd: { label: "标准 XRD 射线源", description: "常见实验室 XRD 射线源，例如 Cu-Kalpha 或 Mo-Kalpha。" },
+            higher_energy_lab: { label: "较高能实验室 X 射线", description: "Mo、Rh、Ag 或类似 17-22 keV 的较高能靶材。" },
+            hard_xray: { label: "硬 X 射线 / 高穿透", description: "30-150 keV、厚样品、高密度金属或工业检测。" },
+            gamma_neutron_particles: { label: "Gamma / 中子 / 粒子", description: "辐射监测、中子转换、gamma 成像或源定位。" },
+            exact_energy: { label: "我知道精确能量", description: "在弹窗中输入 eV、keV 或 MeV 数值。" },
+            not_sure_energy: { label: "不确定", description: "不通过射线源能量进行过度筛选。" },
+        },
+        target: {
+            cr_ka: { label: "Cr-Kalpha", description: "5.4 keV" },
+            cu_ka: { label: "Cu-Kalpha", description: "8.04 keV" },
+            w_la: { label: "W-Lalpha", description: "8.4 keV" },
+            mo_ka: { label: "Mo-Kalpha", description: "17.4 keV" },
+            rh_ka: { label: "Rh-Kalpha", description: "20.2 keV" },
+            ag_ka: { label: "Ag-Kalpha", description: "22.2 keV" },
+        },
+        pixel_size: {
+            pixel_under_1: { label: "小于 1 微米", description: "用于亚微米细节、显微、计量或非常精细的空间分辨率。" },
+            pixel_1_30: { label: "1 到 30 微米", description: "用于精细科学成像、CCD/sCMOS 相机和高分辨率探测器选择。" },
+            pixel_30_100: { label: "30 到 100 微米", description: "用于光子计数探测器、较大像素传感器、信号收集或较高能量应用。" },
+            not_sure_pixel: { label: "不确定", description: "不通过像素尺寸进行强筛选。" },
+        },
+        performance: {
+            highest_resolution: { label: "最高分辨率", description: "亚微米或微米级细节、小结构、显微或计量。" },
+            large_fov: { label: "大视场", description: "大样品、大有效面积、CT、工业部件或更快覆盖。" },
+            fast_imaging: { label: "快速成像", description: "动态过程、实时视频、快速扫描或高通量测量。" },
+            weak_signal_low_noise: { label: "弱信号 / 低噪声", description: "弱 X 射线/EUV 信号、长曝光、低通量、光谱或高灵敏度实验。" },
+            energy_resolved: { label: "能量分辨成像", description: "光谱成像、材料区分或彩色 X 射线图像。" },
+            high_dynamic_range: { label: "高动态范围", description: "同一图像中同时测量强弱信号，或避免饱和。" },
+            single_event: { label: "单光子 / 粒子灵敏度", description: "单粒子轨迹、辐射监测、宇宙射线、alpha、beta、gamma 或中子探测。" },
+            balanced: { label: "均衡性能", description: "通用科研探测器，没有特别极端的优先级。" },
+            not_sure_performance: { label: "不确定", description: "由应用和射线源自动推断优先级。" },
+        },
+        installation: {
+            simple_lab: { label: "大气环境", description: "允许空气存在。适用于普通房间或实验室中、非真空的使用场景。" },
+            vacuum_uhv: { label: "真空 / UHV 腔体", description: "无空气。适用于真空腔体、UHV、EUV/VUV/软 X 射线或法兰安装相机。" },
+            not_sure_installation: { label: "不确定", description: "同时展示适合大气环境和真空环境的可能产品。" },
+        },
+    },
+};
+
+const GROUP_TRANSLATIONS = {
+    zh: {
+        application: { title: "应用与结果", question: "你想测量什么？" },
+        energy: { title: "射线源与能量", question: "你使用的 X 射线源或能量范围是什么？" },
+        target: { title: "可选靶材", question: "已知实验室靶材" },
+        pixel_size: { title: "像素尺寸", question: "你需要什么像素尺寸范围？" },
+        performance: { title: "性能优先级", question: "你的测量最看重什么？" },
+        installation: { title: "安装与使用环境", question: "探测器会在哪里、如何使用？" },
+    },
+};
+
 const answers = {
     application: null,
     energy: null,
@@ -95,6 +454,34 @@ const choiceIconMap = {
 };
 
 const els = {
+    languageToggle: document.querySelector("#language-toggle"),
+    languageToggleLabel: document.querySelector("#language-toggle-label"),
+    heroTitle: document.querySelector("#hero-title"),
+    heroKicker: document.querySelector("#hero-kicker"),
+    heroSubtitle: document.querySelector("#hero-subtitle"),
+    aiHelperOpenText: document.querySelector("#ai-helper-open-text"),
+    selectorInfoSummary: document.querySelector("#selector-info-summary"),
+    selectorInfoTitle: document.querySelector("#selector-info-title"),
+    selectorInfoCopy: document.querySelector("#selector-info-copy"),
+    contactNameLabel: document.querySelector("#contact-name-label"),
+    contactEmailLabel: document.querySelector("#contact-email-label"),
+    contactInfoLabel: document.querySelector("#contact-info-label"),
+    contactNote: document.querySelector("#contact-note"),
+    resultsEyebrow: document.querySelector("#results-eyebrow"),
+    resultsTitle: document.querySelector("#results-title"),
+    aiPanelEyebrow: document.querySelector("#ai-panel-eyebrow"),
+    aiPanelTitle: document.querySelector("#ai-panel-title"),
+    aiPanelCopy: document.querySelector("#ai-panel-copy"),
+    aiInputLabel: document.querySelector("#ai-input-label"),
+    aiExtractedEyebrow: document.querySelector("#ai-extracted-eyebrow"),
+    aiExtractedTitle: document.querySelector("#ai-extracted-title"),
+    aiFollowupsEyebrow: document.querySelector("#ai-followups-eyebrow"),
+    aiFollowupsTitle: document.querySelector("#ai-followups-title"),
+    aiResultEyebrow: document.querySelector("#ai-result-eyebrow"),
+    dialogEyebrow: document.querySelector("#dialog-eyebrow"),
+    dialogTitle: document.querySelector("#dialog-title"),
+    dialogCopy: document.querySelector("#dialog-copy"),
+    dialogEnergyLabel: document.querySelector("#dialog-energy-label"),
     stepCount: document.querySelector("#step-count"),
     stepTotal: document.querySelector("#step-total"),
     progressFill: document.querySelector("#progress-fill"),
@@ -125,6 +512,7 @@ const els = {
     nextButton: document.querySelector("#next-button"),
     flowPosition: document.querySelector("#flow-position"),
     energyDialog: document.querySelector("#energy-dialog"),
+    energyValueLabel: document.querySelector("#energy-value-label"),
     dialogEnergyValue: document.querySelector("#dialog-energy-value"),
     energyCancel: document.querySelector("#energy-cancel"),
     energySave: document.querySelector("#energy-save"),
@@ -157,6 +545,152 @@ const aiState = {
     confidence: 0,
 };
 
+function languagePack() {
+    return LANGUAGE_TEXT[currentLanguage] || LANGUAGE_TEXT.zh;
+}
+
+function ui(key, replacements = {}) {
+    const text = languagePack().ui[key] ?? LANGUAGE_TEXT.en.ui[key] ?? key;
+    return Object.entries(replacements).reduce(
+        (value, [name, replacement]) => value.replaceAll(`{${name}}`, replacement),
+        text,
+    );
+}
+
+function stepText(stepId, key) {
+    return languagePack().steps[stepId]?.[key] || LANGUAGE_TEXT.en.steps[stepId]?.[key] || "";
+}
+
+function translatedGroup(groupId) {
+    const group = window.CHOICE_GROUPS[groupId] || {};
+    return {
+        ...group,
+        title: GROUP_TRANSLATIONS[currentLanguage]?.[groupId]?.title || group.title,
+        question: GROUP_TRANSLATIONS[currentLanguage]?.[groupId]?.question || group.question,
+    };
+}
+
+function translatedChoice(groupId, choice) {
+    const translation = CHOICE_TRANSLATIONS[currentLanguage]?.[groupId]?.[choice.id];
+    return {
+        ...choice,
+        label: translation?.label || choice.label,
+        description: translation?.description || choice.description,
+    };
+}
+
+function translatedChoiceById(groupId, choiceId) {
+    const choice = window.CHOICE_GROUPS[groupId]?.choices.find((item) => item.id === choiceId);
+    return choice ? translatedChoice(groupId, choice) : null;
+}
+
+function setText(element, value) {
+    if (element) element.textContent = value;
+}
+
+function setPlaceholder(element, value) {
+    if (element) element.placeholder = value;
+}
+
+function renderStaticLanguageText() {
+    document.documentElement.lang = languagePack().langAttr;
+    document.title = ui("documentTitle");
+    setText(els.languageToggleLabel, languagePack().toggleLabel);
+    setText(els.heroTitle, ui("heroTitle"));
+    setText(els.heroKicker, ui("heroKicker"));
+    setText(els.heroSubtitle, ui("heroSubtitle"));
+    setText(els.aiHelperOpenText, ui("aiHelperOpen"));
+    setText(els.selectorInfoSummary, ui("infoSummary"));
+    setText(els.selectorInfoTitle, ui("infoTitle"));
+    setText(els.selectorInfoCopy, ui("infoCopy"));
+    setText(els.contactNameLabel, ui("contactName"));
+    setText(els.contactEmailLabel, ui("contactEmail"));
+    setText(els.contactInfoLabel, ui("contactInfo"));
+    setText(els.contactNote, ui("contactNote"));
+    setPlaceholder(els.contactName, ui("contactNamePlaceholder"));
+    setPlaceholder(els.contactInfo, ui("contactInfoPlaceholder"));
+    setText(els.showResults, ui("showResults"));
+    setText(els.resultsEyebrow, ui("resultsEyebrow"));
+    setText(els.resultsTitle, ui("resultsTitle"));
+    setText(els.compareTop, ui("compareTop"));
+    setText(els.engineerContact, ui("engineerAction"));
+    setText(els.energyValueLabel, ui("exactEnergy"));
+    setPlaceholder(els.energyValue, ui("exactEnergyPlaceholder"));
+    setText(els.aiPanelEyebrow, ui("aiPanelEyebrow"));
+    setText(els.aiPanelTitle, ui("aiPanelTitle"));
+    setText(els.aiPanelCopy, ui("aiPanelCopy"));
+    setText(els.aiInputLabel, ui("aiInputLabel"));
+    setPlaceholder(els.aiInput, ui("aiInputPlaceholder"));
+    setText(els.aiSubmit, ui("aiAnalyze"));
+    setText(els.aiReset, ui("aiClear"));
+    setText(els.aiExtractedEyebrow, ui("aiExtractedEyebrow"));
+    setText(els.aiExtractedTitle, ui("aiExtractedTitle"));
+    setText(els.aiFollowupsEyebrow, ui("aiFollowupsEyebrow"));
+    setText(els.aiFollowupsTitle, ui("aiFollowupsTitle"));
+    setText(els.aiResultEyebrow, ui("aiResultEyebrow"));
+    setText(els.aiApply, ui("aiApply"));
+    setText(els.aiViewFull, ui("aiViewFull"));
+    setText(els.aiAskAgain, ui("aiAskAgain"));
+    setText(els.dialogEyebrow, ui("dialogEyebrow"));
+    setText(els.dialogTitle, ui("dialogTitle"));
+    setText(els.dialogCopy, ui("dialogCopy"));
+    setText(els.dialogEnergyLabel, ui("dialogEnergyLabel"));
+    setPlaceholder(els.dialogEnergyValue, ui("exactEnergyPlaceholder"));
+    setText(els.energyCancel, ui("dialogCancel"));
+    setText(els.energySave, ui("dialogSave"));
+    if (els.languageToggle) {
+        els.languageToggle.setAttribute(
+            "aria-label",
+            currentLanguage === "zh" ? "Switch to English" : "切换到中文",
+        );
+    }
+}
+
+function translateBackendText(value) {
+    const text = String(value || "");
+    if (currentLanguage !== "zh" || !text) return text;
+
+    const exactMap = {
+        "Detector type/application matches the request": "探测器类型/应用与需求匹配",
+        "Application fit not evaluated": "未评估应用匹配度",
+        "Energy not requested": "未指定能量要求",
+        "Pixel size not requested": "未指定像素尺寸要求",
+        "Not scored by current answers": "当前答案未对此项评分",
+        "Installation not requested": "未指定安装环境",
+        "Product appears vacuum/beamline-oriented, not a simple lab setup": "产品更偏向真空或束线场景，不适合简单大气实验室设置",
+        "Vacuum/UHV fit is not documented": "未明确记录真空/UHV 适配信息",
+        "Fits atmospheric use": "适合大气环境使用",
+        "broad match": "宽泛匹配",
+        "broad result because no strong filters were selected": "由于筛选条件较少，结果较宽泛",
+        "Conflict check: selected answers need engineer review": "冲突检查：所选答案需要工程师复核",
+    };
+    if (exactMap[text]) return exactMap[text];
+
+    const replacements = [
+        [/^Fits requested energy: (.+)$/i, "符合所选能量：$1"],
+        [/^Partial overlap with requested energy: (.+)$/i, "与所选能量部分重叠：$1"],
+        [/^Energy range is far from requested (.+)$/i, "能量范围与所选要求差距较大：$1"],
+        [/^Energy compatibility is not clearly documented for (.+)$/i, "未明确记录与该能量的兼容性：$1"],
+        [/^Fits requested pixel range: (.+)$/i, "符合所选像素范围：$1"],
+        [/^Close to requested pixel range: (.+)$/i, "接近所选像素范围：$1"],
+        [/^Pixel size is far from requested (.+)$/i, "像素尺寸与所选要求差距较大：$1"],
+        [/^Pixel size is not clearly documented for requested (.+)$/i, "未明确记录所选像素范围：$1"],
+        [/^Energy fit: (.+)$/i, "能量匹配：$1"],
+        [/^Partial energy fit: (.+)$/i, "能量部分匹配：$1"],
+        [/^Pixel fit: (.+)$/i, "像素匹配：$1"],
+        [/^Pixel is close but not exact: (.+)$/i, "像素接近但不完全匹配：$1"],
+        [/^Application & Result: (.+)$/i, "应用与结果：$1"],
+        [/^Source Energy & Sample: (.+)$/i, "射线源与能量：$1"],
+        [/^Performance: (.+)$/i, "性能优先级：$1"],
+        [/^Installation fit: (.+)$/i, "安装环境匹配：$1"],
+        [/^Environment fit: (.+)$/i, "使用环境匹配：$1"],
+        [/^Interface support: (.+)$/i, "接口支持：$1"],
+        [/^Conflict: (.+)$/i, "冲突：$1"],
+    ];
+
+    return replacements.reduce((result, [pattern, replacement]) => result.replace(pattern, replacement), text);
+}
+
 function selectedLabels(groupId) {
     if (groupId === "contact") {
         const mainContact = answers.contact_email || answers.contact_name || answers.contact_info;
@@ -171,7 +705,7 @@ function selectedLabels(groupId) {
         : [answers[groupId]].filter(Boolean);
 
     const labels = selected
-        .map((id) => group.choices.find((choice) => choice.id === id)?.label)
+        .map((id) => translatedChoiceById(groupId, id)?.label)
         .filter(Boolean);
 
     if (groupId === "energy" && answers.energy === "exact_energy" && answers.exact_energy) {
@@ -188,11 +722,11 @@ function iconForChoice(groupId, choiceId) {
 
 function stepLabelText(step, index) {
     if (step.id === "review") {
-        return currentStep === index ? "Summary" : step.hint;
+        return currentStep === index ? stepText(step.id, "hint") : stepText(step.id, "hint");
     }
 
     const labels = selectedLabels(step.id);
-    return labels[0] || step.hint;
+    return labels[0] || stepText(step.id, "hint");
 }
 
 function renderStepOverview() {
@@ -204,7 +738,7 @@ function renderStepOverview() {
                 <button class="step-card ${active ? "active" : ""} ${done ? "done" : ""}" data-step="${index}">
                     <span class="step-number">${done ? "✓" : index + 1}</span>
                     <span class="step-copy">
-                        <strong>${step.short}</strong>
+                        <strong>${stepText(step.id, "short")}</strong>
                         <small>${stepLabelText(step, index)}</small>
                     </span>
                 </button>
@@ -250,12 +784,13 @@ function toggleChoice(groupId, choiceId) {
 }
 
 function choiceCard(groupId, choice) {
+    const displayChoice = translatedChoice(groupId, choice);
     return `
         <button class="choice-card ${isSelected(groupId, choice.id) ? "selected" : ""}" data-group="${groupId}" data-choice="${choice.id}">
             <span class="choice-icon">${iconForChoice(groupId, choice.id)}</span>
             <span class="choice-copy">
-                <strong>${choice.label}</strong>
-                <small>${choice.description}</small>
+                <strong>${displayChoice.label}</strong>
+                <small>${displayChoice.description}</small>
             </span>
             <span class="choice-check">${isSelected(groupId, choice.id) ? "✓" : ""}</span>
         </button>
@@ -283,7 +818,7 @@ function openExactEnergyDialog() {
     if (typeof els.energyDialog.showModal === "function") {
         els.energyDialog.showModal();
     } else {
-        const value = window.prompt("Enter the exact energy, for example 8.04 keV", answers.exact_energy || "");
+        const value = window.prompt(ui("exactEnergyPrompt"), answers.exact_energy || "");
         if (value !== null) {
             answers.exact_energy = value.trim();
             els.energyValue.value = answers.exact_energy;
@@ -307,7 +842,7 @@ function renderOptionalTarget() {
     const group = window.CHOICE_GROUPS.target;
     return `
         <div class="subsection">
-            <p class="subsection-title">Known target</p>
+            <p class="subsection-title">${ui("knownTarget")}</p>
             <div class="mini-card-grid">
                 ${group.choices.map((choice) => choiceCard("target", choice)).join("")}
             </div>
@@ -317,11 +852,11 @@ function renderOptionalTarget() {
 
 function renderQuestionStep() {
     const step = steps[currentStep];
-    const group = window.CHOICE_GROUPS[step.id];
+    const group = translatedGroup(step.id);
 
-    els.stepLabel.textContent = `Step ${currentStep + 1} of ${steps.length}`;
+    els.stepLabel.textContent = ui("stepOf", { current: currentStep + 1, total: steps.length });
     els.questionTitle.textContent = group.question;
-    els.questionCopy.textContent = step.id === "performance" ? "Choose up to 2 priorities." : "Choose the closest option.";
+    els.questionCopy.textContent = step.id === "performance" ? ui("choosePriorities") : ui("chooseClosest");
     els.contactPanel.classList.remove("visible");
     els.reviewPanel.classList.remove("visible");
     els.resultsPanel.classList.remove("visible");
@@ -345,9 +880,9 @@ function renderQuestionStep() {
 }
 
 function renderContactStep() {
-    els.stepLabel.textContent = `Step ${currentStep + 1} of ${steps.length}`;
-    els.questionTitle.textContent = "Who should the engineer contact?";
-    els.questionCopy.textContent = "Leave contact details after reviewing the product matches. Sending is not connected yet.";
+    els.stepLabel.textContent = ui("stepOf", { current: currentStep + 1, total: steps.length });
+    els.questionTitle.textContent = ui("contactTitle");
+    els.questionCopy.textContent = ui("contactCopy");
     els.cardsGrid.style.display = "none";
     els.exactEnergy.classList.remove("visible");
     els.reviewPanel.classList.remove("visible");
@@ -357,9 +892,9 @@ function renderContactStep() {
 }
 
 function renderReview() {
-    els.stepLabel.textContent = `Step ${currentStep + 1} of ${steps.length}`;
-    els.questionTitle.textContent = "Recommendation Review";
-    els.questionCopy.textContent = "Review the selected conditions and generate detector matches before leaving contact information.";
+    els.stepLabel.textContent = ui("stepOf", { current: currentStep + 1, total: steps.length });
+    els.questionTitle.textContent = ui("reviewTitle");
+    els.questionCopy.textContent = ui("reviewCopy");
     els.cardsGrid.style.display = "none";
     els.exactEnergy.classList.remove("visible");
     els.contactPanel.classList.remove("visible");
@@ -371,7 +906,7 @@ function renderReview() {
         .map((groupId) => {
             const labels = selectedLabels(groupId);
             if (!labels.length) return "";
-            const title = groupId === "contact" ? "Engineer Contact" : window.CHOICE_GROUPS[groupId].title;
+            const title = groupId === "contact" ? ui("contactTitle") : translatedGroup(groupId).title;
             return `
                 <article class="review-card">
                     <span>${title}</span>
@@ -383,8 +918,8 @@ function renderReview() {
 
     const engineerCard = `
         <article class="review-card engineer-card">
-            <span>Next step</span>
-            <strong>Generate matches first, then add contact details in the final step.</strong>
+            <span>${ui("nextStep")}</span>
+            <strong>${ui("engineerCard")}</strong>
         </article>
     `;
 
@@ -405,8 +940,8 @@ function specBlock(item, key, label, value) {
     return `
         <div class="${specStatusClass(item, key)}">
             <dt>${label}</dt>
-            <dd>${value || "N/A"}</dd>
-            ${note ? `<small>${note}</small>` : ""}
+            <dd>${value || ui("notAvailable")}</dd>
+            ${note ? `<small>${escapeHtml(translateBackendText(note))}</small>` : ""}
         </div>
     `;
 }
@@ -419,21 +954,21 @@ function renderResultCard(item, index) {
                 <div class="result-title-row">
                     <div>
                         <h3>${item.model_name_variant || item.product_id}</h3>
-                        <p>${item.manufacturer || "Unknown manufacturer"} · ${item.product_family || "N/A"}</p>
+                        <p>${item.manufacturer || ui("unknownManufacturer")} · ${item.product_family || ui("notAvailable")}</p>
                     </div>
-                    <span class="score">${item.match_percent || 0}% match</span>
+                    <span class="score">${item.match_percent || 0}% ${ui("match")}</span>
                 </div>
                 <dl class="spec-grid">
-                    ${specBlock(item, "detector", "Detector", item.detector_principle)}
-                    ${specBlock(item, "energy", "Energy", item.energy_range)}
-                    ${specBlock(item, "pixel", "Pixel", item.pixel_size)}
-                    ${specBlock(item, "active_area", "Active area", item.active_area)}
-                    ${specBlock(item, "interface", "Interface", item.interface)}
-                    ${specBlock(item, "software", "Software", item.software)}
+                    ${specBlock(item, "detector", ui("detector"), item.detector_principle)}
+                    ${specBlock(item, "energy", ui("energy"), item.energy_range)}
+                    ${specBlock(item, "pixel", ui("pixel"), item.pixel_size)}
+                    ${specBlock(item, "active_area", ui("activeArea"), item.active_area)}
+                    ${specBlock(item, "interface", ui("interface"), item.interface)}
+                    ${specBlock(item, "software", ui("software"), item.software)}
                 </dl>
                 <p class="applications">${item.applications || ""}</p>
                 <div class="reason-list">
-                    ${item.reasons.map((reason) => `<span>${reason}</span>`).join("")}
+                    ${item.reasons.map((reason) => `<span>${escapeHtml(translateBackendText(reason))}</span>`).join("")}
                 </div>
             </div>
         </article>
@@ -464,7 +999,7 @@ function selectionConflictStatus(source = answers) {
     if (source.pixel_size === "pixel_under_1" && isHighOrHardEnergy) {
         return {
             level: "warn",
-            message: "Possible conflict: high/hard X-ray energy and under 1 micrometer pixel size may require custom optics, scintillator coupling, or engineer review.",
+            message: ui("possibleConflict"),
         };
     }
 
@@ -490,14 +1025,14 @@ function uncertaintyStatus() {
     if (allUnknown) {
         return {
             level: "block",
-            message: "Need more information. Please choose at least an application, energy range, or pixel size before requesting detector matches.",
+            message: ui("needMoreInfoMessage"),
         };
     }
 
     if (unknownCount >= 3) {
         return {
             level: "warn",
-            message: "This recommendation might not be accurate because several answers are unknown. Please add more information for a stronger match.",
+            message: ui("lowInfoWarning"),
         };
     }
 
@@ -505,7 +1040,7 @@ function uncertaintyStatus() {
 }
 
 function showConfidenceMessage(status) {
-    els.confidenceWarning.textContent = status.message;
+    els.confidenceWarning.textContent = translateBackendText(status.message);
     els.confidenceWarning.classList.toggle("visible", status.level !== "ok");
     els.confidenceWarning.classList.toggle("blocking", status.level === "block");
 }
@@ -523,18 +1058,18 @@ function renderConflictCheck(conflict) {
     els.conflictCheck.classList.add("visible");
     els.conflictCheck.innerHTML = `
         <div class="conflict-check-heading">
-            <p class="eyebrow">Conflict check</p>
-            <h3>${escapeHtml(conflict.title || "Possible matches, but review the answers")}</h3>
-            <p>${escapeHtml(conflict.message || "Some answers point toward different detector families.")}</p>
+            <p class="eyebrow">${ui("conflictCheck")}</p>
+            <h3>${escapeHtml(translateBackendText(conflict.title || ui("conflictFallbackTitle")))}</h3>
+            <p>${escapeHtml(translateBackendText(conflict.message || ui("conflictFallbackMessage")))}</p>
         </div>
         <div class="conflict-list">
             ${details
                 .map((detail) => `
                     <article class="conflict-item">
-                        <strong>${escapeHtml(detail.title)}</strong>
-                        <span>${escapeHtml(detail.selected)}</span>
-                        <p>${escapeHtml(detail.issue)}</p>
-                        <small>${escapeHtml(detail.suggestion)}</small>
+                        <strong>${escapeHtml(translateBackendText(detail.title))}</strong>
+                        <span>${escapeHtml(translateBackendText(detail.selected))}</span>
+                        <p>${escapeHtml(translateBackendText(detail.issue))}</p>
+                        <small>${escapeHtml(translateBackendText(detail.suggestion))}</small>
                     </article>
                 `)
                 .join("")}
@@ -544,7 +1079,7 @@ function renderConflictCheck(conflict) {
 
 function markResultsGenerated() {
     resultsGenerated = true;
-    els.nextButton.innerHTML = "Next: Contact <span aria-hidden='true'>→</span>";
+    els.nextButton.innerHTML = `${ui("nextContact")} <span aria-hidden='true'>→</span>`;
     els.nextButton.disabled = false;
     renderStepOverview();
     renderFlowPosition();
@@ -552,7 +1087,7 @@ function markResultsGenerated() {
 
 async function loadRecommendations() {
     answers.exact_energy = els.energyValue.value.trim();
-    els.resultsList.innerHTML = "<p class='loading'>Finding detector matches...</p>";
+    els.resultsList.innerHTML = `<p class='loading'>${ui("loading")}</p>`;
     els.compareGrid.innerHTML = "";
     els.engineerActionStatus.textContent = "";
     renderConflictCheck(null);
@@ -560,8 +1095,8 @@ async function loadRecommendations() {
     const conflict = selectionConflictStatus();
     const contactLine = answers.contact_email || answers.contact_name || answers.contact_info;
     els.engineerNote.textContent = contactLine
-        ? "Engineer review prepared with the contact details from the previous step. Sending is not connected yet."
-        : "No contact details were added. The recommendation can still be reviewed here.";
+        ? ui("contactPrepared")
+        : ui("noContact");
     els.resultsPanel.classList.add("visible");
 
     if (conflict.level === "block") {
@@ -569,7 +1104,7 @@ async function loadRecommendations() {
         latestConflict = conflict;
         latestRecommendations = [];
         renderConflictCheck(null);
-        els.resultsList.innerHTML = "<article class='info-empty'>Please revise the conflicting energy and pixel-size answers before showing product matches.</article>";
+        els.resultsList.innerHTML = `<article class='info-empty'>${ui("infoEmptyConflict")}</article>`;
         markResultsGenerated();
         return;
     }
@@ -580,7 +1115,7 @@ async function loadRecommendations() {
     if (uncertainty.level === "block") {
         latestRecommendations = [];
         renderConflictCheck(null);
-        els.resultsList.innerHTML = "<article class='info-empty'>Need more information before showing product matches.</article>";
+        els.resultsList.innerHTML = `<article class='info-empty'>${ui("needMoreInfo")}</article>`;
         markResultsGenerated();
         return;
     }
@@ -595,13 +1130,13 @@ async function loadRecommendations() {
     if (data.conflict?.has_conflict) {
         showConfidenceMessage({
             level: data.conflict.blocking ? "block" : "warn",
-            message: data.conflict.message,
+            message: translateBackendText(data.conflict.message),
         });
         latestConflict = data.conflict;
         renderConflictCheck(data.conflict);
         if (data.conflict.blocking) {
             latestRecommendations = [];
-            els.resultsList.innerHTML = "<article class='info-empty'>Please revise the conflicting answers before showing product matches.</article>";
+            els.resultsList.innerHTML = `<article class='info-empty'>${ui("reviseConflict")}</article>`;
             markResultsGenerated();
             return;
         }
@@ -616,11 +1151,11 @@ async function loadRecommendations() {
 function prepareEngineerRequest() {
     const contactLine = answers.contact_email || answers.contact_name || answers.contact_info;
     const contactHint = contactLine
-        ? `Contact: ${contactLine}.`
-        : "Add an email or contact note in Step 6 so an engineer can follow up.";
+        ? ui("contactHintWithContact", { contact: contactLine })
+        : ui("contactHintNoContact");
 
     if (latestConflict) {
-        els.engineerActionStatus.textContent = `${contactHint} Engineering review prepared to discuss alternative ways to reach the measurement goal, because some selected answers point toward different detector families. Sending is not connected yet.`;
+        els.engineerActionStatus.textContent = `${contactHint} ${ui("engineerAlternativePrepared")}`;
         return;
     }
 
@@ -629,11 +1164,11 @@ function prepareEngineerRequest() {
             .map((item) => item.model_name_variant || item.product_id)
             .slice(0, 3)
             .join(", ");
-        els.engineerActionStatus.textContent = `${contactHint} Engineering review prepared for these recommended products: ${products}. Sending is not connected yet.`;
+        els.engineerActionStatus.textContent = `${contactHint} ${ui("engineerProductsPrepared", { products })}`;
         return;
     }
 
-    els.engineerActionStatus.textContent = `${contactHint} Engineering review prepared. Generate recommendations first, or revise the answers if the current choices are blocked. Sending is not connected yet.`;
+    els.engineerActionStatus.textContent = `${contactHint} ${ui("engineerGenericPrepared")}`;
 }
 
 function renderComparison() {
@@ -644,11 +1179,11 @@ function renderComparison() {
         <table>
             <thead>
                 <tr>
-                    <th>Product</th>
-                    <th>Energy</th>
-                    <th>Pixel</th>
-                    <th>Active area</th>
-                    <th>Interface</th>
+                    <th>${ui("product")}</th>
+                    <th>${ui("energy")}</th>
+                    <th>${ui("pixel")}</th>
+                    <th>${ui("activeArea")}</th>
+                    <th>${ui("interface")}</th>
                 </tr>
             </thead>
             <tbody>
@@ -656,10 +1191,10 @@ function renderComparison() {
                     .map((item) => `
                         <tr>
                             <td>${item.model_name_variant || item.product_id}</td>
-                            <td>${item.energy_range || "N/A"}</td>
-                            <td>${item.pixel_size || "N/A"}</td>
-                            <td>${item.active_area || "N/A"}</td>
-                            <td>${item.interface || "N/A"}</td>
+                            <td>${item.energy_range || ui("notAvailable")}</td>
+                            <td>${item.pixel_size || ui("notAvailable")}</td>
+                            <td>${item.active_area || ui("notAvailable")}</td>
+                            <td>${item.interface || ui("notAvailable")}</td>
                         </tr>
                     `)
                     .join("")}
@@ -687,7 +1222,7 @@ function normalizeAiText(value) {
 }
 
 function labelForChoice(groupId, choiceId) {
-    return window.CHOICE_GROUPS[groupId]?.choices.find((choice) => choice.id === choiceId)?.label || "";
+    return translatedChoiceById(groupId, choiceId)?.label || "";
 }
 
 function labelsForAiGroup(groupId, value) {
@@ -741,19 +1276,7 @@ function extractSampleText(text) {
 }
 
 function outputTypeForApplication(applicationId) {
-    const map = {
-        xrd_saxs_waxs: "Diffraction pattern",
-        xafs_absorption: "Spectrum / absorption curve",
-        euv_soft_xray_spectroscopy: "Spectrum",
-        xray_euv_imaging: "2D image",
-        microscopy_metrology: "High-resolution image",
-        ct_3d: "CT volume",
-        industrial_ndt: "2D / CT / inspection image",
-        material_identification: "Material map",
-        radiation_particle: "Particle tracks / radiation map",
-        education_demo: "Demonstration result",
-    };
-    return map[applicationId] || "";
+    return languagePack().outputTypes[applicationId] || LANGUAGE_TEXT.en.outputTypes[applicationId] || "";
 }
 
 function extractEnergyFromText(text) {
@@ -903,12 +1426,12 @@ function calculateAiConfidence(extracted, recommendations = []) {
 function renderAiMessages(userText) {
     els.aiMessages.innerHTML = `
         <article class="ai-message user">
-            <strong>Your request</strong>
+            <strong>${ui("aiUserRequest")}</strong>
             <span>${escapeHtml(userText)}</span>
         </article>
         <article class="ai-message assistant">
-            <strong>I extracted the technical choices below.</strong>
-            <span>If anything is missing, answer the short follow-up cards, then I will refresh the possible matches.</span>
+            <strong>${ui("aiExtractedMessageTitle")}</strong>
+            <span>${ui("aiExtractedMessageCopy")}</span>
         </article>
     `;
 }
@@ -929,14 +1452,14 @@ function renderAiExtractedInfo() {
     extracted.output_type = outputTypeForApplication(extracted.application);
 
     const rows = [
-        ["Application", applicationLabel || "Missing"],
-        ["Sample / object", extracted.sample || "Not provided"],
-        ["Source / energy", [targetLabel, energyLabel, extracted.exact_energy].filter(Boolean).join(" · ") || "Missing"],
-        ["Output type", extracted.output_type || "Inferred after application"],
-        ["Pixel size", pixelLabel || "Missing"],
-        ["Performance priority", performanceLabels.join(", ") || "Missing"],
-        ["Environment", installationLabel || "Missing"],
-        ["AI confidence", `${aiState.confidence}%`],
+        [translatedGroup("application").title, applicationLabel || ui("missing")],
+        [ui("sampleObject"), extracted.sample || ui("notProvided")],
+        [ui("sourceEnergy"), [targetLabel, energyLabel, extracted.exact_energy].filter(Boolean).join(" · ") || ui("missing")],
+        [ui("outputType"), extracted.output_type || ui("inferredAfterApplication")],
+        [ui("pixelSize"), pixelLabel || ui("missing")],
+        [ui("performancePriority"), performanceLabels.join(", ") || ui("missing")],
+        [ui("environment"), installationLabel || ui("missing")],
+        [ui("aiConfidence"), `${aiState.confidence}%`],
     ];
 
     els.aiExtractedGrid.innerHTML = rows
@@ -951,14 +1474,7 @@ function renderAiExtractedInfo() {
 }
 
 function aiFollowupQuestion(groupId) {
-    const map = {
-        application: "What are you trying to measure?",
-        energy: "What X-ray source or energy are you using?",
-        pixel_size: "What pixel size range do you need?",
-        performance: "What matters most for your measurement?",
-        installation: "Where will the detector be used?",
-    };
-    return map[groupId] || window.CHOICE_GROUPS[groupId]?.question || "Choose the closest option.";
+    return translatedGroup(groupId)?.question || ui("chooseClosest");
 }
 
 function renderAiFollowups() {
@@ -970,7 +1486,7 @@ function renderAiFollowups() {
 
     els.aiFollowupList.innerHTML = aiState.missing
         .map((groupId) => {
-            const choices = window.CHOICE_GROUPS[groupId].choices;
+            const choices = window.CHOICE_GROUPS[groupId].choices.map((choice) => translatedChoice(groupId, choice));
             return `
                 <div class="ai-followup-group">
                     <strong>${escapeHtml(aiFollowupQuestion(groupId))}</strong>
@@ -1010,7 +1526,7 @@ function applyAiFollowupChoice(groupId, choiceId) {
         aiState.extracted[groupId] = choiceId;
         if (groupId === "energy") {
             if (choiceId === "exact_energy") {
-                const value = window.prompt("Enter the exact energy, for example 8.04 keV", aiState.extracted.exact_energy || "");
+                const value = window.prompt(ui("exactEnergyPrompt"), aiState.extracted.exact_energy || "");
                 aiState.extracted.exact_energy = (value || "").trim();
             } else {
                 aiState.extracted.exact_energy = aiState.extracted.exact_energy || "";
@@ -1027,17 +1543,17 @@ function applyAiFollowupChoice(groupId, choiceId) {
 
 function renderAiRecommendationList(items) {
     if (!items.length) {
-        return "<article class='ai-empty'>No possible product match was found from the current information.</article>";
+        return `<article class='ai-empty'>${ui("aiNoMatch")}</article>`;
     }
 
     return items.slice(0, 3).map((item) => `
         <article class="ai-mini-result">
             <div>
                 <strong>${escapeHtml(item.model_name_variant || item.product_id)}</strong>
-                <span>${escapeHtml(item.manufacturer || "Unknown manufacturer")}</span>
+                <span>${escapeHtml(item.manufacturer || ui("unknownManufacturer"))}</span>
             </div>
             <b>${Number(item.match_percent || 0)}%</b>
-            <p>${escapeHtml((item.reasons || []).slice(0, 2).join(" · ") || "Possible database match")}</p>
+            <p>${escapeHtml((item.reasons || []).slice(0, 2).map(translateBackendText).join(" · ") || ui("aiPossibleDatabaseMatch"))}</p>
         </article>
     `).join("");
 }
@@ -1057,18 +1573,18 @@ async function runAiRecommendationPreview() {
     const aiAnswers = completeAiAnswers(aiState.extracted);
     aiState.answers = aiAnswers;
     els.aiResultCard.hidden = false;
-    els.aiResultTitle.textContent = "Checking possible matches";
-    els.aiResultNote.textContent = "Using the same strict recommendation endpoint as the manual selector.";
-    els.aiResultList.innerHTML = "<p class='loading'>Finding possible detector matches...</p>";
+    els.aiResultTitle.textContent = ui("aiCheckingTitle");
+    els.aiResultNote.textContent = ui("aiCheckingCopy");
+    els.aiResultList.innerHTML = `<p class='loading'>${ui("loading")}</p>`;
 
     const conflict = selectionConflictStatus(aiAnswers);
     if (conflict.level === "block") {
         aiState.recommendations = [];
         aiState.confidence = calculateAiConfidence(aiState.extracted, []);
         renderAiExtractedInfo();
-        els.aiResultTitle.textContent = "Engineer review recommended";
-        els.aiResultNote.textContent = `${conflict.message} A detector setup may still be possible, but the approach should be reviewed by an engineer.`;
-        els.aiResultList.innerHTML = "<article class='ai-empty'>Automatic product matching is paused because the selected requirements conflict.</article>";
+        els.aiResultTitle.textContent = ui("aiEngineerReview");
+        els.aiResultNote.textContent = translateBackendText(conflict.message);
+        els.aiResultList.innerHTML = `<article class='ai-empty'>${ui("aiConflictPaused")}</article>`;
         return;
     }
 
@@ -1088,17 +1604,17 @@ async function runAiRecommendationPreview() {
         const needsReview = aiState.missing.length >= 2 || unknownCount >= 3 || aiState.confidence < 70 || topMatch < 55;
 
         if (needsReview) {
-            els.aiResultTitle.textContent = "Engineer review recommended";
-            els.aiResultNote.textContent = "Possible matches are shown below, but the information is not strong enough for an automatic final recommendation. Add the missing details or ask an engineer to review the case.";
+            els.aiResultTitle.textContent = ui("aiEngineerReview");
+            els.aiResultNote.textContent = ui("aiNeedsReviewCopy");
         } else {
-            els.aiResultTitle.textContent = "Strong match preview";
-            els.aiResultNote.textContent = "The assistant found enough information to show controlled matches. You can apply these choices to the selector for the full result page.";
+            els.aiResultTitle.textContent = ui("aiStrongMatch");
+            els.aiResultNote.textContent = ui("aiStrongMatchCopy");
         }
 
         els.aiResultList.innerHTML = renderAiRecommendationList(aiState.recommendations);
     } catch (error) {
-        els.aiResultTitle.textContent = "Assistant error";
-        els.aiResultNote.textContent = "The helper could not reach the recommendation endpoint. Check that the Flask app is running.";
+        els.aiResultTitle.textContent = ui("aiErrorTitle");
+        els.aiResultNote.textContent = ui("aiErrorCopy");
         els.aiResultList.innerHTML = "";
     }
 }
@@ -1125,8 +1641,8 @@ function resetAiHelper(keepInput = false) {
     if (!keepInput) els.aiInput.value = "";
     els.aiMessages.innerHTML = `
         <article class="ai-message assistant">
-            <strong>Start with a short measurement description.</strong>
-            <span>Include your application, source energy, pixel size or resolution need, performance priority, and environment if you know them.</span>
+            <strong>${ui("aiStartTitle")}</strong>
+            <span>${ui("aiStartCopy")}</span>
         </article>
     `;
     els.aiExtractedCard.hidden = true;
@@ -1154,8 +1670,8 @@ async function analyzeAiRequest() {
     if (!text) {
         els.aiMessages.innerHTML = `
             <article class="ai-message assistant warning">
-                <strong>Please describe the measurement first.</strong>
-                <span>A short sentence is enough, for example: powder XRD with Cu-Kalpha in a normal lab.</span>
+                <strong>${ui("aiDescribeFirstTitle")}</strong>
+                <span>${ui("aiDescribeFirstCopy")}</span>
             </article>
         `;
         return;
@@ -1187,30 +1703,36 @@ function renderFlowPosition() {
     if (!els.flowPosition) return;
 
     const dots = steps
-        .map((step, index) => `<span class="${index === currentStep ? "active" : ""} ${index < currentStep ? "done" : ""}" aria-label="${step.short}"></span>`)
+        .map((step, index) => `<span class="${index === currentStep ? "active" : ""} ${index < currentStep ? "done" : ""}" aria-label="${stepText(step.id, "short")}"></span>`)
         .join("");
 
     els.flowPosition.innerHTML = `
         <div class="flow-dots" aria-hidden="true">${dots}</div>
-        <p>Your information is secure and will only be used to recommend the best solution.</p>
+        <p>${ui("secureNote")}</p>
     `;
 }
 
+function nextStepButtonLabel(step) {
+    const nextLabel = stepText(step.id, "short");
+    return currentLanguage === "zh" ? `${ui("next")}：${nextLabel}` : `${ui("next")}: ${nextLabel}`;
+}
+
 function render() {
+    renderStaticLanguageText();
     const currentId = steps[currentStep].id;
     els.stepCount.textContent = currentStep + 1;
     els.stepTotal.textContent = steps.length;
     els.progressFill.style.width = `${((currentStep + 1) / steps.length) * 100}%`;
     els.backButton.disabled = currentStep === 0;
-    els.backButton.innerHTML = "<span aria-hidden='true'>←</span> Back";
+    els.backButton.innerHTML = `<span aria-hidden='true'>←</span> ${ui("previous")}`;
     if (currentId === "review") {
         els.nextButton.innerHTML = resultsGenerated
-            ? "Next: Contact <span aria-hidden='true'>→</span>"
-            : "Show results <span aria-hidden='true'>→</span>";
+            ? `${ui("nextContact")} <span aria-hidden='true'>→</span>`
+            : `${ui("showResultsNext")} <span aria-hidden='true'>→</span>`;
     } else if (currentId === "contact") {
-        els.nextButton.innerHTML = "Finish <span aria-hidden='true'>→</span>";
+        els.nextButton.innerHTML = `${ui("finish")} <span aria-hidden='true'>→</span>`;
     } else {
-        els.nextButton.innerHTML = `Next: ${steps[currentStep + 1].short} <span aria-hidden='true'>→</span>`;
+        els.nextButton.innerHTML = `${nextStepButtonLabel(steps[currentStep + 1])} <span aria-hidden='true'>→</span>`;
     }
     els.nextButton.disabled = !canGoNext() && currentStep !== steps.length - 1;
 
@@ -1225,6 +1747,13 @@ function render() {
     } else {
         renderQuestionStep();
     }
+}
+
+function toggleLanguage() {
+    currentLanguage = currentLanguage === "zh" ? "en" : "zh";
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, currentLanguage);
+    resetAiHelper(true);
+    render();
 }
 
 els.backButton.addEventListener("click", () => {
@@ -1250,6 +1779,7 @@ els.nextButton.addEventListener("click", () => {
     render();
 });
 
+els.languageToggle.addEventListener("click", toggleLanguage);
 els.showResults.addEventListener("click", loadRecommendations);
 els.compareTop.addEventListener("click", renderComparison);
 els.engineerContact.addEventListener("click", prepareEngineerRequest);
@@ -1302,4 +1832,5 @@ els.aiInput.addEventListener("keydown", (event) => {
     }
 });
 
+resetAiHelper(true);
 render();
