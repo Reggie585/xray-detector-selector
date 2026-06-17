@@ -688,7 +688,48 @@ function translateBackendText(value) {
         [/^Conflict: (.+)$/i, "冲突：$1"],
     ];
 
-    return replacements.reduce((result, [pattern, replacement]) => result.replace(pattern, replacement), text);
+    const phraseMap = {
+        "Application & Result": "应用与结果",
+        "Source Energy & Sample": "射线源与能量",
+        "Performance": "性能优先级",
+        "Installation": "安装环境",
+        "Detector": "探测器",
+        "Energy": "能量",
+        "Pixel": "像素",
+        "Active area": "有效面积",
+        "Interface": "接口",
+        "Software": "软件",
+        "Low-energy lab X-ray": "低能实验室 X 射线",
+        "Standard XRD source": "标准 XRD 射线源",
+        "Higher-energy lab X-ray": "较高能实验室 X 射线",
+        "Hard X-ray / High penetration": "硬 X 射线 / 高穿透",
+        "EUV / VUV / Soft X-ray": "EUV / VUV / 软 X 射线",
+        "Gamma / Neutron / Particles": "Gamma / 中子 / 粒子",
+        "Under 1 micrometer": "小于 1 微米",
+        "1 to 30 micrometers": "1 到 30 微米",
+        "30 to 100 micrometers": "30 到 100 微米",
+        "Highest resolution": "最高分辨率",
+        "Large field of view": "大视场",
+        "Fast imaging": "快速成像",
+        "Weak signal / low noise": "弱信号 / 低噪声",
+        "Energy-resolved imaging": "能量分辨成像",
+        "High dynamic range": "高动态范围",
+        "Single photon / particle sensitivity": "单光子 / 粒子灵敏度",
+        "Balanced performance": "均衡性能",
+        "Atmospheric environment": "大气环境",
+        "Vacuum / UHV chamber": "真空 / UHV 腔体",
+        "Not sure": "不确定",
+        "not clearly documented": "未明确记录",
+        "fits": "符合",
+        "requested": "所选",
+        "product has": "产品为",
+    };
+
+    let translated = replacements.reduce((result, [pattern, replacement]) => result.replace(pattern, replacement), text);
+    Object.entries(phraseMap).forEach(([english, chinese]) => {
+        translated = translated.replaceAll(english, chinese);
+    });
+    return translated;
 }
 
 function selectedLabels(groupId) {
@@ -1779,7 +1820,7 @@ els.nextButton.addEventListener("click", () => {
     render();
 });
 
-els.languageToggle.addEventListener("click", toggleLanguage);
+els.languageToggle?.addEventListener("click", toggleLanguage);
 els.showResults.addEventListener("click", loadRecommendations);
 els.compareTop.addEventListener("click", renderComparison);
 els.engineerContact.addEventListener("click", prepareEngineerRequest);
