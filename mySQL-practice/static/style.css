@@ -1448,6 +1448,8 @@ body::after {
 }
 
 .site-header {
+    position: relative;
+    z-index: 50;
     padding-top: 0;
 }
 
@@ -1549,7 +1551,7 @@ body::after {
     justify-content: space-between;
     gap: 30px;
     min-height: 154px;
-    padding: 12px 8px 30px;
+    padding: 48px 8px 30px;
 }
 
 .hero-copy {
@@ -1604,6 +1606,17 @@ body::after {
 .ai-helper-panel,
 .energy-dialog {
     border-radius: 24px;
+}
+
+.selector-info[open] {
+    z-index: 90;
+}
+
+.selector-info-panel {
+    z-index: 120;
+    border-color: rgba(72, 220, 255, 0.56);
+    background: #040b18;
+    box-shadow: 0 34px 90px rgba(0, 0, 0, 0.78), 0 0 0 1px rgba(72, 220, 255, 0.12);
 }
 
 .step-overview {
