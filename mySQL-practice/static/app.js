@@ -682,6 +682,9 @@ function translateBackendText(value) {
         "Product appears vacuum/beamline-oriented, not a simple lab setup": "产品更偏向真空或束线场景，不适合简单大气实验室设置",
         "Vacuum/UHV fit is not documented": "未明确记录真空/UHV 适配信息",
         "Fits atmospheric use": "适合大气环境使用",
+        "Detector type/application is not close to the selected application": "探测器类型/应用与所选应用不接近",
+        "ADVACAM is not automatically preferred for vacuum/UHV; it remains only when application, energy, and pixel choices make it relevant": "ADVACAM 不会因为选择真空/UHV 环境而自动优先推荐；只有当应用、能量和像素选择相关时才会保留",
+        "Vacuum/UHV possible only if photon-counting requirements are more important than installation fit": "仅当光子计数需求比安装环境匹配更重要时，才可能作为真空/UHV 方案考虑",
         "broad match": "宽泛匹配",
         "broad result because no strong filters were selected": "由于筛选条件较少，结果较宽泛",
         "Conflict check: selected answers need engineer review": "冲突检查：所选答案需要工程师复核",
@@ -721,6 +724,27 @@ function translateBackendText(value) {
         "Active area": "有效面积",
         "Interface": "接口",
         "Software": "软件",
+        "Typical": "典型值",
+        "product description also lists": "产品说明还列出",
+        "commonly used for": "常用于",
+        "X-rays": "X 射线",
+        "selected application": "所选应用",
+        "type/application": "类型/应用",
+        "not close to": "不接近",
+        "photon-counting requirements": "光子计数需求",
+        "installation fit": "安装环境匹配",
+        "application, energy, and pixel choices": "应用、能量和像素选择",
+        "not automatically preferred": "不会自动优先推荐",
+        "remains only when": "只有在以下条件相关时才保留：",
+        "make it relevant": "使它相关",
+        "Medical X-ray imaging": "医学 X 射线成像",
+        "material analysis": "材料分析",
+        "radiation monitoring": "辐射监测",
+        "gamma spectral imaging": "伽马光谱成像",
+        "gamma camera": "伽马相机",
+        "isotope imaging": "同位素成像",
+        "particle physics research": "粒子物理研究",
+        "Industrial-system integration": "工业系统集成",
         "Low-energy lab X-ray": "低能实验室 X 射线",
         "Standard XRD source": "标准 XRD 射线源",
         "Higher-energy lab X-ray": "较高能实验室 X 射线",
@@ -751,7 +775,114 @@ function translateBackendText(value) {
     Object.entries(phraseMap).forEach(([english, chinese]) => {
         translated = translated.replaceAll(english, chinese);
     });
-    return translated;
+    return translated
+        .replace(/(\d+(?:\.\d+)?(?:\s*[×x]\s*\d+(?:\.\d+)?)?)\s*[µμ]m\b/g, "$1 微米")
+        .replace(/mm²/g, "平方毫米")
+        .replace(/(\d+(?:\.\d+)?(?:\s*[×x]\s*\d+(?:\.\d+)?)?)\s*mm\b/g, "$1 毫米");
+}
+
+function translateProductText(value) {
+    const text = String(value || "");
+    if (currentLanguage !== "zh" || !text) return text;
+
+    const exactMap = {
+        "Integrating CCD spectroscopy camera with deep cooling": "带深度制冷的积分式 CCD 光谱相机",
+        "Medipix3 hybrid photon-counting detector": "Medipix3 混合型光子计数探测器",
+        "sCMOS X-ray camera with changeable lens/scintillator units": "带可更换镜头 / 闪烁体单元的 sCMOS X 射线相机",
+        "Integrating CCD camera with deep cooling": "带深度制冷的积分式 CCD 相机",
+        "In-vacuum integrating CCD imaging camera with deep cooling": "真空内使用的深度制冷积分式 CCD 成像相机",
+        "Integrating CCD imaging camera with deep cooling": "带深度制冷的积分式 CCD 成像相机",
+        "Timepix single-particle counting / particle tracking": "Timepix 单粒子计数 / 粒子追踪探测器",
+        "In-vacuum integrating CCD spectroscopy camera with deep cooling": "真空内使用的深度制冷积分式 CCD 光谱相机",
+        "Photon-counting, event-based / data-driven detector": "光子计数、事件驱动 / 数据驱动探测器",
+        "Direct-detection back-illuminated sCMOS camera with deep cooling": "带深度制冷的背照式直接探测 sCMOS 相机",
+        "VUV, EUV, SXR, HXR": "VUV、EUV、软 X 射线（SXR）、硬 X 射线（HXR）",
+        "Gigabit Ethernet, USB 3.0": "千兆以太网、USB 3.0",
+        "Gigabit Ethernet": "千兆以太网",
+        "USB 3.0 or 1 Gbps Ethernet": "USB 3.0 或 1 Gbps 以太网",
+        "USB 2.0 High-Speed": "USB 2.0 高速",
+        "2× RJ45 Gigabit Ethernet": "2× RJ45 千兆以太网",
+        "3× RJ45 Gigabit Ethernet": "3× RJ45 千兆以太网",
+        "1× 1 Gb/s Ethernet with PoE": "1× 1 Gb/s PoE 以太网",
+        "USB 3.0 SuperSpeed": "USB 3.0 超高速",
+        "10 Gigabit Ethernet, USB 3.0": "10 千兆以太网、USB 3.0",
+        "greateyes Vision": "greateyes Vision 软件",
+        "ADVACAM / PIXet software ecosystem (specific software not consistently listed)": "ADVACAM / PIXet 软件生态（具体软件未完全统一列出）",
+        "Intuitive software with basic tools; SDK included": "直观软件，包含基础工具；包含 SDK",
+        "PIXet Pro / Timepix3 .t3 data formats referenced": "PIXet Pro / 支持 Timepix3 .t3 数据格式",
+        "PIXet Basic": "PIXet Basic 软件",
+        "PIXet Pro": "PIXet Pro 软件",
+    };
+
+    if (exactMap[text]) return exactMap[text];
+
+    const phraseMap = {
+        "Effective pixel size": "等效像素尺寸",
+        "Field of view": "视场",
+        "calculated from pixel pitch": "由像素间距计算",
+        "Typical": "典型值",
+        "product description also lists": "产品说明还列出",
+        "vacuum version": "真空版本",
+        "with PoE": "带 PoE",
+        "SuperSpeed": "超高速",
+        "High-Speed": "高速",
+        "data formats referenced": "数据格式已列出",
+        "software ecosystem": "软件生态",
+        "specific software not consistently listed": "具体软件未完全统一列出",
+        "basic tools": "基础工具",
+        "SDK included": "包含 SDK",
+        "EUV lithography": "EUV 光刻",
+        "Medical X-ray imaging": "医学 X 射线成像",
+        "X-ray tomography": "X 射线断层成像",
+        "Fourier-transform holography": "傅里叶变换全息成像",
+        "XRF imaging": "XRF 成像",
+        "CDI": "相干衍射成像（CDI）",
+        "ptychography": "叠层成像",
+        "GISAXS": "掠入射小角 X 射线散射（GISAXS）",
+        "Soft X-ray spectroscopy": "软 X 射线光谱",
+        "soft X-ray spectroscopy": "软 X 射线光谱",
+        "plasma emission spectroscopy": "等离子体发射光谱",
+        "HHG spectroscopy": "高次谐波光谱",
+        "XANES": "XANES",
+        "RIXS": "RIXS",
+        "low-dose X-ray radiography": "低剂量 X 射线摄影",
+        "scintigraphy/SPECT/isotope imaging": "闪烁显像 / SPECT / 同位素成像",
+        "energy-dispersive XRD/SAXS/WAXS": "能量色散 XRD / SAXS / WAXS",
+        "particle tracking": "粒子追踪",
+        "neutron imaging": "中子成像",
+        "Compton camera": "康普顿相机",
+        "TOF imaging": "飞行时间（TOF）成像",
+        "material analysis": "材料分析",
+        "radiation monitoring": "辐射监测",
+        "gamma spectral imaging": "伽马光谱成像",
+        "gamma camera": "伽马相机",
+        "isotope imaging": "同位素成像",
+        "particle physics research": "粒子物理研究",
+        "Industrial-system integration": "工业系统集成",
+        "commonly used for": "常用于",
+        "X-rays": "X 射线",
+        "X-ray micron/submicron microscopy": "X 射线微米 / 亚微米显微",
+        "X-ray microscopy": "X 射线显微",
+        "X-ray CT": "X 射线 CT",
+        "X-ray metrology": "X 射线计量",
+        "X-ray imaging": "X 射线成像",
+        "X-ray radiography": "X 射线摄影",
+        "ant head imaging": "蚂蚁头部成像",
+        "ant leg CT": "蚂蚁腿部 CT",
+        "carbon-fiber reinforced polymer": "碳纤维增强聚合物",
+        "stained neurons": "染色神经元",
+        "API tablet distribution": "API 药片分布",
+    };
+
+    let translated = translateBackendText(text);
+    Object.entries(phraseMap).forEach(([english, chinese]) => {
+        translated = translated.replaceAll(english, chinese);
+    });
+
+    return translated
+        .replace(/(\d+(?:\.\d+)?(?:\s*[×x]\s*\d+(?:\.\d+)?)?)\s*[µμ]m\b/g, "$1 微米")
+        .replace(/mm²/g, "平方毫米")
+        .replace(/(\d+(?:\.\d+)?(?:\s*[×x]\s*\d+(?:\.\d+)?)?)\s*mm\b/g, "$1 毫米");
 }
 
 function selectedLabels(groupId) {
@@ -1000,24 +1131,32 @@ function specStatusNote(item, key) {
 
 function specBlock(item, key, label, value) {
     const note = specStatusNote(item, key);
+    const displayValue = value ? translateProductText(value) : ui("notAvailable");
     return `
-        <div class="${specStatusClass(item, key)}">
-            <dt>${label}</dt>
-            <dd>${value || ui("notAvailable")}</dd>
+        <div class="${escapeHtml(specStatusClass(item, key))}">
+            <dt>${escapeHtml(label)}</dt>
+            <dd>${escapeHtml(displayValue)}</dd>
             ${note ? `<small>${escapeHtml(translateBackendText(note))}</small>` : ""}
         </div>
     `;
 }
 
 function renderResultCard(item, index) {
+    const modelName = item.model_name_variant || item.product_id || ui("notAvailable");
+    const maker = item.manufacturer || ui("unknownManufacturer");
+    const family = item.product_family || ui("notAvailable");
+    const title = currentLanguage === "zh" ? `型号：${modelName}` : modelName;
+    const makerLine = currentLanguage === "zh" ? `厂商：${maker} · 系列：${family}` : `${maker} · ${family}`;
+    const applications = translateProductText(item.applications || "");
+
     return `
         <article class="result-card">
             <div class="rank">${index + 1}</div>
             <div class="result-body">
                 <div class="result-title-row">
                     <div>
-                        <h3>${item.model_name_variant || item.product_id}</h3>
-                        <p>${item.manufacturer || ui("unknownManufacturer")} · ${item.product_family || ui("notAvailable")}</p>
+                        <h3>${escapeHtml(title)}</h3>
+                        <p>${escapeHtml(makerLine)}</p>
                     </div>
                     <span class="score">${item.match_percent || 0}% ${ui("match")}</span>
                 </div>
@@ -1029,7 +1168,7 @@ function renderResultCard(item, index) {
                     ${specBlock(item, "interface", ui("interface"), item.interface)}
                     ${specBlock(item, "software", ui("software"), item.software)}
                 </dl>
-                <p class="applications">${item.applications || ""}</p>
+                <p class="applications">${escapeHtml(applications)}</p>
                 <div class="reason-list">
                     ${item.reasons.map((reason) => `<span>${escapeHtml(translateBackendText(reason))}</span>`).join("")}
                 </div>
@@ -1253,11 +1392,11 @@ function renderComparison() {
                 ${top
                     .map((item) => `
                         <tr>
-                            <td>${item.model_name_variant || item.product_id}</td>
-                            <td>${item.energy_range || ui("notAvailable")}</td>
-                            <td>${item.pixel_size || ui("notAvailable")}</td>
-                            <td>${item.active_area || ui("notAvailable")}</td>
-                            <td>${item.interface || ui("notAvailable")}</td>
+                            <td>${escapeHtml(item.model_name_variant || item.product_id || ui("notAvailable"))}</td>
+                            <td>${escapeHtml(translateProductText(item.energy_range || ui("notAvailable")))}</td>
+                            <td>${escapeHtml(translateProductText(item.pixel_size || ui("notAvailable")))}</td>
+                            <td>${escapeHtml(translateProductText(item.active_area || ui("notAvailable")))}</td>
+                            <td>${escapeHtml(translateProductText(item.interface || ui("notAvailable")))}</td>
                         </tr>
                     `)
                     .join("")}
@@ -1613,7 +1752,7 @@ function renderAiRecommendationList(items) {
         <article class="ai-mini-result">
             <div>
                 <strong>${escapeHtml(item.model_name_variant || item.product_id)}</strong>
-                <span>${escapeHtml(item.manufacturer || ui("unknownManufacturer"))}</span>
+                <span>${escapeHtml(currentLanguage === "zh" ? `厂商：${item.manufacturer || ui("unknownManufacturer")}` : item.manufacturer || ui("unknownManufacturer"))}</span>
             </div>
             <b>${Number(item.match_percent || 0)}%</b>
             <p>${escapeHtml((item.reasons || []).slice(0, 2).map(translateBackendText).join(" · ") || ui("aiPossibleDatabaseMatch"))}</p>
