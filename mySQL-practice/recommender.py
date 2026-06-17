@@ -878,39 +878,116 @@ def get_choices(group_id, choice_ids):
     return [choice for choice_id in choice_ids if (choice := get_choice(group_id, choice_id))]
 
 
+def answer_label(group_id, choice_id, fallback="Not selected"):
+    choice = get_choice(group_id, choice_id)
+    return (choice or {}).get("label", fallback)
+
+
+def add_conflict_detail(details, title, selected, issue, suggestion):
+    details.append(
+        {
+            "title": title,
+            "selected": selected,
+            "issue": issue,
+            "suggestion": suggestion,
+        }
+    )
+
+
 def get_selection_conflict(answers):
+    details = []
+    application_id = answers.get("application")
     energy_id = answers.get("energy")
+    target_id = answers.get("target")
     pixel_id = answers.get("pixel_size")
+    performance_ids = set(answers.get("performance") or [])
     exact_energy_kev = parse_energy_to_kev(answers.get("exact_energy")) if energy_id == "exact_energy" else None
     is_high_or_hard_energy = (
         energy_id in HIGH_HARD_ENERGY_IDS
         or (exact_energy_kev is not None and exact_energy_kev >= 17)
     )
+    is_lab_or_xrd_energy = (
+        energy_id in LAB_XRD_ENERGY_IDS
+        or target_id in LAB_TARGET_IDS
+        or (exact_energy_kev is not None and 1 <= exact_energy_kev <= 30)
+    )
+    is_soft_energy = energy_id == "euv_vuv_soft" or (exact_energy_kev is not None and exact_energy_kev < 1)
 
     if pixel_id == "pixel_under_1" and is_high_or_hard_energy:
-        energy_choice = get_choice("energy", energy_id)
-        pixel_choice = get_choice("pixel_size", pixel_id)
         energy_label = (
             f"{exact_energy_kev:g} keV"
             if exact_energy_kev is not None
-            else (energy_choice or {}).get("label", "high/hard X-ray")
+            else answer_label("energy", energy_id, "high/hard X-ray")
         )
-        pixel_label = (pixel_choice or {}).get("label", "under 1 micrometer")
-        return {
-            "has_conflict": True,
-            "title": "Conflicting energy and pixel-size choices",
-            "message": (
-                f"{energy_label} and {pixel_label} are not a practical detector-selection pair. "
-                "High/hard X-ray measurements usually need thicker sensors, scintillators, or photon-counting detector geometries, "
-                "while sub-1 micrometer effective pixels are normally associated with microscopy optics and lower-energy imaging setups. "
-                "Please change either the energy range or the pixel-size requirement before viewing product matches."
+        pixel_label = answer_label("pixel_size", pixel_id, "under 1 micrometer")
+        add_conflict_detail(
+            details,
+            "Energy vs Pixel Size",
+            f"{energy_label} + {pixel_label}",
+            (
+                "High/hard X-ray measurements usually need thicker sensors, scintillators, "
+                "or photon-counting detector geometries, while sub-1 micrometer effective pixels "
+                "are normally associated with microscopy optics and lower-energy imaging setups."
             ),
+            "Review the energy range or ask an engineer about optical coupling, scintillator, or custom geometry options.",
+        )
+
+    if application_id == "euv_soft_xray_spectroscopy" and is_lab_or_xrd_energy:
+        energy_label = (
+            f"{exact_energy_kev:g} keV"
+            if exact_energy_kev is not None
+            else answer_label("target", target_id, answer_label("energy", energy_id, "lab X-ray source"))
+        )
+        add_conflict_detail(
+            details,
+            "Application vs Energy",
+            f"{answer_label('application', application_id)} + {energy_label}",
+            (
+                "EUV/VUV/soft X-ray spectroscopy is normally below about 1 keV, "
+                "but the selected source is a lab X-ray/XRD-style energy such as Cu-Kalpha or Mo-Kalpha."
+            ),
+            "If the source is really Cu-Kalpha or another lab target, consider an XRD, XAFS, or X-ray imaging application instead.",
+        )
+
+    if application_id == "xrd_saxs_waxs" and is_soft_energy:
+        add_conflict_detail(
+            details,
+            "Application vs Energy",
+            f"{answer_label('application', application_id)} + {answer_label('energy', energy_id, 'soft X-ray energy')}",
+            (
+                "XRD/SAXS/WAXS usually uses lab or beamline X-ray energies, "
+                "while EUV/VUV/soft X-ray choices point toward a different spectroscopy or imaging setup."
+            ),
+            "Review whether the measurement is diffraction, soft X-ray spectroscopy, or EUV imaging.",
+        )
+
+    if "single_event" in performance_ids and application_id not in {"radiation_particle", "material_identification"}:
+        add_conflict_detail(
+            details,
+            "Priority vs Detector Type",
+            f"{answer_label('performance', 'single_event')} + {answer_label('application', application_id)}",
+            (
+                "Single photon / particle sensitivity often points toward photon-counting or Timepix-style detectors. "
+                "Some vacuum/EUV spectroscopy workflows still use CCD or sCMOS cameras, but they should be treated as possible matches, not guaranteed single-event detectors."
+            ),
+            "Keep the CCD/sCMOS options as possible vacuum/spectroscopy matches, but ask an engineer if single-event counting is required.",
+        )
+
+    if not details:
+        return {
+            "has_conflict": False,
+            "blocking": False,
+            "title": "",
+            "message": "",
+            "details": [],
         }
 
     return {
-        "has_conflict": False,
-        "title": "",
-        "message": "",
+        "has_conflict": True,
+        "blocking": False,
+        "title": "Possible matches, but your answers contain conflicts",
+        "message": "Some selected answers point toward different detector families. The products below are possible matches, but their percentages are reduced until the conflicts are reviewed.",
+        "details": details,
     }
 
 
@@ -1483,10 +1560,50 @@ def strict_match_percent(answers, breakdown):
     return max(0, min(round((matched / total) * 100), 100))
 
 
-def get_recommendations(answers, limit=3):
-    if get_selection_conflict(answers)["has_conflict"]:
-        return []
+def conflict_score_adjustment(product, answers, conflict):
+    if not conflict.get("has_conflict"):
+        return 0, [], {}
 
+    details = conflict.get("details", [])
+    penalty = min(16, len(details) * 4)
+    reasons = ["Conflict check: selected answers need engineer review"]
+    quality_updates = {}
+
+    application_id = answers.get("application")
+    energy_id = answers.get("energy")
+    target_id = answers.get("target")
+    performance_ids = set(answers.get("performance") or [])
+    exact_energy_kev = parse_energy_to_kev(answers.get("exact_energy")) if energy_id == "exact_energy" else None
+    lab_or_xrd_energy = (
+        energy_id in LAB_XRD_ENERGY_IDS
+        or target_id in LAB_TARGET_IDS
+        or (exact_energy_kev is not None and 1 <= exact_energy_kev <= 30)
+    )
+
+    if application_id == "euv_soft_xray_spectroscopy" and lab_or_xrd_energy:
+        penalty += 5
+        reasons.append("Conflict: EUV/soft X-ray application was paired with a lab XRD-style energy")
+
+    if "single_event" in performance_ids and is_ccd_camera(product):
+        penalty += 8
+        reasons.append("Conflict: single-event priority may require photon-counting or Timepix-style detection")
+        quality_updates["detector"] = {
+            "status": "warn",
+            "note": "CCD camera is possible for vacuum/EUV spectroscopy, but single-event counting may need a different detector family",
+        }
+
+    if answers.get("pixel_size") == "pixel_under_1" and (
+        energy_id in HIGH_HARD_ENERGY_IDS
+        or (exact_energy_kev is not None and exact_energy_kev >= 17)
+    ):
+        penalty += 7
+        reasons.append("Conflict: high/hard X-ray energy and sub-1 micrometer pixels may require custom optics or scintillator design")
+
+    return min(penalty, 30), reasons, quality_updates
+
+
+def get_recommendations(answers, limit=3):
+    conflict = get_selection_conflict(answers)
     products = get_products()
     candidates = []
     eligible_products = []
@@ -1499,6 +1616,10 @@ def get_recommendations(answers, limit=3):
         score, reasons, match_points, possible_points, breakdown, spec_quality = score_product(product, answers)
         if score > 0:
             match_percent = strict_match_percent(answers, breakdown)
+            conflict_penalty, conflict_reasons, quality_updates = conflict_score_adjustment(product, answers, conflict)
+            match_percent = max(0, match_percent - conflict_penalty)
+            reasons.extend(conflict_reasons)
+            spec_quality.update(quality_updates)
             candidates.append(
                 {
                     "match_percent": min(match_percent, 100),
