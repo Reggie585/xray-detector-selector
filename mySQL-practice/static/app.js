@@ -453,22 +453,44 @@ const choiceIconMap = {
     },
 };
 
+function ensureLanguageToggle() {
+    const existing = document.querySelector("#language-toggle");
+    if (existing) return existing;
+
+    const aiButton = document.querySelector("#ai-helper-open");
+    if (!aiButton) return null;
+
+    const button = document.createElement("button");
+    button.className = "language-toggle";
+    button.id = "language-toggle";
+    button.type = "button";
+    button.setAttribute("aria-label", "Switch language");
+    button.innerHTML = `
+        <span class="language-icon" aria-hidden="true">◎</span>
+        <span id="language-toggle-label">EN</span>
+    `;
+    aiButton.insertAdjacentElement("beforebegin", button);
+    return button;
+}
+
+const languageToggleElement = ensureLanguageToggle();
+
 const els = {
-    languageToggle: document.querySelector("#language-toggle"),
-    languageToggleLabel: document.querySelector("#language-toggle-label"),
-    heroTitle: document.querySelector("#hero-title"),
-    heroKicker: document.querySelector("#hero-kicker"),
-    heroSubtitle: document.querySelector("#hero-subtitle"),
-    aiHelperOpenText: document.querySelector("#ai-helper-open-text"),
-    selectorInfoSummary: document.querySelector("#selector-info-summary"),
-    selectorInfoTitle: document.querySelector("#selector-info-title"),
-    selectorInfoCopy: document.querySelector("#selector-info-copy"),
+    languageToggle: languageToggleElement,
+    languageToggleLabel: languageToggleElement?.querySelector("#language-toggle-label"),
+    heroTitle: document.querySelector("#hero-title") || document.querySelector(".hero-copy h1"),
+    heroKicker: document.querySelector("#hero-kicker") || document.querySelector(".hero-cn"),
+    heroSubtitle: document.querySelector("#hero-subtitle") || document.querySelector(".hero-copy .title-subtitle"),
+    aiHelperOpenText: document.querySelector("#ai-helper-open-text") || document.querySelector("#ai-helper-open span:last-child"),
+    selectorInfoSummary: document.querySelector("#selector-info-summary") || document.querySelector(".selector-info summary span:last-child"),
+    selectorInfoTitle: document.querySelector("#selector-info-title") || document.querySelector(".selector-info-panel h2"),
+    selectorInfoCopy: document.querySelector("#selector-info-copy") || document.querySelector(".selector-info-panel p"),
     contactNameLabel: document.querySelector("#contact-name-label"),
     contactEmailLabel: document.querySelector("#contact-email-label"),
     contactInfoLabel: document.querySelector("#contact-info-label"),
     contactNote: document.querySelector("#contact-note"),
-    resultsEyebrow: document.querySelector("#results-eyebrow"),
-    resultsTitle: document.querySelector("#results-title"),
+    resultsEyebrow: document.querySelector("#results-eyebrow") || document.querySelector(".results-header .eyebrow"),
+    resultsTitle: document.querySelector("#results-title") || document.querySelector(".results-header h2"),
     aiPanelEyebrow: document.querySelector("#ai-panel-eyebrow"),
     aiPanelTitle: document.querySelector("#ai-panel-title"),
     aiPanelCopy: document.querySelector("#ai-panel-copy"),
