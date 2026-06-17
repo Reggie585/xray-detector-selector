@@ -445,6 +445,20 @@ STRICT_MATCH_WEIGHTS = {
     "installation": 14,
 }
 
+ADDITIVE_SCORE_WEIGHTS = STRICT_MATCH_WEIGHTS
+
+MULTIPLICATIVE_SCORE_WEIGHTS = {
+    "application": 0.25,
+    "energy": 0.25,
+    "pixel_size": 0.20,
+    "installation": 0.20,
+    "performance": 0.10,
+}
+
+UNKNOWN_CATEGORY_SCORE = 0.62
+MISSING_CATEGORY_SCORE = 0.65
+INCOMPATIBLE_CATEGORY_SCORE = 0.12
+
 
 LAB_XRD_ENERGY_IDS = {"low_energy_lab", "standard_xrd", "higher_energy_lab"}
 LAB_TARGET_IDS = {"cr_ka", "cu_ka", "w_la", "mo_ka", "rh_ka", "ag_ka"}
@@ -1700,12 +1714,123 @@ def strict_match_percent(answers, breakdown):
     return max(0, min(round((matched / total) * 100), 100))
 
 
+def selected_category_value(answers, category):
+    if category == "performance":
+        return answers.get("performance") or []
+    return answers.get(category)
+
+
+def category_was_answered(answers, category):
+    value = selected_category_value(answers, category)
+    return bool(value)
+
+
+def category_is_unknown_answer(answers, category):
+    value = selected_category_value(answers, category)
+    if isinstance(value, list):
+        return bool(value) and any(selected_is_unknown(choice_id) for choice_id in value)
+    return selected_is_unknown(value)
+
+
+def bucket_ratio(bucket):
+    possible = bucket.get("possible", 0)
+    if not possible:
+        return None
+    return max(0, min(bucket.get("matched", 0) / possible, 1))
+
+
+def category_ratio_for_additive(answers, breakdown, category):
+    if not category_was_answered(answers, category):
+        return None
+    if category_is_unknown_answer(answers, category):
+        return UNKNOWN_CATEGORY_SCORE
+
+    ratio = bucket_ratio(breakdown.get(category, {}))
+    if ratio is None:
+        return UNKNOWN_CATEGORY_SCORE
+    return ratio
+
+
+def category_ratio_for_multiplication(answers, breakdown, category):
+    if not category_was_answered(answers, category):
+        return MISSING_CATEGORY_SCORE
+    if category_is_unknown_answer(answers, category):
+        return UNKNOWN_CATEGORY_SCORE
+
+    ratio = bucket_ratio(breakdown.get(category, {}))
+    if ratio is None:
+        return MISSING_CATEGORY_SCORE
+    if ratio <= 0:
+        return INCOMPATIBLE_CATEGORY_SCORE
+    return max(INCOMPATIBLE_CATEGORY_SCORE, min(ratio, 1))
+
+
+def additive_baseline_score(answers, breakdown):
+    total_weight = 0
+    weighted_score = 0
+
+    for category, weight in ADDITIVE_SCORE_WEIGHTS.items():
+        ratio = category_ratio_for_additive(answers, breakdown, category)
+        if ratio is None:
+            continue
+        total_weight += weight
+        weighted_score += weight * ratio
+
+    if not total_weight:
+        return 0
+    return round((weighted_score / total_weight) * 100)
+
+
+def multiplicative_technical_score(answers, breakdown):
+    score = 1
+    for category, exponent in MULTIPLICATIVE_SCORE_WEIGHTS.items():
+        ratio = category_ratio_for_multiplication(answers, breakdown, category)
+        score *= ratio ** exponent
+    return round(score * 100)
+
+
+def hybrid_score(additive_score, multiplicative_score):
+    return round((0.65 * additive_score) + (0.35 * multiplicative_score))
+
+
+def display_label_for_score(final_score):
+    if final_score >= 85:
+        return "Strong Match"
+    if final_score >= 70:
+        return "Good Match"
+    if final_score >= 60:
+        return "Possible Match"
+    if final_score >= 50:
+        return "Weak Match"
+    return "Engineer Review Required"
+
+
+def should_recommend_engineer_review(final_score, conflict):
+    return final_score < 60 or bool(conflict.get("has_conflict"))
+
+
+def calculate_hybrid_scores(answers, breakdown, conflict_penalty, conflict):
+    additive_score = additive_baseline_score(answers, breakdown)
+    multiplicative_score = multiplicative_technical_score(answers, breakdown)
+    hybrid_before_penalty = hybrid_score(additive_score, multiplicative_score)
+    final_score = max(0, min(100, hybrid_before_penalty - conflict_penalty))
+    return {
+        "additive_score": additive_score,
+        "multiplicative_score": multiplicative_score,
+        "hybrid_score": hybrid_before_penalty,
+        "conflict_penalty": conflict_penalty,
+        "final_score": final_score,
+        "match_label": display_label_for_score(final_score),
+        "engineer_review": should_recommend_engineer_review(final_score, conflict),
+    }
+
+
 def conflict_score_adjustment(product, answers, conflict):
     if not conflict.get("has_conflict"):
         return 0, [], {}
 
     details = conflict.get("details", [])
-    penalty = min(16, len(details) * 4)
+    penalty = 0
     reasons = ["Conflict check: selected answers need engineer review"]
     quality_updates = {}
 
@@ -1725,7 +1850,7 @@ def conflict_score_adjustment(product, answers, conflict):
         reasons.append("Conflict: EUV/soft X-ray application was paired with a lab XRD-style energy")
 
     if "single_event" in performance_ids and is_ccd_or_cmos_camera(product):
-        penalty += 5
+        penalty += 2
         reasons.append("Conflict: single-event priority may require photon-counting or Timepix-style detection")
         quality_updates["detector"] = {
             "status": "warn",
@@ -1736,10 +1861,13 @@ def conflict_score_adjustment(product, answers, conflict):
         energy_id in HIGH_HARD_ENERGY_IDS
         or (exact_energy_kev is not None and exact_energy_kev >= 17)
     ):
-        penalty += 7
+        penalty += 8
         reasons.append("Conflict: high/hard X-ray energy and sub-1 micrometer pixels may require custom optics or scintillator design")
 
-    return min(penalty, 30), reasons, quality_updates
+    if penalty == 0 and details:
+        penalty = min(5, len(details) * 3)
+
+    return min(penalty, 20), reasons, quality_updates
 
 
 def environment_family(product):
@@ -1830,15 +1958,17 @@ def get_recommendations(answers, limit=3):
 
         score, reasons, match_points, possible_points, breakdown, spec_quality = score_product(product, answers)
         if score > 0:
-            match_percent = strict_match_percent(answers, breakdown)
             conflict_penalty, conflict_reasons, quality_updates = conflict_score_adjustment(product, answers, conflict)
-            match_percent = max(0, match_percent - conflict_penalty)
+            score_detail = calculate_hybrid_scores(answers, breakdown, conflict_penalty, conflict)
             reasons.extend(conflict_reasons)
             spec_quality.update(quality_updates)
+            if score_detail["engineer_review"] and "Engineer Review Recommended" not in reasons:
+                reasons.append("Engineer Review Recommended")
             candidates.append(
                 {
-                    "match_percent": min(match_percent, 100),
+                    "match_percent": score_detail["final_score"],
                     "rank_score": score,
+                    "score_detail": score_detail,
                     "product": product,
                     "product_id": product.get("product_id"),
                     "reasons": reasons,
@@ -1858,9 +1988,18 @@ def get_recommendations(answers, limit=3):
             {
                 "match_percent": 0,
                 "rank_score": 1,
+                "score_detail": {
+                    "additive_score": 0,
+                    "multiplicative_score": 0,
+                    "hybrid_score": 0,
+                    "conflict_penalty": 0,
+                    "final_score": 0,
+                    "match_label": "Engineer Review Required",
+                    "engineer_review": True,
+                },
                 "product": product,
                 "product_id": product.get("product_id"),
-                "reasons": ["broad match"],
+                "reasons": ["broad match", "Engineer Review Recommended"],
                 "breakdown": {},
                 "spec_quality": {},
                 "environment_priority": environment_sort_priority(product, answers),
@@ -1894,9 +2033,17 @@ def get_recommendations(answers, limit=3):
     results = []
     for candidate in selected:
         product = candidate["product"]
+        score_detail = candidate["score_detail"]
         results.append(
             {
                 "match_percent": candidate["match_percent"],
+                "match_label": score_detail["match_label"],
+                "engineer_review": score_detail["engineer_review"],
+                "additive_score": score_detail["additive_score"],
+                "multiplicative_score": score_detail["multiplicative_score"],
+                "hybrid_score": score_detail["hybrid_score"],
+                "conflict_penalty": score_detail["conflict_penalty"],
+                "final_score": score_detail["final_score"],
                 "performance_percent": candidate["performance_percent"],
                 "energy_percent": candidate["energy_percent"],
                 "pixel_percent": candidate["pixel_percent"],
