@@ -345,59 +345,24 @@ CHOICE_GROUPS = {
         "choices": [
             {
                 "id": "simple_lab",
-                "label": "Simple lab setup",
-                "description": "Normal lab use in air, easy installation, and ready-to-use software.",
-                "terms": ["usb", "ethernet", "software", "windows", "lab", "air"],
-                "technical": "Standard software and USB/Ethernet style setup preferred.",
+                "label": "Atmospheric environment",
+                "description": "Air is allowed. Use this for normal room/lab setups outside vacuum.",
+                "terms": ["air", "atmospheric", "room", "lab", "normal"],
+                "technical": "Atmospheric/air operation required; ADVACAM and Rigaku can be considered, and only greateyes ELSE is allowed from greateyes camera families.",
             },
             {
                 "id": "vacuum_uhv",
                 "label": "Vacuum / UHV chamber",
-                "description": "Vacuum chambers, beamlines, EUV/VUV/soft X-ray experiments, or internal-vacuum camera use.",
-                "terms": ["vacuum", "uhv", "flange", "cf", "10^-10", "bake-out", "euv", "vuv"],
-                "technical": "Vacuum compatibility, flange options, and cooling are important.",
-            },
-            {
-                "id": "industrial_oem",
-                "label": "Industrial machine / OEM",
-                "description": "Commercial instrument, factory system, or custom machine integration.",
-                "terms": ["industrial", "oem", "sdk", "trigger", "ethernet", "api", "customization"],
-                "technical": "SDK/API, trigger I/O, and robust integration prioritized.",
-            },
-            {
-                "id": "inline_robot",
-                "label": "Inline / robot inspection",
-                "description": "Continuous scanning, robot CT, conveyor inspection, or large structure inspection.",
-                "terms": ["inline", "robot", "continuous", "tdi", "scanning", "poe", "ethernet", "inspection"],
-                "technical": "Continuous scanning, active area, and robust interface prioritized.",
-            },
-            {
-                "id": "portable_field",
-                "label": "Portable / field use",
-                "description": "Field measurements, temporary setup, radiation checks, or easy transport.",
-                "terms": ["portable", "field", "usb", "low power", "compact", "small", "light"],
-                "technical": "Size, weight, power, and simple connection prioritized.",
-            },
-            {
-                "id": "classroom",
-                "label": "Classroom / education",
-                "description": "Students, demonstrations, simple experiments, and easy operation.",
-                "terms": ["education", "classroom", "simple", "student", "demo", "edx"],
-                "technical": "Entry-level detector and simple software preferred.",
-            },
-            {
-                "id": "beamline_advanced",
-                "label": "Beamline / advanced research",
-                "description": "Synchrotron, automation, trigger synchronization, EPICS, Tango, or Python control.",
-                "terms": ["beamline", "synchrotron", "trigger", "epics", "tango", "python", "sdk", "automation"],
-                "technical": "Trigger, SDK, EPICS/Tango/Python support prioritized.",
+                "description": "No air. Use this for vacuum chambers, UHV, EUV/VUV/soft X-ray work, or flange-mounted cameras.",
+                "terms": ["vacuum", "uhv", "flange", "cf", "10^-10", "bake-out", "euv", "vuv", "ccd", "cmos", "scmos"],
+                "technical": "Vacuum/UHV operation required; CCD and CMOS/sCMOS camera products are prioritized.",
             },
             {
                 "id": "not_sure_installation",
                 "label": "Not sure",
-                "description": "Keep installation filters broad and show notes in the result.",
+                "description": "Show possible products from both atmospheric and vacuum-style detector families.",
                 "terms": [],
-                "technical": "Installation kept broad.",
+                "technical": "Installation kept broad; show a mix of atmospheric and vacuum-compatible options.",
             },
         ],
     },
@@ -598,6 +563,65 @@ def is_ccd_camera(product):
     return "ccd" in text
 
 
+def is_cmos_camera(product):
+    text = field_text(
+        product,
+        [
+            "product_category",
+            "detector_principle",
+            "readout_chip_type",
+            "sensor_type_options",
+            "product_family",
+            "model_name_variant",
+        ],
+    )
+    return "cmos" in text or "scmos" in text
+
+
+def is_ccd_or_cmos_camera(product):
+    return is_ccd_camera(product) or is_cmos_camera(product)
+
+
+def product_identity_text(product):
+    return field_text(
+        product,
+        [
+            "manufacturer",
+            "brand",
+            "product_family",
+            "model_name_variant",
+            "product_id",
+        ],
+    )
+
+
+def is_advacam_product(product):
+    return "advacam" in product_identity_text(product)
+
+
+def is_rigaku_product(product):
+    return "rigaku" in product_identity_text(product) or "xsight" in product_identity_text(product)
+
+
+def is_greateyes_product(product):
+    return "greateyes" in product_identity_text(product)
+
+
+def is_greateyes_else_series(product):
+    text = product_identity_text(product)
+    return is_greateyes_product(product) and ("else" in text)
+
+
+def is_atmospheric_supported_product(product):
+    if is_advacam_product(product):
+        return True
+    if is_rigaku_product(product):
+        return True
+    if is_greateyes_product(product):
+        return is_greateyes_else_series(product)
+    return not is_ccd_or_cmos_camera(product)
+
+
 def is_vacuum_or_uhv_product(product):
     text = field_text(
         product,
@@ -630,14 +654,23 @@ def is_vacuum_or_uhv_product(product):
 
 
 def should_exclude_product(product, answers):
-    # Step 5 is a practical-use gate. A simple in-air lab setup should not
-    # return CCD camera families that normally imply vacuum/deep-cooled setups.
-    if answers.get("installation") == "simple_lab" and is_ccd_camera(product):
+    installation = answers.get("installation")
+    ccd_or_cmos_camera = is_ccd_or_cmos_camera(product)
+
+    # Step 5 is a practical-use gate. Atmospheric/air setups can keep flexible
+    # atmospheric options, but not every CCD/CMOS scientific camera family.
+    if installation == "simple_lab" and not is_atmospheric_supported_product(product):
+        return True
+
+    # Vacuum/UHV is also a hard environment gate in the simplified flow. CCD and
+    # CMOS/sCMOS camera families are the default; ADVACAM is kept as a possible
+    # photon-counting path only when earlier technical answers make it relevant.
+    if installation == "vacuum_uhv" and not ccd_or_cmos_camera and not is_advacam_product(product):
         return True
 
     # For lab XRD/SAXS/WAXS source selection, users normally expect diffraction
     # or photon-counting detectors, not broad scientific CCD camera families.
-    if is_lab_xrd_request(answers) and is_ccd_camera(product):
+    if installation not in {"vacuum_uhv", "simple_lab", "not_sure_installation"} and is_lab_xrd_request(answers) and ccd_or_cmos_camera:
         return True
 
     energy_fit = energy_range_fit(product, answers)
@@ -1227,16 +1260,58 @@ def installation_fit(product, answers):
     matches = count_term_matches(product_text, choice["terms"])
     interface_matches, environment_matches = split_interface_support_matches(matches)
     ccd_camera = is_ccd_camera(product)
+    cmos_camera = is_cmos_camera(product)
+    ccd_or_cmos_camera = ccd_camera or cmos_camera
     vacuum_product = is_vacuum_or_uhv_product(product)
 
     if choice["id"] == "simple_lab":
-        if ccd_camera:
+        if is_advacam_product(product):
+            return {
+                "matched": weight,
+                "possible": weight,
+                "reason": "Atmospheric fit: ADVACAM products can be applied flexibly",
+                "status": "good",
+                "note": "Allowed for atmospheric use because ADVACAM products can be applied flexibly",
+                "tie_bonus": 7,
+            }
+
+        if is_rigaku_product(product):
+            return {
+                "matched": round(weight * 0.62, 2),
+                "possible": weight,
+                "reason": "Atmospheric fallback: Rigaku may require customization for air operation",
+                "status": "warn",
+                "note": "Rigaku is kept as a customizable atmospheric option, but ranked after direct atmospheric fits",
+                "tie_bonus": -6,
+            }
+
+        if is_greateyes_else_series(product):
+            return {
+                "matched": weight,
+                "possible": weight,
+                "reason": "Atmospheric fit: greateyes ELSE series",
+                "status": "good",
+                "note": "Allowed for atmospheric use because greateyes ELSE is the air-operation series",
+                "tie_bonus": 3,
+            }
+
+        if is_greateyes_product(product):
             return {
                 "matched": 0,
                 "possible": weight,
                 "reason": None,
                 "status": "bad",
-                "note": "Simple lab setup excludes CCD camera products",
+                "note": "Atmospheric environment excludes greateyes ALEX, LOTTE, and CHARLIE; only ELSE is allowed",
+                "tie_bonus": -12,
+            }
+
+        if ccd_or_cmos_camera:
+            return {
+                "matched": 0,
+                "possible": weight,
+                "reason": None,
+                "status": "bad",
+                "note": "Atmospheric environment excludes this CCD/CMOS camera family unless it is ADVACAM, Rigaku, or greateyes ELSE",
                 "tie_bonus": -10,
             }
 
@@ -1244,9 +1319,9 @@ def installation_fit(product, answers):
             return {
                 "matched": weight,
                 "possible": weight,
-                "reason": f"Installation fit: simple lab setup ({', '.join(environment_matches[:3])})",
+                "reason": f"Environment fit: atmospheric operation ({', '.join(environment_matches[:3])})",
                 "status": "good",
-                "note": "Fits simple lab setup; CCD camera products were excluded",
+                "note": "Fits atmospheric use",
                 "tie_bonus": 3,
             }
 
@@ -1273,30 +1348,50 @@ def installation_fit(product, answers):
         return {
             "matched": round(weight * 0.35, 2),
             "possible": weight,
-            "reason": "Installation fit: non-CCD product kept for simple lab setup",
+            "reason": "Environment fit: non-CCD/CMOS product kept for atmospheric use",
             "status": "warn",
-            "note": "Not a CCD camera; simple-lab interface details are not fully documented and only lightly affect the score",
+            "note": "Not a CCD or CMOS/sCMOS camera; atmospheric details are not fully documented and only lightly affect the score",
             "tie_bonus": 1,
         }
 
     if choice["id"] == "vacuum_uhv":
-        if ccd_camera and vacuum_product:
+        if is_rigaku_product(product):
+            return {
+                "matched": round(weight * 0.68, 2),
+                "possible": weight,
+                "reason": "Vacuum/UHV fallback: Rigaku may require customization",
+                "status": "warn",
+                "note": "Rigaku is kept as a customizable vacuum/UHV option, but ranked after direct vacuum camera fits",
+                "tie_bonus": -6,
+            }
+
+        if is_advacam_product(product):
+            return {
+                "matched": round(weight * 0.38, 2),
+                "possible": weight,
+                "reason": "Vacuum/UHV possible only if photon-counting requirements are more important than installation fit",
+                "status": "warn",
+                "note": "ADVACAM is not automatically preferred for vacuum/UHV; it remains only when application, energy, and pixel choices make it relevant",
+                "tie_bonus": -5,
+            }
+
+        if ccd_or_cmos_camera and vacuum_product:
             return {
                 "matched": weight,
                 "possible": weight,
-                "reason": "Installation fit: CCD camera with vacuum/UHV indicators",
+                "reason": "Environment fit: CCD/CMOS camera with vacuum/UHV indicators",
                 "status": "good",
-                "note": "Vacuum/UHV selected; CCD camera products are prioritized",
+                "note": "Vacuum/UHV selected; CCD and CMOS/sCMOS camera products are prioritized",
                 "tie_bonus": 8,
             }
 
-        if ccd_camera:
+        if ccd_or_cmos_camera:
             return {
                 "matched": round(weight * 0.62, 2),
                 "possible": weight,
-                "reason": "Installation fit: CCD camera family",
+                "reason": "Environment fit: CCD/CMOS camera family",
                 "status": "warn",
-                "note": "CCD camera is preferred for vacuum/UHV, but missing vacuum details reduce the installation score",
+                "note": "CCD/CMOS camera family is preferred for vacuum/UHV, but missing vacuum details reduce the environment score",
                 "tie_bonus": 5,
             }
 
@@ -1306,7 +1401,7 @@ def installation_fit(product, answers):
                 "possible": weight,
                 "reason": f"Installation fit: vacuum/UHV indicators ({', '.join(environment_matches[:3])})" if environment_matches else "Installation fit: vacuum/UHV indicators",
                 "status": "warn",
-                "note": "Vacuum/UHV indicators found, but product is not a CCD camera family",
+                "note": "Vacuum/UHV indicators found, but product is not a CCD or CMOS/sCMOS camera family",
                 "tie_bonus": -1,
             }
 
@@ -1629,12 +1724,12 @@ def conflict_score_adjustment(product, answers, conflict):
         penalty += 5
         reasons.append("Conflict: EUV/soft X-ray application was paired with a lab XRD-style energy")
 
-    if "single_event" in performance_ids and is_ccd_camera(product):
+    if "single_event" in performance_ids and is_ccd_or_cmos_camera(product):
         penalty += 5
         reasons.append("Conflict: single-event priority may require photon-counting or Timepix-style detection")
         quality_updates["detector"] = {
             "status": "warn",
-            "note": "CCD camera is possible for vacuum/EUV spectroscopy, but single-event counting may need a different detector family",
+            "note": "CCD/CMOS camera is possible for vacuum/EUV spectroscopy, but single-event counting may need a different detector family",
         }
 
     if answers.get("pixel_size") == "pixel_under_1" and (
@@ -1645,6 +1740,81 @@ def conflict_score_adjustment(product, answers, conflict):
         reasons.append("Conflict: high/hard X-ray energy and sub-1 micrometer pixels may require custom optics or scintillator design")
 
     return min(penalty, 30), reasons, quality_updates
+
+
+def environment_family(product):
+    if is_atmospheric_supported_product(product):
+        return "atmospheric"
+    return "vacuum_camera" if is_ccd_or_cmos_camera(product) else "atmospheric"
+
+
+def environment_sort_priority(product, answers):
+    installation = answers.get("installation")
+    if installation == "simple_lab":
+        if is_advacam_product(product):
+            return 4
+        if is_greateyes_else_series(product):
+            return 3
+        if is_atmospheric_supported_product(product) and not is_rigaku_product(product):
+            return 2
+        if is_rigaku_product(product):
+            return 1
+        return 0
+
+    if installation == "vacuum_uhv":
+        if is_rigaku_product(product):
+            return 1
+        if is_advacam_product(product):
+            return 0
+        if is_ccd_or_cmos_camera(product) and is_vacuum_or_uhv_product(product):
+            return 4
+        if is_ccd_or_cmos_camera(product):
+            return 3
+        return 0
+
+    return 0
+
+
+def select_diverse_environment_candidates(candidates, limit):
+    if len(candidates) <= limit:
+        return candidates[:limit]
+
+    selected = []
+    selected_ids = set()
+
+    for family in ["atmospheric", "vacuum_camera"]:
+        for candidate in candidates:
+            product_id = candidate["product_id"]
+            if product_id in selected_ids:
+                continue
+            if environment_family(candidate["product"]) == family:
+                selected.append(candidate)
+                selected_ids.add(product_id)
+                break
+
+    for candidate in candidates:
+        if len(selected) >= limit:
+            break
+        product_id = candidate["product_id"]
+        if product_id in selected_ids:
+            continue
+        selected.append(candidate)
+        selected_ids.add(product_id)
+
+    selected.sort(
+        key=lambda item: (
+            item["match_percent"],
+            item["environment_priority"],
+            item["rank_score"],
+            item["energy_percent"],
+            item["pixel_percent"],
+            item["application_percent"],
+            item["performance_percent"],
+            item["installation_percent"],
+        ),
+        reverse=True,
+    )
+    return selected[:limit]
 
 
 def get_recommendations(answers, limit=3):
@@ -1674,6 +1844,7 @@ def get_recommendations(answers, limit=3):
                     "reasons": reasons,
                     "breakdown": breakdown,
                     "spec_quality": spec_quality,
+                    "environment_priority": environment_sort_priority(product, answers),
                     "performance_percent": fit_percent(breakdown["performance"]),
                     "energy_percent": fit_percent(breakdown["energy"]),
                     "pixel_percent": fit_percent(breakdown["pixel_size"]),
@@ -1692,6 +1863,7 @@ def get_recommendations(answers, limit=3):
                 "reasons": ["broad match"],
                 "breakdown": {},
                 "spec_quality": {},
+                "environment_priority": environment_sort_priority(product, answers),
                 "performance_percent": 0,
                 "energy_percent": 0,
                 "pixel_percent": 0,
@@ -1704,6 +1876,7 @@ def get_recommendations(answers, limit=3):
     candidates.sort(
         key=lambda item: (
             item["match_percent"],
+            item["environment_priority"],
             item["rank_score"],
             item["energy_percent"],
             item["pixel_percent"],
@@ -1713,7 +1886,10 @@ def get_recommendations(answers, limit=3):
         ),
         reverse=True,
     )
-    selected = candidates[:limit]
+    if answers.get("installation") == "not_sure_installation":
+        selected = select_diverse_environment_candidates(candidates, limit)
+    else:
+        selected = candidates[:limit]
 
     results = []
     for candidate in selected:
