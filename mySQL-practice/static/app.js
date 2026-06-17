@@ -685,6 +685,12 @@ function translateBackendText(value) {
         "Detector type/application is not close to the selected application": "探测器类型/应用与所选应用不接近",
         "ADVACAM is not automatically preferred for vacuum/UHV; it remains only when application, energy, and pixel choices make it relevant": "ADVACAM 不会因为选择真空/UHV 环境而自动优先推荐；只有当应用、能量和像素选择相关时才会保留",
         "Vacuum/UHV possible only if photon-counting requirements are more important than installation fit": "仅当光子计数需求比安装环境匹配更重要时，才可能作为真空/UHV 方案考虑",
+        "Strong Match": "强匹配",
+        "Good Match": "良好匹配",
+        "Possible Match": "可能匹配",
+        "Weak Match": "弱匹配",
+        "Engineer Review Required": "需要工程师复核",
+        "Engineer Review Recommended": "建议工程师复核",
         "broad match": "宽泛匹配",
         "broad result because no strong filters were selected": "由于筛选条件较少，结果较宽泛",
         "Conflict check: selected answers need engineer review": "冲突检查：所选答案需要工程师复核",
@@ -1148,6 +1154,9 @@ function renderResultCard(item, index) {
     const title = currentLanguage === "zh" ? `型号：${modelName}` : modelName;
     const makerLine = currentLanguage === "zh" ? `厂商：${maker} · 系列：${family}` : `${maker} · ${family}`;
     const applications = translateProductText(item.applications || "");
+    const matchLabel = item.match_label ? translateBackendText(item.match_label) : "";
+    const reviewLabel = item.engineer_review ? translateBackendText("Engineer Review Recommended") : "";
+    const scoreClass = item.engineer_review ? "score review" : "score";
 
     return `
         <article class="result-card">
@@ -1158,7 +1167,11 @@ function renderResultCard(item, index) {
                         <h3>${escapeHtml(title)}</h3>
                         <p>${escapeHtml(makerLine)}</p>
                     </div>
-                    <span class="score">${item.match_percent || 0}% ${ui("match")}</span>
+                    <span class="${scoreClass}">
+                        <strong>${item.match_percent || 0}% ${ui("match")}</strong>
+                        ${matchLabel ? `<small>${escapeHtml(matchLabel)}</small>` : ""}
+                        ${reviewLabel ? `<small>${escapeHtml(reviewLabel)}</small>` : ""}
+                    </span>
                 </div>
                 <dl class="spec-grid">
                     ${specBlock(item, "detector", ui("detector"), item.detector_principle)}
