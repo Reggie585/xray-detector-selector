@@ -469,7 +469,7 @@ GROUP_WEIGHTS = {
     "target": 8,
     "pixel_size": 24,
     "performance": 5,
-    "installation": 20,
+    "installation": 14,
 }
 
 STRICT_MATCH_WEIGHTS = {
@@ -477,7 +477,7 @@ STRICT_MATCH_WEIGHTS = {
     "pixel_size": 30,
     "application": 22,
     "performance": 12,
-    "installation": 26,
+    "installation": 14,
 }
 
 
@@ -486,6 +486,18 @@ LAB_TARGET_IDS = {"cr_ka", "cu_ka", "w_la", "mo_ka", "rh_ka", "ag_ka"}
 HIGH_HARD_ENERGY_IDS = {"higher_energy_lab", "hard_xray"}
 ENERGY_FIT_WEIGHT = GROUP_WEIGHTS["energy"] + GROUP_WEIGHTS["target"]
 PIXEL_FIT_WEIGHT = GROUP_WEIGHTS["pixel_size"]
+INTERFACE_SUPPORT_TERMS = {
+    "usb",
+    "ethernet",
+    "software",
+    "windows",
+    "sdk",
+    "trigger",
+    "api",
+    "python",
+    "epics",
+    "tango",
+}
 ENERGY_FIELDS = [
     "minimum_energy_threshold",
     "detectable_energy_radiation_range",
@@ -1008,6 +1020,18 @@ def count_term_matches(text, terms):
     return matches
 
 
+def split_interface_support_matches(matches):
+    interface_matches = []
+    environment_matches = []
+    for match in matches:
+        clean_match = normalize(match)
+        if clean_match in INTERFACE_SUPPORT_TERMS:
+            interface_matches.append(match)
+        else:
+            environment_matches.append(match)
+    return interface_matches, environment_matches
+
+
 def first_value(product, *fields):
     for field in fields:
         value = product.get(field)
@@ -1201,6 +1225,7 @@ def installation_fit(product, answers):
     weight = GROUP_WEIGHTS["installation"]
     product_text = field_text(product, SEARCH_FIELDS["installation"])
     matches = count_term_matches(product_text, choice["terms"])
+    interface_matches, environment_matches = split_interface_support_matches(matches)
     ccd_camera = is_ccd_camera(product)
     vacuum_product = is_vacuum_or_uhv_product(product)
 
@@ -1215,19 +1240,29 @@ def installation_fit(product, answers):
                 "tie_bonus": -10,
             }
 
-        if matches:
+        if environment_matches:
             return {
                 "matched": weight,
                 "possible": weight,
-                "reason": f"Installation fit: simple lab setup ({', '.join(matches[:3])})",
+                "reason": f"Installation fit: simple lab setup ({', '.join(environment_matches[:3])})",
                 "status": "good",
                 "note": "Fits simple lab setup; CCD camera products were excluded",
                 "tie_bonus": 3,
             }
 
+        if interface_matches:
+            return {
+                "matched": round(weight * 0.42, 2),
+                "possible": weight,
+                "reason": f"Interface support: {', '.join(interface_matches[:3])}",
+                "status": "warn",
+                "note": "Interface/software looks usable, but it has a smaller percentage impact than energy, pixel size, and application",
+                "tie_bonus": 0.5,
+            }
+
         if vacuum_product:
             return {
-                "matched": round(weight * 0.2, 2),
+                "matched": round(weight * 0.12, 2),
                 "possible": weight,
                 "reason": None,
                 "status": "bad",
@@ -1236,11 +1271,11 @@ def installation_fit(product, answers):
             }
 
         return {
-            "matched": round(weight * 0.62, 2),
+            "matched": round(weight * 0.35, 2),
             "possible": weight,
             "reason": "Installation fit: non-CCD product kept for simple lab setup",
             "status": "warn",
-            "note": "Not a CCD camera; simple-lab interface details are not fully documented",
+            "note": "Not a CCD camera; simple-lab interface details are not fully documented and only lightly affect the score",
             "tie_bonus": 1,
         }
 
@@ -1257,19 +1292,19 @@ def installation_fit(product, answers):
 
         if ccd_camera:
             return {
-                "matched": round(weight * 0.78, 2),
+                "matched": round(weight * 0.62, 2),
                 "possible": weight,
                 "reason": "Installation fit: CCD camera family",
                 "status": "warn",
-                "note": "CCD camera is preferred for vacuum/UHV, but vacuum details are not fully documented",
+                "note": "CCD camera is preferred for vacuum/UHV, but missing vacuum details reduce the installation score",
                 "tie_bonus": 5,
             }
 
-        if vacuum_product or matches:
+        if vacuum_product or environment_matches:
             return {
                 "matched": round(weight * 0.45, 2),
                 "possible": weight,
-                "reason": f"Installation fit: vacuum/UHV indicators ({', '.join(matches[:3])})" if matches else "Installation fit: vacuum/UHV indicators",
+                "reason": f"Installation fit: vacuum/UHV indicators ({', '.join(environment_matches[:3])})" if environment_matches else "Installation fit: vacuum/UHV indicators",
                 "status": "warn",
                 "note": "Vacuum/UHV indicators found, but product is not a CCD camera family",
                 "tie_bonus": -1,
@@ -1284,14 +1319,24 @@ def installation_fit(product, answers):
             "tie_bonus": -5,
         }
 
-    if matches:
+    if environment_matches:
         return {
             "matched": weight,
             "possible": weight,
-            "reason": f"{CHOICE_GROUPS['installation']['title']}: {', '.join(matches[:3])}",
+            "reason": f"{CHOICE_GROUPS['installation']['title']}: {', '.join(environment_matches[:3])}",
             "status": "good",
-            "note": "Installation/interface text matches the selected environment",
+            "note": "Installation environment text matches the selected environment",
             "tie_bonus": min(len(matches), 3) * 0.1,
+        }
+
+    if interface_matches:
+        return {
+            "matched": round(weight * 0.35, 2),
+            "possible": weight,
+            "reason": f"Interface support: {', '.join(interface_matches[:3])}",
+            "status": "warn",
+            "note": "Interface/software match is useful, but it is weighted lightly in the total percentage",
+            "tie_bonus": 0.2,
         }
 
     return {
@@ -1585,7 +1630,7 @@ def conflict_score_adjustment(product, answers, conflict):
         reasons.append("Conflict: EUV/soft X-ray application was paired with a lab XRD-style energy")
 
     if "single_event" in performance_ids and is_ccd_camera(product):
-        penalty += 8
+        penalty += 5
         reasons.append("Conflict: single-event priority may require photon-counting or Timepix-style detection")
         quality_updates["detector"] = {
             "status": "warn",
