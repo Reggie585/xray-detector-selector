@@ -404,7 +404,7 @@ const SIMPLIFIED_INSTALLATION_IDS = ["simple_lab", "vacuum_uhv", "not_sure_insta
 const ENERGY_CHOICES_BY_APPLICATION = {
     xrd_saxs_waxs: ["low_energy_lab", "standard_xrd", "higher_energy_lab", "exact_energy", "not_sure_energy"],
     xafs_absorption: ["euv_vuv_soft", "low_energy_lab", "standard_xrd", "higher_energy_lab", "hard_xray", "exact_energy", "not_sure_energy"],
-    euv_soft_xray_spectroscopy: ["euv_vuv_soft", "exact_energy", "not_sure_energy"],
+    euv_soft_xray_spectroscopy: ["euv_vuv_soft", "low_energy_lab", "standard_xrd", "exact_energy", "not_sure_energy"],
     xray_euv_imaging: ["euv_vuv_soft", "low_energy_lab", "standard_xrd", "higher_energy_lab", "hard_xray", "exact_energy", "not_sure_energy"],
     microscopy_metrology: ["euv_vuv_soft", "low_energy_lab", "standard_xrd", "higher_energy_lab", "exact_energy", "not_sure_energy"],
     ct_3d: ["low_energy_lab", "higher_energy_lab", "hard_xray", "exact_energy", "not_sure_energy"],
