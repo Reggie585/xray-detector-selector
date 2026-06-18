@@ -401,6 +401,25 @@ let resultsGenerated = false;
 
 const SIMPLIFIED_INSTALLATION_IDS = ["simple_lab", "vacuum_uhv", "not_sure_installation"];
 
+const ENERGY_CHOICES_BY_APPLICATION = {
+    xrd_saxs_waxs: ["low_energy_lab", "standard_xrd", "higher_energy_lab", "exact_energy", "not_sure_energy"],
+    xafs_absorption: ["euv_vuv_soft", "low_energy_lab", "standard_xrd", "higher_energy_lab", "hard_xray", "exact_energy", "not_sure_energy"],
+    euv_soft_xray_spectroscopy: ["euv_vuv_soft", "exact_energy", "not_sure_energy"],
+    xray_euv_imaging: ["euv_vuv_soft", "low_energy_lab", "standard_xrd", "higher_energy_lab", "hard_xray", "exact_energy", "not_sure_energy"],
+    microscopy_metrology: ["euv_vuv_soft", "low_energy_lab", "standard_xrd", "higher_energy_lab", "exact_energy", "not_sure_energy"],
+    ct_3d: ["low_energy_lab", "higher_energy_lab", "hard_xray", "exact_energy", "not_sure_energy"],
+    industrial_ndt: ["higher_energy_lab", "hard_xray", "gamma_neutron_particles", "exact_energy", "not_sure_energy"],
+    material_identification: ["low_energy_lab", "standard_xrd", "higher_energy_lab", "hard_xray", "gamma_neutron_particles", "exact_energy", "not_sure_energy"],
+    radiation_particle: ["hard_xray", "gamma_neutron_particles", "exact_energy", "not_sure_energy"],
+    education_demo: ["low_energy_lab", "standard_xrd", "gamma_neutron_particles", "exact_energy", "not_sure_energy"],
+};
+
+const TARGET_CHOICES_BY_ENERGY = {
+    low_energy_lab: ["cr_ka", "cu_ka", "w_la"],
+    standard_xrd: ["cu_ka", "mo_ka"],
+    higher_energy_lab: ["mo_ka", "rh_ka", "ag_ka"],
+};
+
 const ICONS = {
     diffraction: '<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M9 44h46"/><path d="M13 38h8l5-21 8 34 7-25 6 12h6"/><path d="M17 26l7 7"/><path d="M47 28l-7 7"/></svg>',
     spectrum: '<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M10 42h8l4-10 6 18 6-26 7 16 4-8 7 10"/><path d="M13 50h38"/><path d="M15 34h3"/><path d="M48 34h3"/></svg>',
@@ -628,15 +647,23 @@ function translatedChoice(groupId, choice) {
     };
 }
 
-function translatedChoiceById(groupId, choiceId) {
-    const choice = visibleChoicesForGroup(groupId).find((item) => item.id === choiceId);
+function translatedChoiceById(groupId, choiceId, source = answers) {
+    const choice = visibleChoicesForGroup(groupId, source).find((item) => item.id === choiceId);
     return choice ? translatedChoice(groupId, choice) : null;
 }
 
-function visibleChoicesForGroup(groupId) {
+function adaptiveChoiceIds(groupId, source = answers) {
+    if (groupId === "installation") return SIMPLIFIED_INSTALLATION_IDS;
+    if (groupId === "energy") return ENERGY_CHOICES_BY_APPLICATION[source.application] || null;
+    if (groupId === "target") return TARGET_CHOICES_BY_ENERGY[source.energy] || [];
+    return null;
+}
+
+function visibleChoicesForGroup(groupId, source = answers) {
     const choices = window.CHOICE_GROUPS[groupId]?.choices || [];
-    if (groupId !== "installation") return choices;
-    return choices.filter((choice) => SIMPLIFIED_INSTALLATION_IDS.includes(choice.id));
+    const ids = adaptiveChoiceIds(groupId, source);
+    if (!ids) return choices;
+    return choices.filter((choice) => ids.includes(choice.id));
 }
 
 function sanitizeInstallationAnswer() {
@@ -648,6 +675,28 @@ function sanitizeInstallationAnswer() {
     }
     if (aiState.answers?.installation && !SIMPLIFIED_INSTALLATION_IDS.includes(aiState.answers.installation)) {
         aiState.answers.installation = "not_sure_installation";
+    }
+}
+
+function sanitizeAdaptiveAnswers() {
+    sanitizeInstallationAnswer();
+
+    const visibleEnergyIds = new Set(visibleChoicesForGroup("energy").map((choice) => choice.id));
+    if (answers.energy && !visibleEnergyIds.has(answers.energy)) {
+        answers.energy = null;
+        answers.target = null;
+        answers.exact_energy = "";
+        if (els.energyValue) els.energyValue.value = "";
+    }
+
+    const visibleTargetIds = new Set(visibleChoicesForGroup("target").map((choice) => choice.id));
+    if (answers.target && !visibleTargetIds.has(answers.target)) {
+        answers.target = null;
+    }
+
+    if (answers.energy !== "exact_energy" && answers.exact_energy) {
+        answers.exact_energy = "";
+        if (els.energyValue) els.energyValue.value = "";
     }
 }
 
@@ -1082,6 +1131,7 @@ function toggleChoice(groupId, choiceId) {
 
     if (maxChoices === 1) {
         answers[groupId] = answers[groupId] === choiceId ? null : choiceId;
+        sanitizeAdaptiveAnswers();
         return;
     }
 
@@ -1097,6 +1147,7 @@ function toggleChoice(groupId, choiceId) {
     }
 
     answers[groupId] = Array.from(selected);
+    sanitizeAdaptiveAnswers();
 }
 
 function choiceCard(groupId, choice) {
@@ -1115,7 +1166,7 @@ function choiceCard(groupId, choice) {
 
 function renderChoiceCards(groupId) {
     const group = window.CHOICE_GROUPS[groupId];
-    sanitizeInstallationAnswer();
+    sanitizeAdaptiveAnswers();
     els.cardsGrid.innerHTML = visibleChoicesForGroup(groupId).map((choice) => choiceCard(groupId, choice)).join("");
     els.cardsGrid.classList.toggle("compact", groupId === "performance");
 
@@ -1150,7 +1201,8 @@ function closeExactEnergyDialog() {
 }
 
 function renderOptionalTarget() {
-    const shouldShowTarget = ["low_energy_lab", "standard_xrd", "higher_energy_lab"].includes(answers.energy);
+    const visibleTargets = visibleChoicesForGroup("target");
+    const shouldShowTarget = visibleTargets.length > 0;
     if (!shouldShowTarget) {
         answers.target = null;
         return "";
@@ -1161,7 +1213,7 @@ function renderOptionalTarget() {
         <div class="subsection">
             <p class="subsection-title">${ui("knownTarget")}</p>
             <div class="mini-card-grid">
-                ${visibleChoicesForGroup("target").map((choice) => choiceCard("target", choice)).join("")}
+                ${visibleTargets.map((choice) => choiceCard("target", choice)).join("")}
             </div>
         </div>
     `;
@@ -1572,8 +1624,8 @@ function countChoiceTermHits(text, choice) {
     }, 0);
 }
 
-function bestChoiceByTerms(groupId, text) {
-    const choices = visibleChoicesForGroup(groupId);
+function bestChoiceByTerms(groupId, text, source = answers) {
+    const choices = visibleChoicesForGroup(groupId, source);
     let best = { id: null, score: 0 };
 
     choices.forEach((choice) => {
@@ -1612,7 +1664,7 @@ function outputTypeForApplication(applicationId) {
     return languagePack().outputTypes[applicationId] || LANGUAGE_TEXT.en.outputTypes[applicationId] || "";
 }
 
-function extractEnergyFromText(text) {
+function extractEnergyFromText(text, source = answers) {
     const exactMatch = text.match(/(\d+(?:\.\d+)?)\s*(mev|kev|ev)\b/);
     const exactEnergy = exactMatch ? `${exactMatch[1]} ${exactMatch[2]}` : "";
 
@@ -1650,7 +1702,7 @@ function extractEnergyFromText(text) {
         return { energy: "exact_energy", target: null, exact_energy: exactEnergy };
     }
 
-    return { energy: bestChoiceByTerms("energy", text), target: null, exact_energy: "" };
+    return { energy: bestChoiceByTerms("energy", text, source), target: null, exact_energy: "" };
 }
 
 function extractPixelFromText(text) {
@@ -1694,10 +1746,11 @@ function extractPerformanceFromText(text) {
 
 function extractRequirementsFromText(rawText) {
     const text = normalizeAiText(rawText);
-    const energyInfo = extractEnergyFromText(text);
+    const application = bestChoiceByTerms("application", text);
+    const energyInfo = extractEnergyFromText(text, { ...answers, application });
 
     return {
-        application: bestChoiceByTerms("application", text),
+        application,
         energy: energyInfo.energy,
         target: energyInfo.target,
         pixel_size: extractPixelFromText(text),
@@ -1819,7 +1872,7 @@ function renderAiFollowups() {
 
     els.aiFollowupList.innerHTML = aiState.missing
         .map((groupId) => {
-            const choices = visibleChoicesForGroup(groupId).map((choice) => translatedChoice(groupId, choice));
+            const choices = visibleChoicesForGroup(groupId, aiState.extracted || answers).map((choice) => translatedChoice(groupId, choice));
             return `
                 <div class="ai-followup-group">
                     <strong>${escapeHtml(aiFollowupQuestion(groupId))}</strong>
@@ -2052,6 +2105,7 @@ function nextStepButtonLabel(step) {
 
 function render() {
     renderStaticLanguageText();
+    sanitizeAdaptiveAnswers();
     const currentId = steps[currentStep].id;
     els.stepCount.textContent = currentStep + 1;
     els.stepTotal.textContent = steps.length;
