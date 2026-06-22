@@ -794,9 +794,14 @@ function translateBackendText(value) {
         "Application & Result: spectroscopy": "应用与结果：光谱",
         "Application & Result: spectral imaging": "应用与结果：光谱成像",
         "Application & Result: material": "应用与结果：材料识别",
+        "Application & Result: absorption, transmission": "应用与结果：吸收、透射",
+        "Application & Result: absorption/transmission/reflection": "应用与结果：吸收 / 透射 / 反射",
         "Application & Result: imaging": "应用与结果：成像",
         "Application & Result: microscopy": "应用与结果：显微 / 计量",
         "Application & Result: xrd": "应用与结果：XRD / 衍射",
+        "Performance: Energy-resolved imaging": "性能优先级：能量分辨成像",
+        "Performance: energy-resolved imaging": "性能优先级：能量分辨成像",
+        "Atmospheric fit: greateyes ELSE series": "大气环境匹配：greateyes ELSE 系列",
         "Source Energy & Sample: cr": "射线源与能量：Cr 靶材",
         "Source Energy & Sample: cu": "射线源与能量：Cu 靶材",
         "Source Energy & Sample: w": "射线源与能量：W 靶材",
@@ -829,6 +834,7 @@ function translateBackendText(value) {
         [/^Application & Result: (.+)$/i, "应用与结果：$1"],
         [/^Source Energy & Sample: (.+)$/i, "射线源与能量：$1"],
         [/^Performance: (.+)$/i, "性能优先级：$1"],
+        [/^Atmospheric fit: (.+)$/i, "大气环境匹配：$1"],
         [/^Installation fit: (.+)$/i, "安装环境匹配：$1"],
         [/^Installation & Control: (.+)$/i, "安装环境与控制：$1"],
         [/^Environment fit: (.+)$/i, "使用环境匹配：$1"],
@@ -848,6 +854,9 @@ function translateBackendText(value) {
         "Active area": "有效面积",
         "Interface": "接口",
         "Software": "软件",
+        "Atmospheric fit": "大气环境匹配",
+        "greateyes ELSE series": "greateyes ELSE 系列",
+        "ELSE series": "ELSE 系列",
         "Typical": "典型值",
         "product description also lists": "产品说明还列出",
         "commonly used for": "常用于",
@@ -871,6 +880,16 @@ function translateBackendText(value) {
         "particle physics research": "粒子物理研究",
         "Industrial-system integration": "工业系统集成",
         "spectroscopy": "光谱",
+        "Raman spectroscopy": "拉曼光谱",
+        "near-infrared spectroscopy": "近红外光谱",
+        "fluorescence spectroscopy": "荧光光谱",
+        "absorption/transmission/reflection spectroscopy": "吸收 / 透射 / 反射光谱",
+        "near-infrared": "近红外",
+        "fluorescence": "荧光",
+        "Raman": "拉曼",
+        "absorption": "吸收",
+        "transmission": "透射",
+        "reflection": "反射",
         "spectral imaging": "光谱成像",
         "material": "材料",
         "imaging": "成像",
@@ -909,6 +928,8 @@ function translateBackendText(value) {
         translated = translated.replaceAll(english, chinese);
     });
     return translated
+        .replace(/能量-resolved\s*成像/g, "能量分辨成像")
+        .replace(/吸收,\s*透射/g, "吸收、透射")
         .replace(/(\d+(?:\.\d+)?(?:\s*[×x]\s*\d+(?:\.\d+)?)?)\s*(?:[µμ]m|um)\b/g, "$1 微米")
         .replace(/mm²/g, "平方毫米")
         .replace(/(\d+(?:\.\d+)?(?:\s*[×x]\s*\d+(?:\.\d+)?)?)\s*mm\b/g, "$1 毫米");
@@ -970,6 +991,13 @@ function translateProductText(value) {
         "in datasheet": "（数据表）",
         "datasheet": "数据表",
         "product summaries often list": "产品摘要通常列出",
+        "Raman spectroscopy": "拉曼光谱",
+        "near-infrared spectroscopy": "近红外光谱",
+        "fluorescence spectroscopy": "荧光光谱",
+        "absorption/transmission/reflection spectroscopy": "吸收 / 透射 / 反射光谱",
+        "absorption spectroscopy": "吸收光谱",
+        "transmission spectroscopy": "透射光谱",
+        "reflection spectroscopy": "反射光谱",
         "EUV lithography": "EUV 光刻",
         "CT imaging": "CT 成像",
         "X-ray spectroscopy": "X 射线光谱",
@@ -1037,6 +1065,7 @@ function translateProductText(value) {
     });
 
     return translated
+        .replace(/;\s*/g, "；")
         .replace(/(\d+(?:\.\d+)?(?:\s*[×x]\s*\d+(?:\.\d+)?)?)\s*(?:[µμ]m|um)\b/g, "$1 微米")
         .replace(/mm²/g, "平方毫米")
         .replace(/(\d+(?:\.\d+)?(?:\s*[×x]\s*\d+(?:\.\d+)?)?)\s*mm\b/g, "$1 毫米");
