@@ -176,7 +176,7 @@ const LANGUAGE_TEXT = {
         ui: {
             documentTitle: "X 射线探测器选型工具",
             heroTitle: "X 射线探测器选型工具",
-            heroKicker: "X-ray Detector Selector",
+            heroKicker: "智能探测器推荐流程",
             heroSubtitle: "回答几个问题，我们会帮助你找到最适合应用场景的探测器。",
             aiHelperOpen: "AI 助手",
             infoSummary: "这是什么工具？",
@@ -240,7 +240,7 @@ const LANGUAGE_TEXT = {
             software: "软件",
             unknownManufacturer: "未知厂商",
             match: "匹配",
-            notAvailable: "N/A",
+            notAvailable: "未提供",
             contactHintWithContact: "联系方式：{contact}。",
             contactHintNoContact: "请在第 6 步添加邮箱或备注，方便工程师后续联系。",
             engineerAlternativePrepared: "已准备工程师复核信息，用于讨论其他实现测量目标的方式。因为部分答案指向不同探测器类型，建议工程师确认。当前还没有真正发送。",
@@ -323,27 +323,27 @@ const CHOICE_TRANSLATIONS = {
             ct_3d: { label: "CT / 三维成像", description: "用于重建样品或部件的三维体数据。" },
             industrial_ndt: { label: "工业无损检测", description: "用于焊缝、管道、阀门、电池、电子器件、复合材料、铸件或工业部件。" },
             material_identification: { label: "材料识别", description: "用于能量分辨或彩色 X 射线成像，以区分不同材料。" },
-            radiation_particle: { label: "辐射监测 / 粒子追踪", description: "用于 alpha、beta、gamma、中子、宇宙射线、源定位或粒子轨迹。" },
+            radiation_particle: { label: "辐射监测 / 粒子追踪", description: "用于 α、β、伽马、中子、宇宙射线、源定位或粒子轨迹。" },
             education_demo: { label: "教学 / 演示", description: "用于课堂实验、简单辐射可视化或粒子物理教学。" },
             not_sure_application: { label: "不确定", description: "先保持应用筛选较宽，继续回答后续问题。" },
         },
         energy: {
             euv_vuv_soft: { label: "EUV / VUV / 软 X 射线", description: "低于约 1 keV、真空实验或软 X 射线实验。" },
-            low_energy_lab: { label: "低能实验室 X 射线", description: "Cr-Kalpha、Cu-Kalpha、W-Lalpha 或类似 5-9 keV 射线源。" },
-            standard_xrd: { label: "标准 XRD 射线源", description: "常见实验室 XRD 射线源，例如 Cu-Kalpha 或 Mo-Kalpha。" },
+            low_energy_lab: { label: "低能实验室 X 射线", description: "Cr-Kα、Cu-Kα、W-Lα 或类似 5-9 keV 射线源。" },
+            standard_xrd: { label: "标准 XRD 射线源", description: "常见实验室 XRD 射线源，例如 Cu-Kα 或 Mo-Kα。" },
             higher_energy_lab: { label: "较高能实验室 X 射线", description: "Mo、Rh、Ag 或类似 17-22 keV 的较高能靶材。" },
             hard_xray: { label: "硬 X 射线 / 高穿透", description: "30-150 keV、厚样品、高密度金属或工业检测。" },
-            gamma_neutron_particles: { label: "Gamma / 中子 / 粒子", description: "辐射监测、中子转换、gamma 成像或源定位。" },
+            gamma_neutron_particles: { label: "伽马 / 中子 / 粒子", description: "辐射监测、中子转换、伽马成像或源定位。" },
             exact_energy: { label: "我知道精确能量", description: "在弹窗中输入 eV、keV 或 MeV 数值。" },
             not_sure_energy: { label: "不确定", description: "不通过射线源能量进行过度筛选。" },
         },
         target: {
-            cr_ka: { label: "Cr-Kalpha", description: "5.4 keV" },
-            cu_ka: { label: "Cu-Kalpha", description: "8.04 keV" },
-            w_la: { label: "W-Lalpha", description: "8.4 keV" },
-            mo_ka: { label: "Mo-Kalpha", description: "17.4 keV" },
-            rh_ka: { label: "Rh-Kalpha", description: "20.2 keV" },
-            ag_ka: { label: "Ag-Kalpha", description: "22.2 keV" },
+            cr_ka: { label: "Cr-Kα", description: "5.4 keV" },
+            cu_ka: { label: "Cu-Kα", description: "8.04 keV" },
+            w_la: { label: "W-Lα", description: "8.4 keV" },
+            mo_ka: { label: "Mo-Kα", description: "17.4 keV" },
+            rh_ka: { label: "Rh-Kα", description: "20.2 keV" },
+            ag_ka: { label: "Ag-Kα", description: "22.2 keV" },
         },
         pixel_size: {
             pixel_under_1: { label: "小于 1 微米", description: "用于亚微米细节、显微、计量或非常精细的空间分辨率。" },
@@ -358,7 +358,7 @@ const CHOICE_TRANSLATIONS = {
             weak_signal_low_noise: { label: "弱信号 / 低噪声", description: "弱 X 射线/EUV 信号、长曝光、低通量、光谱或高灵敏度实验。" },
             energy_resolved: { label: "能量分辨成像", description: "光谱成像、材料区分或彩色 X 射线图像。" },
             high_dynamic_range: { label: "高动态范围", description: "同一图像中同时测量强弱信号，或避免饱和。" },
-            single_event: { label: "单光子 / 粒子灵敏度", description: "单粒子轨迹、辐射监测、宇宙射线、alpha、beta、gamma 或中子探测。" },
+            single_event: { label: "单光子 / 粒子灵敏度", description: "单粒子轨迹、辐射监测、宇宙射线、α、β、伽马或中子探测。" },
             balanced: { label: "均衡性能", description: "通用科研探测器，没有特别极端的优先级。" },
             not_sure_performance: { label: "不确定", description: "由应用和射线源自动推断优先级。" },
         },
@@ -768,6 +768,338 @@ function renderStaticLanguageText() {
     }
 }
 
+const COMMON_ZH_PHRASES = {
+    "X-ray Detector Selector": "X 射线探测器选型工具",
+    "Recommendation output": "推荐结果",
+    "Best matches": "最佳匹配",
+    "Compare top 3": "对比前三项",
+    "AI helper": "AI 助手",
+    "Need help choosing": "需要帮助选型",
+    "Contact Us": "联系我们",
+    "Contact us": "联系我们",
+    "Contact": "联系",
+    "Back": "上一步",
+    "Previous": "上一步",
+    "Next": "下一步",
+    "Finish": "完成",
+    "Review": "结果",
+    "Summary": "汇总",
+    "Select": "请选择",
+    "Application": "应用",
+    "Source": "射线源",
+    "Environment": "环境",
+    "Priority": "优先级",
+    "Install": "环境",
+    "Product": "产品",
+    "Detector": "探测器",
+    "Energy": "能量",
+    "Pixel": "像素",
+    "Active area": "有效面积",
+    "Interface": "接口",
+    "Software": "软件",
+    "match": "匹配",
+    "Unknown manufacturer": "未知厂商",
+    "Not available": "未提供",
+    "N/A": "未提供",
+
+    "Scientific VUV / EUV / soft X-ray / hard X-ray imaging and spectroscopy": "科学级 VUV / EUV / 软 X 射线 / 硬 X 射线成像与光谱",
+    "Scientific VUV / EUV / soft X-ray / hard X-ray spectroscopy": "科学级 VUV / EUV / 软 X 射线 / 硬 X 射线光谱",
+    "Scientific in-vacuum VUV / EUV / soft X-ray / hard X-ray spectroscopy": "真空内科学级 VUV / EUV / 软 X 射线 / 硬 X 射线光谱",
+    "Scientific in-vacuum VUV / EUV / soft X-ray / hard X-ray imaging": "真空内科学级 VUV / EUV / 软 X 射线 / 硬 X 射线成像",
+    "Scientific UV / visible / near-infrared spectroscopy": "科学级紫外 / 可见光 / 近红外光谱",
+    "Scientific UV / visible / near-infrared imaging": "科学级紫外 / 可见光 / 近红外成像",
+    "High-energy beam conditions": "高能束流条件",
+    "Micron/submicron X-ray microscopy": "微米 / 亚微米 X 射线显微",
+    "X-ray computed tomography": "X 射线计算机断层成像",
+    "X-ray metrology": "X 射线计量",
+    "Integration into larger industrial systems": "集成到大型工业系统",
+    "Radiation monitoring, material analysis, X-ray imaging, particle tracking": "辐射监测、材料分析、X 射线成像、粒子追踪",
+
+    "Deep-cooled scientific CCD imaging camera": "深度制冷科学级 CCD 成像相机",
+    "Deep-cooled scientific CCD spectroscopy camera": "深度制冷科学级 CCD 光谱相机",
+    "In-vacuum deep-cooled scientific CCD spectroscopy camera": "真空内深度制冷科学级 CCD 光谱相机",
+    "In-vacuum deep-cooled scientific CCD imaging camera": "真空内深度制冷科学级 CCD 成像相机",
+    "Deep-cooled direct-detection back-illuminated sCMOS scientific camera": "深度制冷背照式直接探测 sCMOS 科学相机",
+    "Compact 2D X-ray sCMOS camera": "紧凑型二维 X 射线 sCMOS 相机",
+    "Hybrid photon-counting particle-tracking / spectral imaging detector": "混合型光子计数粒子追踪 / 光谱成像探测器",
+    "Large-area hybrid photon-counting spectral X-ray imaging detector": "大面积混合型光子计数光谱 X 射线成像探测器",
+    "Rugged industrial multi-chip spectral X-ray scanning/imaging detector": "坚固型工业多芯片光谱 X 射线扫描 / 成像探测器",
+    "Educational USB radiation / particle camera": "教学用 USB 辐射 / 粒子相机",
+    "Compact low-power photon-counting radiation camera for integration": "用于集成的紧凑低功耗光子计数辐射相机",
+    "Compact low-power photon-counting radiation camera": "紧凑低功耗光子计数辐射相机",
+
+    "Integrating CCD spectroscopy camera with deep cooling": "带深度制冷的积分式 CCD 光谱相机",
+    "In-vacuum integrating CCD spectroscopy camera with deep cooling": "真空内使用的深度制冷积分式 CCD 光谱相机",
+    "In-vacuum integrating CCD imaging camera with deep cooling": "真空内使用的深度制冷积分式 CCD 成像相机",
+    "Integrating CCD imaging camera with deep cooling": "带深度制冷的积分式 CCD 成像相机",
+    "Integrating CCD camera with deep cooling": "带深度制冷的积分式 CCD 相机",
+    "Direct-detection back-illuminated sCMOS camera with deep cooling": "带深度制冷的背照式直接探测 sCMOS 相机",
+    "sCMOS X-ray camera with changeable lens/scintillator units": "带可更换镜头 / 闪烁体单元的 sCMOS X 射线相机",
+    "Photon-counting, event-based / data-driven detector": "光子计数、事件驱动 / 数据驱动探测器",
+    "Medipix3 hybrid photon-counting detector": "Medipix3 混合型光子计数探测器",
+    "Timepix single-particle counting / particle tracking": "Timepix 单粒子计数 / 粒子追踪探测器",
+
+    "VUV, EUV, SXR, HXR": "VUV、EUV、软 X 射线（SXR）、硬 X 射线（HXR）",
+    "Alpha, beta, gamma, cosmic particles; exact X-ray energy range not specified": "α、β、伽马、宇宙粒子；未明确标注精确 X 射线能量范围",
+    "Typical: Si 3–60 keV; CdTe 5–500 keV; product description also lists 1 mm CdT...": "典型值：Si 3–60 keV；CdTe 5–500 keV；产品说明还列出 1 mm CdT...",
+    "100 μm Si: 3–20 keV; 300 μm Si: 5–40 keV; 500 μm Si: 8–60 keV": "100 微米 Si：3–20 keV；300 微米 Si：5–40 keV；500 微米 Si：8–60 keV",
+    "500 μm Si commonly used for 8–60 keV X-rays": "500 微米 Si 常用于 8–60 keV X 射线",
+    "Si up to 60 keV; CdTe up to 600 keV in datasheet; product summaries often lis...": "数据表中 Si 最高 60 keV；CdTe 最高 600 keV；产品摘要通常还列出...",
+    "Si up to 60 keV; CdTe up to 600 keV in datasheet; product summary also lists ...": "数据表中 Si 最高 60 keV；CdTe 最高 600 keV；产品摘要还列出...",
+    "UV, VIS, NIR": "紫外、可见光、近红外",
+    "50 eV (vacuum version) – 30 keV": "50 eV（真空版本）– 30 keV",
+
+    "Image / spectral imaging data": "图像 / 光谱成像数据",
+    "Position, energy/ToT, arrival time/ToA, fast arrival time/FToA depending mode": "位置、能量 / ToT、到达时间 / ToA、快速到达时间 / FToA，取决于模式",
+    "Tracking: deposited energy sum per pixel; Imaging: event count per pixel": "追踪：每像素沉积能量总和；成像：每像素事件计数",
+    "Event count; deposited energy sum/ToT; first event arrival time/ToA": "事件计数；沉积能量总和 / ToT；首个事件到达时间 / ToA",
+    "Photon counts above thresholds; spectral / material-sensitive images": "阈值以上光子计数；光谱 / 材料敏感图像",
+    "Spectroscopy image/signal data": "光谱图像 / 信号数据",
+    "Direct-detection sCMOS image data": "直接探测 sCMOS 图像数据",
+    "2D X-ray images; CT / microscopy image data": "二维 X 射线图像；CT / 显微图像数据",
+    "Image data": "图像数据",
+
+    "EUV lithography": "EUV 光刻",
+    "X-ray tomography/fluorescence imaging": "X 射线断层 / 荧光成像",
+    "X-ray tomography": "X 射线断层成像",
+    "Fourier-transform holography": "傅里叶变换全息成像",
+    "X-ray diffraction": "X 射线衍射",
+    "X-ray phase contrast imaging": "X 射线相位衬度成像",
+    "XRF imaging": "XRF 成像",
+    "CDI": "相干衍射成像（CDI）",
+    "ptychography": "叠层成像",
+    "GISAXS": "掠入射小角 X 射线散射（GISAXS）",
+    "X-ray spectroscopy": "X 射线光谱",
+    "Soft X-ray spectroscopy": "软 X 射线光谱",
+    "soft X-ray spectroscopy": "软 X 射线光谱",
+    "plasma emission spectroscopy": "等离子体发射光谱",
+    "HHG spectroscopy": "高次谐波光谱",
+    "HHG detection/experiments": "HHG 探测 / 实验",
+    "high-repetition XFEL X-ray imaging": "高重复频率 XFEL X 射线成像",
+    "Raman spectroscopy": "拉曼光谱",
+    "near-infrared spectroscopy": "近红外光谱",
+    "fluorescence spectroscopy": "荧光光谱",
+    "absorption/transmission/reflection spectroscopy": "吸收 / 透射 / 反射光谱",
+    "absorption spectroscopy": "吸收光谱",
+    "transmission spectroscopy": "透射光谱",
+    "reflection spectroscopy": "反射光谱",
+    "Live fluorescence bioimaging": "活体荧光生物成像",
+    "LIBS spectroscopy": "LIBS 光谱",
+    "EL/PL imaging": "EL / PL 成像",
+    "ultracold quantum research": "超冷量子研究",
+    "astronomy": "天文观测",
+    "neutron tomography": "中子断层成像",
+    "CT imaging": "CT 成像",
+    "material-sensitive imaging": "材料敏感成像",
+    "low-density material/soft tissue defect detection": "低密度材料 / 软组织缺陷检测",
+    "light-material/soft-tissue defect detection": "轻质材料 / 软组织缺陷检测",
+    "large-sample NDT": "大样品无损检测",
+    "mineral/geology inspection": "矿物 / 地质检测",
+    "industrial radiography": "工业射线照相",
+    "high-energy X-ray/gamma imaging": "高能 X 射线 / 伽马成像",
+    "electronics/light-part inspection": "电子器件 / 轻质部件检测",
+    "low-dose X-ray radiography": "低剂量 X 射线摄影",
+    "scintigraphy/SPECT/isotope imaging": "闪烁显像 / SPECT / 同位素成像",
+    "energy-dispersive XRD/SAXS/WAXS": "能量色散 XRD / SAXS / WAXS",
+    "particle tracking": "粒子追踪",
+    "neutron imaging": "中子成像",
+    "Compton camera": "康普顿相机",
+    "TOF imaging": "飞行时间（TOF）成像",
+    "Education": "教学 / 演示",
+    "particle interaction experiments": "粒子相互作用实验",
+    "shielding": "屏蔽实验",
+    "air radioactivity": "空气放射性",
+    "cosmic muon search": "宇宙缪子探测",
+    "altitude/radiation studies": "海拔 / 辐射研究",
+    "decay law observation": "衰变规律观察",
+    "Medical X-ray imaging": "医学 X 射线成像",
+    "material analysis": "材料分析",
+    "radiation monitoring": "辐射监测",
+    "gamma spectral imaging": "伽马光谱成像",
+    "gamma camera": "伽马相机",
+    "isotope imaging": "同位素成像",
+    "particle physics research": "粒子物理研究",
+    "Industrial-system integration": "工业系统集成",
+    "phase identification": "物相识别",
+    "compositional analysis": "成分分析",
+    "defect detection": "缺陷检测",
+    "inspection": "检测",
+    "controlled laboratory environment": "受控实验室环境",
+    "portable": "便携",
+    "field": "现场",
+    "vacuum": "真空",
+    "laboratory": "实验室",
+    "spectral imaging": "光谱成像",
+    "material": "材料",
+    "imaging": "成像",
+    "spectroscopy": "光谱",
+    "radiation studies": "辐射研究",
+    "radiation": "辐射",
+    "particle": "粒子",
+    "cosmic": "宇宙射线",
+
+    "With CF flange: UHV capability to 10^-10 mbar; bake-out max +80 °C": "带 CF 法兰：UHV 能力可达 10^-10 mbar；最高烘烤温度 +80 °C",
+    "With CF flange: UHV capability to 10^-9 mbar; bake-out max +80 °C": "带 CF 法兰：UHV 能力可达 10^-9 mbar；最高烘烤温度 +80 °C",
+    "In-vacuum camera; UHV capability to 10^-9 mbar; bake-out max +80 °C": "真空内相机；UHV 能力可达 10^-9 mbar；最高烘烤温度 +80 °C",
+    "Possible; operate only below 10^-3 Pa when in vacuum; contact supplier for details": "可能支持；真空中仅可在低于 10^-3 Pa 时运行；详情请联系供应商",
+    "Hermetically vacuum-sealed camera; window material MgF2/UVFS/BK7; not an in-vacuum camera": "气密真空密封相机；窗口材料 MgF2 / UVFS / BK7；不是真空内相机",
+    "Vacuum version available upon request; EUV sensitivity can extend to ≥50 eV": "可按需提供真空版本；EUV 灵敏度可扩展至 ≥50 eV",
+
+    "Flange distance and mechanical customization available": "可定制法兰距离和机械结构",
+    "Sensor specification customizable": "可定制传感器规格",
+    "Designed for integration into larger industrial systems": "面向大型工业系统集成设计",
+    "Designed for integration; model/row/sensor configuration dependent": "面向集成设计；取决于型号 / 排列 / 传感器配置",
+    "Industrial integration; rugged/compact form factor; SenseEdge option": "工业集成；坚固 / 紧凑结构；可选 SenseEdge",
+    "Flange distance can be customized": "法兰距离可定制",
+    "Sensor coating/window configuration options": "可选传感器镀膜 / 窗口配置",
+    "Flange/window and cooling accessories available": "可提供法兰 / 窗口和冷却附件",
+    "Changeable lens units; vacuum version available upon request": "可更换镜头单元；可按需提供真空版本",
+
+    "Water cooling / temperature stabilization": "水冷 / 温度稳定",
+    "External temperature stabilization recommended": "建议外部温度稳定",
+    "Water cooling": "水冷",
+    "deep thermoelectric cooling": "深度热电制冷",
+    "deep cooling": "深度制冷",
+    "liquid cooling only": "仅液冷",
+    "forced air or liquid cooling": "强制风冷或液冷",
+    "in-vacuum liquid-cooling configuration": "真空内液冷配置",
+    "No water chiller necessary": "无需水冷机",
+    "max pressure": "最大压力",
+    "auto shutdown": "自动关机",
+    "Down to": "最低",
+
+    "Gigabit Ethernet, USB 3.0": "千兆以太网、USB 3.0",
+    "10 Gigabit Ethernet, USB 3.0": "10 千兆以太网、USB 3.0",
+    "USB 3.0 or 1 Gbps Ethernet": "USB 3.0 或 1 Gbps 以太网",
+    "USB 3.0 SuperSpeed": "USB 3.0 超高速",
+    "USB 2.0 High-Speed": "USB 2.0 高速",
+    "2× RJ45 Gigabit Ethernet": "2× RJ45 千兆以太网",
+    "3× RJ45 Gigabit Ethernet": "3× RJ45 千兆以太网",
+    "1× 1 Gb/s Ethernet with PoE": "1× 1 Gb/s PoE 以太网",
+    "Gigabit Ethernet": "千兆以太网",
+    "ADVACAM / PIXet software ecosystem (specific software not consistently listed)": "ADVACAM / PIXet 软件生态（具体软件未完全统一列出）",
+    "Intuitive software with basic tools; SDK included": "直观软件，包含基础工具；包含 SDK",
+    "PIXet Pro / Timepix3 .t3 data formats referenced": "PIXet Pro / 支持 Timepix3 .t3 数据格式",
+    "greateyes Vision": "greateyes Vision 软件",
+    "PIXet Basic": "PIXet Basic 软件",
+    "PIXet Pro": "PIXet Pro 软件",
+
+    "Application & Result": "应用与结果",
+    "Source Energy & Sample": "射线源与能量",
+    "Performance Priority": "性能优先级",
+    "Performance": "性能优先级",
+    "Installation & Control": "安装环境与控制",
+    "Installation": "安装环境",
+    "Control": "控制",
+    "Atmospheric fit": "大气环境匹配",
+    "Atmospheric fallback": "大气环境备选",
+    "Environment fit": "环境匹配",
+    "Installation fit": "安装环境匹配",
+    "Interface support": "接口支持",
+    "Energy family fit": "能量类型匹配",
+    "Pixel family fit": "像素类型匹配",
+    "Energy family appears compatible with": "能量类型看起来兼容",
+    "Energy family conflicts with requested": "能量类型与所选要求冲突",
+    "Pixel range inferred from product text": "根据产品文字推断像素范围",
+    "ADVACAM products can be applied flexibly": "ADVACAM 产品可灵活应用",
+    "Rigaku may require customization for air operation": "Rigaku 可能需要定制后用于大气环境",
+    "greateyes ELSE series": "greateyes ELSE 系列",
+    "ELSE series": "ELSE 系列",
+    "non-CCD/CMOS product kept for atmospheric use": "保留用于大气环境的非 CCD/CMOS 产品",
+    "atmospheric operation": "大气环境运行",
+    "direct atmospheric fits": "直接适配大气环境的产品",
+    "direct vacuum camera fits": "直接适配真空相机的产品",
+    "customizable atmospheric option": "可定制的大气环境备选",
+    "customizable vacuum/UHV option": "可定制真空/UHV 备选",
+    "CCD/CMOS camera with vacuum/UHV indicators": "具有真空/UHV 信息的 CCD/CMOS 相机",
+    "CCD/CMOS camera family": "CCD/CMOS 相机类型",
+    "vacuum/UHV indicators": "真空/UHV 相关信息",
+    "Vacuum/UHV indicators": "真空/UHV 相关信息",
+    "Vacuum/UHV selected": "已选择真空/UHV",
+    "not a CCD or CMOS/sCMOS camera family": "不是 CCD 或 CMOS/sCMOS 相机类型",
+    "not a simple lab setup": "不适合简单实验室环境",
+    "vacuum/beamline-oriented": "偏向真空或束线场景",
+    "Typical": "典型值",
+    "product description also lists": "产品说明还列出",
+    "product summaries often list": "产品摘要通常列出",
+    "product summary also lists": "产品摘要还列出",
+    "commonly used for": "常用于",
+    "not clearly documented": "未明确记录",
+    "Not scored by current answers": "当前答案未对此项评分",
+    "not scored by current answers": "当前答案未对此项评分",
+    "requested": "所选",
+    "product has": "产品为",
+    "fits": "符合",
+    "in datasheet": "（数据表）",
+    "datasheet": "数据表",
+    "with PoE": "带 PoE",
+    "data formats referenced": "数据格式已列出",
+    "software ecosystem": "软件生态",
+    "specific software not consistently listed": "具体软件未完全统一列出",
+    "basic tools": "基础工具",
+    "SDK included": "包含 SDK",
+    "Effective pixel size": "等效像素尺寸",
+    "Field of view": "视场",
+    "calculated from pixel pitch": "由像素间距计算",
+    "SuperSpeed": "超高速",
+    "High-Speed": "高速",
+    "up to": "最高",
+    "Si up to": "Si 最高",
+    "CdTe up to": "CdTe 最高",
+    "X-rays": "X 射线",
+    "X-ray": "X 射线",
+    "soft X-ray": "软 X 射线",
+    "hard X-ray": "硬 X 射线",
+    "gamma": "伽马",
+    "Gamma": "伽马",
+    "alpha": "α",
+    "Alpha": "α",
+    "beta": "β",
+    "Beta": "β",
+    "near-infrared": "近红外",
+    "fluorescence": "荧光",
+    "Raman": "拉曼",
+    "absorption": "吸收",
+    "transmission": "透射",
+    "reflection": "反射",
+    "microscopy": "显微",
+    "camera": "相机",
+    "detector": "探测器",
+    "event-based": "事件驱动",
+    "data-driven": "数据驱动",
+    "photon-counting": "光子计数",
+    "single-particle": "单粒子",
+    "tracking": "追踪",
+    "deep cooling": "深度制冷",
+    "deep-cooled": "深度制冷",
+};
+
+function applyZhPhraseMap(text, extraMap = {}) {
+    let translated = String(text || "");
+    const entries = Object.entries({ ...COMMON_ZH_PHRASES, ...extraMap })
+        .sort(([left], [right]) => right.length - left.length);
+
+    entries.forEach(([english, chinese]) => {
+        translated = translated.replaceAll(english, chinese);
+    });
+
+    return translated;
+}
+
+function cleanupZhTechnicalText(value) {
+    return String(value || "")
+        .replace(/能量-resolved\s*成像/g, "能量分辨成像")
+        .replace(/energy-resolved/g, "能量分辨")
+        .replace(/吸收,\s*透射/g, "吸收、透射")
+        .replace(/辐射,\s*粒子,\s*宇宙射线/g, "辐射、粒子、宇宙射线")
+        .replace(/伽马,\s*α,\s*β/g, "伽马、α、β")
+        .replace(/;\s*/g, "；")
+        .replace(/\s+\/\s+/g, " / ")
+        .replace(/(\d+(?:\.\d+)?(?:\s*[×x]\s*\d+(?:\.\d+)?)?)\s*(?:[µμ]m|um)\b/g, "$1 微米")
+        .replace(/mm²/g, "平方毫米")
+        .replace(/(\d+(?:\.\d+)?(?:\s*[×x]\s*\d+(?:\.\d+)?)?)\s*mm\b/g, "$1 毫米");
+}
+
 function translateBackendText(value) {
     const text = String(value || "");
     if (currentLanguage !== "zh" || !text) return text;
@@ -802,6 +1134,9 @@ function translateBackendText(value) {
         "Performance: Energy-resolved imaging": "性能优先级：能量分辨成像",
         "Performance: energy-resolved imaging": "性能优先级：能量分辨成像",
         "Atmospheric fit: greateyes ELSE series": "大气环境匹配：greateyes ELSE 系列",
+        "Atmospheric fit: ADVACAM products can be applied flexibly": "大气环境匹配：ADVACAM 产品可灵活应用",
+        "Application & Result: radiation, particle, cosmic": "应用与结果：辐射、粒子、宇宙射线",
+        "Energy family fit: gamma, alpha, beta": "能量类型匹配：伽马、α、β",
         "Source Energy & Sample: cr": "射线源与能量：Cr 靶材",
         "Source Energy & Sample: cu": "射线源与能量：Cu 靶材",
         "Source Energy & Sample: w": "射线源与能量：W 靶材",
@@ -815,6 +1150,23 @@ function translateBackendText(value) {
         "broad match": "宽泛匹配",
         "broad result because no strong filters were selected": "由于筛选条件较少，结果较宽泛",
         "Conflict check: selected answers need engineer review": "冲突检查：所选答案需要工程师复核",
+        "Possible matches, but your answers contain conflicts": "可以显示可能匹配项，但你的答案存在冲突",
+        "Some selected answers point toward different detector families. The products below are possible matches, but their percentages are reduced until the conflicts are reviewed.": "部分答案指向不同的探测器类型。下面的产品只是可能匹配项；在冲突被复核前，匹配百分比会被降低。",
+        "Allowed for atmospheric use because ADVACAM products can be applied flexibly": "允许用于大气环境，因为 ADVACAM 产品可灵活应用",
+        "Rigaku is kept as a customizable atmospheric option, but ranked after direct atmospheric fits": "Rigaku 会作为可定制的大气环境备选保留，但排序低于直接适配大气环境的产品",
+        "Allowed for atmospheric use because greateyes ELSE is the air-operation series": "允许用于大气环境，因为 greateyes ELSE 是适合空气环境运行的系列",
+        "Atmospheric environment excludes greateyes ALEX, LOTTE, and CHARLIE; only ELSE is allowed": "大气环境会排除 greateyes ALEX、LOTTE 和 CHARLIE；只允许 ELSE 系列",
+        "Atmospheric environment excludes this CCD/CMOS camera family unless it is ADVACAM, Rigaku, or greateyes ELSE": "大气环境会排除此类 CCD/CMOS 相机，除非它属于 ADVACAM、Rigaku 或 greateyes ELSE",
+        "Not a CCD or CMOS/sCMOS camera; atmospheric details are not fully documented and only lightly affect the score": "该产品不是 CCD 或 CMOS/sCMOS 相机；大气环境细节未完整记录，因此只轻微影响评分",
+        "Rigaku is kept as a customizable vacuum/UHV option, but ranked after direct vacuum camera fits": "Rigaku 会作为可定制真空/UHV 备选保留，但排序低于直接适配真空相机的产品",
+        "Vacuum/UHV selected; CCD and CMOS/sCMOS camera products are prioritized": "已选择真空/UHV；CCD 和 CMOS/sCMOS 相机产品会优先考虑",
+        "CCD/CMOS camera family is preferred for vacuum/UHV, but missing vacuum details reduce the environment score": "CCD/CMOS 相机类型更适合真空/UHV，但缺少真空细节会降低环境评分",
+        "Vacuum/UHV indicators found, but product is not a CCD or CMOS/sCMOS camera family": "发现真空/UHV 相关信息，但该产品不是 CCD 或 CMOS/sCMOS 相机类型",
+        "Installation environment text matches the selected environment": "安装环境文字与所选环境匹配",
+        "Interface/software looks usable, but it has a smaller percentage impact than energy, pixel size, and application": "接口/软件看起来可用，但它对百分比的影响小于能量、像素尺寸和应用场景",
+        "Interface/software match is useful, but it is weighted lightly in the total percentage": "接口/软件匹配有参考价值，但在总百分比中的权重较低",
+        "Installation/interface fit is not clearly documented": "未明确记录安装环境 / 接口适配信息",
+        "CCD/CMOS camera is possible for vacuum/EUV spectroscopy, but single-event counting may need a different detector family": "CCD/CMOS 相机可用于真空 / EUV 光谱，但单事件计数可能需要不同的探测器类型",
     };
     if (exactMap[text]) return exactMap[text];
 
@@ -828,13 +1180,19 @@ function translateBackendText(value) {
         [/^Pixel size is far from requested (.+)$/i, "像素尺寸与所选要求差距较大：$1"],
         [/^Pixel size is not clearly documented for requested (.+)$/i, "未明确记录所选像素范围：$1"],
         [/^Energy fit: (.+)$/i, "能量匹配：$1"],
+        [/^Energy family fit: (.+)$/i, "能量类型匹配：$1"],
+        [/^Energy family appears compatible with (.+)$/i, "能量类型看起来兼容：$1"],
+        [/^Energy family conflicts with requested (.+)$/i, "能量类型与所选要求冲突：$1"],
         [/^Partial energy fit: (.+)$/i, "能量部分匹配：$1"],
         [/^Pixel fit: (.+)$/i, "像素匹配：$1"],
+        [/^Pixel family fit: (.+)$/i, "像素类型匹配：$1"],
+        [/^Pixel range inferred from product text: (.+)$/i, "根据产品文字推断像素范围：$1"],
         [/^Pixel is close but not exact: (.+)$/i, "像素接近但不完全匹配：$1"],
         [/^Application & Result: (.+)$/i, "应用与结果：$1"],
         [/^Source Energy & Sample: (.+)$/i, "射线源与能量：$1"],
         [/^Performance: (.+)$/i, "性能优先级：$1"],
         [/^Atmospheric fit: (.+)$/i, "大气环境匹配：$1"],
+        [/^Atmospheric fallback: (.+)$/i, "大气环境备选：$1"],
         [/^Installation fit: (.+)$/i, "安装环境匹配：$1"],
         [/^Installation & Control: (.+)$/i, "安装环境与控制：$1"],
         [/^Environment fit: (.+)$/i, "使用环境匹配：$1"],
@@ -855,6 +1213,10 @@ function translateBackendText(value) {
         "Interface": "接口",
         "Software": "软件",
         "Atmospheric fit": "大气环境匹配",
+        "Energy family fit": "能量类型匹配",
+        "Pixel family fit": "像素类型匹配",
+        "ADVACAM products can be applied flexibly": "ADVACAM 产品可灵活应用",
+        "Rigaku may require customization for air operation": "Rigaku 可能需要定制后用于大气环境",
         "greateyes ELSE series": "greateyes ELSE 系列",
         "ELSE series": "ELSE 系列",
         "Typical": "典型值",
@@ -878,6 +1240,13 @@ function translateBackendText(value) {
         "gamma camera": "伽马相机",
         "isotope imaging": "同位素成像",
         "particle physics research": "粒子物理研究",
+        "radiation": "辐射",
+        "particle": "粒子",
+        "cosmic": "宇宙射线",
+        "gamma": "伽马",
+        "Gamma": "伽马",
+        "alpha": "α",
+        "beta": "β",
         "Industrial-system integration": "工业系统集成",
         "spectroscopy": "光谱",
         "Raman spectroscopy": "拉曼光谱",
@@ -927,12 +1296,7 @@ function translateBackendText(value) {
     Object.entries(phraseMap).forEach(([english, chinese]) => {
         translated = translated.replaceAll(english, chinese);
     });
-    return translated
-        .replace(/能量-resolved\s*成像/g, "能量分辨成像")
-        .replace(/吸收,\s*透射/g, "吸收、透射")
-        .replace(/(\d+(?:\.\d+)?(?:\s*[×x]\s*\d+(?:\.\d+)?)?)\s*(?:[µμ]m|um)\b/g, "$1 微米")
-        .replace(/mm²/g, "平方毫米")
-        .replace(/(\d+(?:\.\d+)?(?:\s*[×x]\s*\d+(?:\.\d+)?)?)\s*mm\b/g, "$1 毫米");
+    return cleanupZhTechnicalText(applyZhPhraseMap(translated, phraseMap));
 }
 
 function translateProductText(value) {
@@ -1006,7 +1370,7 @@ function translateProductText(value) {
         "NDT": "无损检测",
         "mineral/geology inspection": "矿物 / 地质检测",
         "industrial radiography": "工业射线照相",
-        "high-energy X-ray/gamma imaging": "高能 X 射线 / gamma 成像",
+        "high-energy X-ray/gamma imaging": "高能 X 射线 / 伽马成像",
         "electronics/light-part inspection": "电子器件 / 轻质部件检测",
         "Medical X-ray imaging": "医学 X 射线成像",
         "X-ray tomography": "X 射线断层成像",
@@ -1028,12 +1392,23 @@ function translateProductText(value) {
         "neutron imaging": "中子成像",
         "Compton camera": "康普顿相机",
         "TOF imaging": "飞行时间（TOF）成像",
+        "Education": "教学 / 演示",
+        "particle interaction experiments": "粒子相互作用实验",
+        "shielding": "屏蔽实验",
+        "air radioactivity": "空气放射性",
+        "cosmic muon search": "宇宙缪子探测",
+        "altitude/radiation studies": "海拔 / 辐射研究",
+        "decay law observation": "衰变规律观察",
         "material analysis": "材料分析",
         "radiation monitoring": "辐射监测",
+        "radiation studies": "辐射研究",
         "gamma spectral imaging": "伽马光谱成像",
         "gamma camera": "伽马相机",
         "isotope imaging": "同位素成像",
         "particle physics research": "粒子物理研究",
+        "particle": "粒子",
+        "radiation": "辐射",
+        "cosmic": "宇宙射线",
         "Industrial-system integration": "工业系统集成",
         "phase identification": "物相识别",
         "compositional analysis": "成分分析",
@@ -1064,11 +1439,7 @@ function translateProductText(value) {
         translated = translated.replaceAll(english, chinese);
     });
 
-    return translated
-        .replace(/;\s*/g, "；")
-        .replace(/(\d+(?:\.\d+)?(?:\s*[×x]\s*\d+(?:\.\d+)?)?)\s*(?:[µμ]m|um)\b/g, "$1 微米")
-        .replace(/mm²/g, "平方毫米")
-        .replace(/(\d+(?:\.\d+)?(?:\s*[×x]\s*\d+(?:\.\d+)?)?)\s*mm\b/g, "$1 毫米");
+    return cleanupZhTechnicalText(applyZhPhraseMap(translated, phraseMap));
 }
 
 function selectedLabels(groupId) {
@@ -1329,18 +1700,12 @@ function specStatusClass(item, key) {
     return `status-${status}`;
 }
 
-function specStatusNote(item, key) {
-    return item.spec_quality?.[key]?.note || "";
-}
-
 function specBlock(item, key, label, value) {
-    const note = specStatusNote(item, key);
     const displayValue = value ? translateProductText(value) : ui("notAvailable");
     return `
         <div class="${escapeHtml(specStatusClass(item, key))}">
             <dt>${escapeHtml(label)}</dt>
             <dd>${escapeHtml(displayValue)}</dd>
-            ${note ? `<small>${escapeHtml(translateBackendText(note))}</small>` : ""}
         </div>
     `;
 }
@@ -1496,6 +1861,7 @@ function markResultsGenerated() {
     els.nextButton.disabled = false;
     renderStepOverview();
     renderFlowPosition();
+    translateRenderedEnglishText();
 }
 
 async function loadRecommendations() {
@@ -1615,6 +1981,7 @@ function renderComparison() {
             </tbody>
         </table>
     `;
+    translateRenderedEnglishText(els.compareGrid);
 }
 
 function escapeHtml(value) {
@@ -1624,6 +1991,26 @@ function escapeHtml(value) {
         .replaceAll(">", "&gt;")
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
+}
+
+function translateRenderedEnglishText(root = document.body) {
+    if (currentLanguage !== "zh" || !root) return;
+
+    const skipTags = new Set(["SCRIPT", "STYLE", "TEXTAREA", "INPUT", "OPTION", "CODE"]);
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+        acceptNode(node) {
+            const parent = node.parentElement;
+            if (!parent || skipTags.has(parent.tagName)) return NodeFilter.FILTER_REJECT;
+            if (!/[A-Za-z]/.test(node.nodeValue || "")) return NodeFilter.FILTER_REJECT;
+            return NodeFilter.FILTER_ACCEPT;
+        },
+    });
+
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach((node) => {
+        node.nodeValue = translateProductText(node.nodeValue);
+    });
 }
 
 function normalizeAiText(value) {
@@ -1881,11 +2268,12 @@ function renderAiExtractedInfo() {
         .map(([label, value]) => `
             <div>
                 <span>${escapeHtml(label)}</span>
-                <strong>${escapeHtml(value)}</strong>
+                <strong>${escapeHtml(translateProductText(value))}</strong>
             </div>
         `)
         .join("");
     els.aiExtractedCard.hidden = false;
+    translateRenderedEnglishText(els.aiExtractedCard);
 }
 
 function aiFollowupQuestion(groupId) {
@@ -1924,6 +2312,7 @@ function renderAiFollowups() {
     });
 
     els.aiFollowupsCard.hidden = false;
+    translateRenderedEnglishText(els.aiFollowupsCard);
 }
 
 function applyAiFollowupChoice(groupId, choiceId) {
@@ -2000,6 +2389,7 @@ async function runAiRecommendationPreview() {
         els.aiResultTitle.textContent = ui("aiEngineerReview");
         els.aiResultNote.textContent = translateBackendText(conflict.message);
         els.aiResultList.innerHTML = `<article class='ai-empty'>${ui("aiConflictPaused")}</article>`;
+        translateRenderedEnglishText(els.aiResultCard);
         return;
     }
 
@@ -2027,10 +2417,12 @@ async function runAiRecommendationPreview() {
         }
 
         els.aiResultList.innerHTML = renderAiRecommendationList(aiState.recommendations);
+        translateRenderedEnglishText(els.aiResultCard);
     } catch (error) {
         els.aiResultTitle.textContent = ui("aiErrorTitle");
         els.aiResultNote.textContent = ui("aiErrorCopy");
         els.aiResultList.innerHTML = "";
+        translateRenderedEnglishText(els.aiResultCard);
     }
 }
 
@@ -2164,6 +2556,8 @@ function render() {
     } else {
         renderQuestionStep();
     }
+
+    translateRenderedEnglishText();
 }
 
 function toggleLanguage() {
