@@ -1062,6 +1062,33 @@ h3 {
     line-height: 1.45;
 }
 
+.conflict-summary-mini {
+    display: grid;
+    gap: 10px;
+}
+
+.conflict-summary-mini strong,
+.conflict-summary-mini b {
+    color: #ffdba3;
+}
+
+.conflict-summary-mini p,
+.conflict-summary-mini small {
+    margin: 0;
+    color: var(--muted-2);
+}
+
+.conflict-summary-mini div {
+    display: grid;
+    gap: 4px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line-soft);
+}
+
+.conflict-summary-mini span {
+    color: var(--text);
+}
+
 .progress-track {
     display: none;
 }

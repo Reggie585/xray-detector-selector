@@ -37,9 +37,9 @@ const LANGUAGE_TEXT = {
             choosePriorities: "Choose up to 2 priorities.",
             stepOf: "Step {current} of {total}",
             knownTarget: "Known target",
-            exactEnergy: "Exact energy",
-            exactEnergyPlaceholder: "Example: 8.04 keV",
-            exactEnergyPrompt: "Enter the exact energy, for example 8.04 keV",
+            exactEnergy: "Custom target or exact energy",
+            exactEnergyPlaceholder: "Example: Fe, Co-Kalpha, or 12 keV",
+            exactEnergyPrompt: "Enter the non-standard target or exact energy, for example Fe, Co-Kalpha, or 12 keV",
             contactTitle: "Who should the engineer contact?",
             contactCopy: "Leave contact details after reviewing the product matches. Sending is not connected yet.",
             contactName: "Name",
@@ -74,14 +74,14 @@ const LANGUAGE_TEXT = {
             noContact: "No contact details were added. The recommendation can still be reviewed here.",
             contactPrepared: "Engineer review prepared with the contact details from the previous step. Sending is not connected yet.",
             needMoreInfo: "Need more information before showing product matches.",
-            reviseConflict: "Please revise the conflicting answers before showing product matches.",
+            reviseConflict: "The current answers contain a conflict, so product matches are paused. Please review the conflict above or ask an engineer to confirm.",
             infoEmptyConflict: "Please revise the conflicting energy and pixel-size answers before showing product matches.",
             needMoreInfoMessage: "Need more information. Please choose at least an application, energy range, or pixel size before requesting detector matches.",
             lowInfoWarning: "This recommendation might not be accurate because several answers are unknown. Please add more information for a stronger match.",
             possibleConflict: "Possible conflict: high/hard X-ray energy and under 1 micrometer pixel size may require custom optics, scintillator coupling, or engineer review.",
             conflictCheck: "Conflict check",
-            conflictFallbackTitle: "Possible matches, but review the answers",
-            conflictFallbackMessage: "Some answers point toward different detector families.",
+            conflictFallbackTitle: "Selected answers contain a technical conflict",
+            conflictFallbackMessage: "Automatic product matching is paused. Please review the conflict before viewing detector recommendations.",
             product: "Product",
             detector: "Detector",
             energy: "Energy",
@@ -186,9 +186,9 @@ const LANGUAGE_TEXT = {
             choosePriorities: "最多选择 2 个优先级。",
             stepOf: "第 {current} 步，共 {total} 步",
             knownTarget: "已知靶材",
-            exactEnergy: "精确能量",
-            exactEnergyPlaceholder: "示例：8.04 keV",
-            exactEnergyPrompt: "请输入精确能量，例如 8.04 keV",
+            exactEnergy: "非标靶材 / 精确能量",
+            exactEnergyPlaceholder: "示例：Fe、Co-Kα 或 12 keV",
+            exactEnergyPrompt: "请输入非标靶材或精确能量，例如 Fe、Co-Kα 或 12 keV",
             contactTitle: "工程师应该联系谁？",
             contactCopy: "在查看产品匹配结果之后留下联系方式。当前还没有真正发送功能。",
             contactName: "姓名",
@@ -223,14 +223,14 @@ const LANGUAGE_TEXT = {
             noContact: "未填写联系方式。你仍然可以在这里查看推荐结果。",
             contactPrepared: "已使用上一步填写的联系方式准备工程师复核信息。当前还没有真正发送。",
             needMoreInfo: "需要更多信息后才能显示产品匹配结果。",
-            reviseConflict: "请先修改存在冲突的答案，再查看产品匹配结果。",
+            reviseConflict: "当前答案存在冲突，暂不显示产品匹配。请先根据上方说明修改答案，或联系工程师确认。",
             infoEmptyConflict: "请先修改冲突的能量和像素尺寸答案，再查看产品匹配结果。",
             needMoreInfoMessage: "需要更多信息。请至少选择应用场景、能量范围或像素尺寸中的一项，再请求探测器匹配。",
             lowInfoWarning: "由于多个答案为“不确定”，本次推荐可能不够准确。请补充更多信息以获得更强的匹配结果。",
             possibleConflict: "可能存在冲突：高能/硬 X 射线与小于 1 微米像素尺寸的组合，可能需要定制光学、闪烁体耦合或工程师复核。",
             conflictCheck: "冲突检查",
-            conflictFallbackTitle: "可以显示可能匹配项，但请复核答案",
-            conflictFallbackMessage: "部分答案指向不同的探测器类型。",
+            conflictFallbackTitle: "所选答案存在技术冲突",
+            conflictFallbackMessage: "自动产品匹配已暂停。请先查看下面的冲突原因，再调整答案或联系工程师确认。",
             product: "产品",
             detector: "探测器",
             energy: "能量",
@@ -328,14 +328,19 @@ const CHOICE_TRANSLATIONS = {
             not_sure_application: { label: "不确定", description: "先保持应用筛选较宽，继续回答后续问题。" },
         },
         energy: {
+            cr_ka: { label: "Cr 靶材", description: "Cr-Kα，约 5.4 keV。" },
+            cu_ka: { label: "Cu 靶材", description: "Cu-Kα，约 8.04 keV。" },
+            mo_ka: { label: "Mo 靶材", description: "Mo-Kα，约 17.4 keV。" },
+            rh_ka: { label: "Rh 靶材", description: "Rh-Kα，约 20.2 keV。" },
+            ag_ka: { label: "Ag 靶材", description: "Ag-Kα，约 22.2 keV。" },
+            w_la: { label: "W 靶材", description: "W-Lα，约 8.4 keV。" },
             euv_vuv_soft: { label: "EUV / VUV / 软 X 射线", description: "低于约 1 keV、真空实验或软 X 射线实验。" },
             low_energy_lab: { label: "低能实验室 X 射线", description: "Cr-Kα、Cu-Kα、W-Lα 或类似 5-9 keV 射线源。" },
-            standard_xrd: { label: "标准 XRD 射线源", description: "常见实验室 XRD 射线源，例如 Cu-Kα 或 Mo-Kα。" },
             higher_energy_lab: { label: "较高能实验室 X 射线", description: "Mo、Rh、Ag 或类似 17-22 keV 的较高能靶材。" },
             hard_xray: { label: "硬 X 射线 / 高穿透", description: "30-150 keV、厚样品、高密度金属或工业检测。" },
             gamma_neutron_particles: { label: "伽马 / 中子 / 粒子", description: "辐射监测、中子转换、伽马成像或源定位。" },
-            exact_energy: { label: "我知道精确能量", description: "在弹窗中输入 eV、keV 或 MeV 数值。" },
-            not_sure_energy: { label: "不确定", description: "不通过射线源能量进行过度筛选。" },
+            exact_energy: { label: "非标靶材 / 自定义输入", description: "输入其他靶材名称，或输入已知 eV、keV、MeV 能量。" },
+            not_sure_energy: { label: "不确定，帮我推荐", description: "不知道靶材时，系统会结合应用、像素和环境进行推荐。" },
         },
         target: {
             cr_ka: { label: "Cr-Kα", description: "5.4 keV" },
@@ -373,7 +378,7 @@ const CHOICE_TRANSLATIONS = {
 const GROUP_TRANSLATIONS = {
     zh: {
         application: { title: "应用与结果", question: "你想测量什么？" },
-        energy: { title: "射线源与能量", question: "你使用的 X 射线源或能量范围是什么？" },
+        energy: { title: "射线源与靶材", question: "你使用的常用靶材是什么？" },
         target: { title: "可选靶材", question: "已知实验室靶材" },
         pixel_size: { title: "像素尺寸", question: "你需要什么像素尺寸范围？" },
         performance: { title: "性能优先级", question: "你的测量最看重什么？" },
@@ -401,22 +406,18 @@ let resultsGenerated = false;
 
 const SIMPLIFIED_INSTALLATION_IDS = ["simple_lab", "vacuum_uhv", "not_sure_installation"];
 
-const ENERGY_CHOICES_BY_APPLICATION = {
-    xrd_saxs_waxs: ["low_energy_lab", "standard_xrd", "higher_energy_lab", "exact_energy", "not_sure_energy"],
-    xafs_absorption: ["euv_vuv_soft", "low_energy_lab", "standard_xrd", "higher_energy_lab", "hard_xray", "exact_energy", "not_sure_energy"],
-    euv_soft_xray_spectroscopy: ["euv_vuv_soft", "low_energy_lab", "standard_xrd", "exact_energy", "not_sure_energy"],
-    xray_euv_imaging: ["euv_vuv_soft", "low_energy_lab", "standard_xrd", "higher_energy_lab", "hard_xray", "exact_energy", "not_sure_energy"],
-    microscopy_metrology: ["euv_vuv_soft", "low_energy_lab", "standard_xrd", "higher_energy_lab", "exact_energy", "not_sure_energy"],
-    ct_3d: ["low_energy_lab", "higher_energy_lab", "hard_xray", "exact_energy", "not_sure_energy"],
-    industrial_ndt: ["higher_energy_lab", "hard_xray", "gamma_neutron_particles", "exact_energy", "not_sure_energy"],
-    material_identification: ["low_energy_lab", "standard_xrd", "higher_energy_lab", "hard_xray", "gamma_neutron_particles", "exact_energy", "not_sure_energy"],
-    radiation_particle: ["hard_xray", "gamma_neutron_particles", "exact_energy", "not_sure_energy"],
-    education_demo: ["low_energy_lab", "standard_xrd", "gamma_neutron_particles", "exact_energy", "not_sure_energy"],
+const COMMON_TARGET_SOURCE_IDS = ["cr_ka", "cu_ka", "mo_ka", "rh_ka", "ag_ka", "w_la", "exact_energy", "not_sure_energy"];
+const TARGET_TO_ENERGY_ID = {
+    cr_ka: "low_energy_lab",
+    cu_ka: "low_energy_lab",
+    w_la: "low_energy_lab",
+    mo_ka: "higher_energy_lab",
+    rh_ka: "higher_energy_lab",
+    ag_ka: "higher_energy_lab",
 };
 
 const TARGET_CHOICES_BY_ENERGY = {
     low_energy_lab: ["cr_ka", "cu_ka", "w_la"],
-    standard_xrd: ["cu_ka", "mo_ka"],
     higher_energy_lab: ["mo_ka", "rh_ka", "ag_ka"],
 };
 
@@ -654,12 +655,22 @@ function translatedChoiceById(groupId, choiceId, source = answers) {
 
 function adaptiveChoiceIds(groupId, source = answers) {
     if (groupId === "installation") return SIMPLIFIED_INSTALLATION_IDS;
-    if (groupId === "energy") return ENERGY_CHOICES_BY_APPLICATION[source.application] || null;
     if (groupId === "target") return TARGET_CHOICES_BY_ENERGY[source.energy] || [];
     return null;
 }
 
+function commonTargetSourceChoices() {
+    const targetChoices = window.CHOICE_GROUPS.target?.choices || [];
+    const energyChoices = window.CHOICE_GROUPS.energy?.choices || [];
+    const choicesById = new Map([...targetChoices, ...energyChoices].map((choice) => [choice.id, choice]));
+
+    return COMMON_TARGET_SOURCE_IDS
+        .map((id) => choicesById.get(id))
+        .filter(Boolean);
+}
+
 function visibleChoicesForGroup(groupId, source = answers) {
+    if (groupId === "energy") return commonTargetSourceChoices();
     const choices = window.CHOICE_GROUPS[groupId]?.choices || [];
     const ids = adaptiveChoiceIds(groupId, source);
     if (!ids) return choices;
@@ -682,7 +693,8 @@ function sanitizeAdaptiveAnswers() {
     sanitizeInstallationAnswer();
 
     const visibleEnergyIds = new Set(visibleChoicesForGroup("energy").map((choice) => choice.id));
-    if (answers.energy && !visibleEnergyIds.has(answers.energy)) {
+    const targetDrivenEnergyIsValid = answers.target && TARGET_TO_ENERGY_ID[answers.target] === answers.energy;
+    if (answers.energy && !visibleEnergyIds.has(answers.energy) && !targetDrivenEnergyIsValid) {
         answers.energy = null;
         answers.target = null;
         answers.exact_energy = "";
@@ -1150,8 +1162,25 @@ function translateBackendText(value) {
         "broad match": "宽泛匹配",
         "broad result because no strong filters were selected": "由于筛选条件较少，结果较宽泛",
         "Conflict check: selected answers need engineer review": "冲突检查：所选答案需要工程师复核",
-        "Possible matches, but your answers contain conflicts": "可以显示可能匹配项，但你的答案存在冲突",
-        "Some selected answers point toward different detector families. The products below are possible matches, but their percentages are reduced until the conflicts are reviewed.": "部分答案指向不同的探测器类型。下面的产品只是可能匹配项；在冲突被复核前，匹配百分比会被降低。",
+        "Possible matches, but your answers contain conflicts": "所选答案存在技术冲突",
+        "Some selected answers point toward different detector families. The products below are possible matches, but their percentages are reduced until the conflicts are reviewed.": "自动产品匹配已暂停。请先查看下面的冲突原因，再调整答案或联系工程师确认。",
+        "Selected answers contain a technical conflict": "所选答案存在技术冲突",
+        "Automatic product matching is paused. Please review the conflicting answers below before viewing detector recommendations.": "自动产品匹配已暂停。请先查看下面的冲突原因，再查看探测器推荐。",
+        "Energy vs Pixel Size": "能量与像素尺寸冲突",
+        "Application vs Energy": "应用与能量选择冲突",
+        "Priority vs Detector Type": "性能优先级与探测器类型冲突",
+        "High/hard X-ray measurements usually need thicker sensors, scintillators, or photon-counting detector geometries, while sub-1 micrometer effective pixels are normally associated with microscopy optics and lower-energy imaging setups.": "高能 / 硬 X 射线测量通常需要更厚的传感器、闪烁体或光子计数探测器结构；小于 1 微米的有效像素通常更接近显微光学或低能成像方案。",
+        "Review the energy range or ask an engineer about optical coupling, scintillator, or custom geometry options.": "请复核能量范围，或让工程师评估光学耦合、闪烁体或定制几何结构方案。",
+        "EUV/VUV/soft X-ray spectroscopy is normally below about 1 keV, but the selected source is a lab X-ray/XRD-style energy such as Cu-Kalpha or Mo-Kalpha.": "EUV / VUV / 软 X 射线光谱通常低于约 1 keV，但当前选择的是 Cu-Kalpha 或 Mo-Kalpha 这类实验室 X 射线 / XRD 能量。",
+        "If the source is really Cu-Kalpha or another lab target, consider an XRD, XAFS, or X-ray imaging application instead.": "如果射线源确实是 Cu-Kalpha 或其他实验室靶材，请考虑改选 XRD、XAFS 或 X 射线成像应用。",
+        "XRD/SAXS/WAXS usually uses lab or beamline X-ray energies, while EUV/VUV/soft X-ray choices point toward a different spectroscopy or imaging setup.": "XRD / SAXS / WAXS 通常使用实验室或束线 X 射线能量；EUV / VUV / 软 X 射线则更像另一类光谱或成像系统。",
+        "Review whether the measurement is diffraction, soft X-ray spectroscopy, or EUV imaging.": "请确认测量目标到底是衍射、软 X 射线光谱，还是 EUV 成像。",
+        "Single photon / particle sensitivity often points toward photon-counting or Timepix-style detectors. Some vacuum/EUV spectroscopy workflows still use CCD or sCMOS cameras, but they should be treated as possible matches, not guaranteed single-event detectors.": "单光子 / 粒子灵敏度通常指向光子计数或 Timepix 类探测器。有些真空 / EUV 光谱流程仍会使用 CCD 或 sCMOS 相机，但不应直接视为确定的单事件探测方案。",
+        "Single photon / particle sensitivity often points toward photon-counting or Timepix-style detectors. Some vacuum/EUV spectroscopy workflows still use CCD or sCMOS cameras, but they should be treated as engineering-review options, not automatic recommendations.": "单光子 / 粒子灵敏度通常指向光子计数或 Timepix 类探测器。有些真空 / EUV 光谱流程仍会使用 CCD 或 sCMOS 相机，但这类方案应先由工程师复核，而不是直接自动推荐。",
+        "Keep the CCD/sCMOS options as possible vacuum/spectroscopy matches, but ask an engineer if single-event counting is required.": "如果确实需要单事件计数，请让工程师确认；CCD/sCMOS 只能作为真空 / 光谱方向的备选思路。",
+        "Revise the application or performance priority, or ask an engineer to confirm whether single-event counting is truly required.": "请修改应用或性能优先级，或让工程师确认是否真的需要单事件计数。",
+        "ADVACAM particle/radiation detector family fit": "ADVACAM 粒子 / 辐射探测器系列匹配",
+        "ADVACAM flexible detector platform": "ADVACAM 灵活探测器平台",
         "Allowed for atmospheric use because ADVACAM products can be applied flexibly": "允许用于大气环境，因为 ADVACAM 产品可灵活应用",
         "Rigaku is kept as a customizable atmospheric option, but ranked after direct atmospheric fits": "Rigaku 会作为可定制的大气环境备选保留，但排序低于直接适配大气环境的产品",
         "Allowed for atmospheric use because greateyes ELSE is the air-operation series": "允许用于大气环境，因为 greateyes ELSE 是适合空气环境运行的系列",
@@ -1267,7 +1296,6 @@ function translateBackendText(value) {
         "Ethernet": "以太网",
         "usb": "USB",
         "Low-energy lab X-ray": "低能实验室 X 射线",
-        "Standard XRD source": "标准 XRD 射线源",
         "Higher-energy lab X-ray": "较高能实验室 X 射线",
         "Hard X-ray / High penetration": "硬 X 射线 / 高穿透",
         "EUV / VUV / Soft X-ray": "EUV / VUV / 软 X 射线",
@@ -1448,6 +1476,21 @@ function selectedLabels(groupId) {
         return mainContact ? [mainContact] : [];
     }
 
+    if (groupId === "energy") {
+        if (answers.target) {
+            const targetLabel = translatedChoiceById("target", answers.target)?.label;
+            return targetLabel ? [targetLabel] : [];
+        }
+        if (answers.energy === "exact_energy") {
+            const customLabel = translatedChoiceById("energy", "exact_energy")?.label || ui("exactEnergy");
+            return answers.exact_energy ? [`${customLabel} (${answers.exact_energy})`] : [customLabel];
+        }
+        if (answers.energy === "not_sure_energy") {
+            const unsureLabel = translatedChoiceById("energy", "not_sure_energy")?.label;
+            return unsureLabel ? [unsureLabel] : [];
+        }
+    }
+
     const group = window.CHOICE_GROUPS[groupId];
     if (!group) return [];
 
@@ -1520,14 +1563,57 @@ function renderStepOverview() {
 }
 
 function isSelected(groupId, choiceId) {
+    if (groupId === "energy") {
+        if (TARGET_TO_ENERGY_ID[choiceId]) return answers.target === choiceId;
+        return answers.energy === choiceId;
+    }
+
     const value = answers[groupId];
     return Array.isArray(value) ? value.includes(choiceId) : value === choiceId;
+}
+
+function setSourceTargetChoice(choiceId) {
+    if (TARGET_TO_ENERGY_ID[choiceId]) {
+        const alreadySelected = answers.target === choiceId;
+        answers.target = alreadySelected ? null : choiceId;
+        answers.energy = alreadySelected ? null : TARGET_TO_ENERGY_ID[choiceId];
+        answers.exact_energy = "";
+        if (els.energyValue) els.energyValue.value = "";
+        sanitizeAdaptiveAnswers();
+        return;
+    }
+
+    if (choiceId === "exact_energy") {
+        const alreadySelected = answers.energy === "exact_energy";
+        answers.energy = alreadySelected ? null : "exact_energy";
+        answers.target = null;
+        if (alreadySelected) {
+            answers.exact_energy = "";
+            if (els.energyValue) els.energyValue.value = "";
+        }
+        sanitizeAdaptiveAnswers();
+        return;
+    }
+
+    if (choiceId === "not_sure_energy") {
+        const alreadySelected = answers.energy === "not_sure_energy";
+        answers.energy = alreadySelected ? null : "not_sure_energy";
+        answers.target = null;
+        answers.exact_energy = "";
+        if (els.energyValue) els.energyValue.value = "";
+        sanitizeAdaptiveAnswers();
+    }
 }
 
 function toggleChoice(groupId, choiceId) {
     const group = window.CHOICE_GROUPS[groupId];
     const maxChoices = group.max_choices || 1;
     resultsGenerated = false;
+
+    if (groupId === "energy") {
+        setSourceTargetChoice(choiceId);
+        return;
+    }
 
     if (maxChoices === 1) {
         answers[groupId] = answers[groupId] === choiceId ? null : choiceId;
@@ -1600,25 +1686,6 @@ function closeExactEnergyDialog() {
     }
 }
 
-function renderOptionalTarget() {
-    const visibleTargets = visibleChoicesForGroup("target");
-    const shouldShowTarget = visibleTargets.length > 0;
-    if (!shouldShowTarget) {
-        answers.target = null;
-        return "";
-    }
-
-    const group = window.CHOICE_GROUPS.target;
-    return `
-        <div class="subsection">
-            <p class="subsection-title">${ui("knownTarget")}</p>
-            <div class="mini-card-grid">
-                ${visibleTargets.map((choice) => choiceCard("target", choice)).join("")}
-            </div>
-        </div>
-    `;
-}
-
 function renderQuestionStep() {
     const step = steps[currentStep];
     const group = translatedGroup(step.id);
@@ -1633,19 +1700,8 @@ function renderQuestionStep() {
 
     renderChoiceCards(step.id);
 
-    if (step.id === "energy") {
-        els.cardsGrid.insertAdjacentHTML("afterend", renderOptionalTarget());
-        document.querySelectorAll(".subsection .choice-card").forEach((button) => {
-            button.addEventListener("click", () => {
-                toggleChoice(button.dataset.group, button.dataset.choice);
-                render();
-            });
-        });
-        els.exactEnergy.classList.remove("visible");
-    } else {
-        document.querySelector(".subsection")?.remove();
-        els.exactEnergy.classList.remove("visible");
-    }
+    document.querySelector(".subsection")?.remove();
+    els.exactEnergy.classList.remove("visible");
 }
 
 function renderContactStep() {
@@ -1670,7 +1726,7 @@ function renderReview() {
     els.reviewPanel.classList.add("visible");
     els.resultsPanel.classList.remove("visible");
 
-    const reviewGroups = ["application", "energy", "target", "pixel_size", "performance", "installation"];
+    const reviewGroups = ["application", "energy", "pixel_size", "performance", "installation"];
     const choiceCards = reviewGroups
         .map((groupId) => {
             const labels = selectedLabels(groupId);
@@ -1823,6 +1879,29 @@ function showConfidenceMessage(status) {
     els.confidenceWarning.classList.toggle("blocking", status.level === "block");
 }
 
+function renderConflictSummary(conflict) {
+    const details = conflict?.details || [];
+    if (!details.length) {
+        return escapeHtml(ui("reviseConflict"));
+    }
+
+    return `
+        <div class="conflict-summary-mini">
+            <strong>${escapeHtml(translateBackendText(conflict.title || ui("conflictFallbackTitle")))}</strong>
+            <p>${escapeHtml(translateBackendText(conflict.message || ui("conflictFallbackMessage")))}</p>
+            ${details
+                .map((detail) => `
+                    <div>
+                        <b>${escapeHtml(translateBackendText(detail.title))}</b>
+                        <span>${escapeHtml(translateBackendText(detail.selected))}</span>
+                        <small>${escapeHtml(translateBackendText(detail.suggestion))}</small>
+                    </div>
+                `)
+                .join("")}
+        </div>
+    `;
+}
+
 function renderConflictCheck(conflict) {
     if (!els.conflictCheck) return;
 
@@ -1909,17 +1988,15 @@ async function loadRecommendations() {
     const data = await response.json();
     if (data.conflict?.has_conflict) {
         showConfidenceMessage({
-            level: data.conflict.blocking ? "block" : "warn",
+            level: "block",
             message: translateBackendText(data.conflict.message),
         });
         latestConflict = data.conflict;
         renderConflictCheck(data.conflict);
-        if (data.conflict.blocking) {
-            latestRecommendations = [];
-            els.resultsList.innerHTML = `<article class='info-empty'>${ui("reviseConflict")}</article>`;
-            markResultsGenerated();
-            return;
-        }
+        latestRecommendations = [];
+        els.resultsList.innerHTML = `<article class='info-empty'>${ui("reviseConflict")}</article>`;
+        markResultsGenerated();
+        return;
     } else {
         renderConflictCheck(null);
     }
@@ -2088,7 +2165,7 @@ function extractEnergyFromText(text, source = answers) {
         return { energy: "low_energy_lab", target: "cr_ka", exact_energy: exactEnergy || "5.4 keV" };
     }
     if (/\bcu\b|cu-k|8\.04/.test(text)) {
-        return { energy: "standard_xrd", target: "cu_ka", exact_energy: exactEnergy || "8.04 keV" };
+        return { energy: "low_energy_lab", target: "cu_ka", exact_energy: exactEnergy || "8.04 keV" };
     }
     if (/\bw-l\b|w-lalpha|8\.4/.test(text)) {
         return { energy: "low_energy_lab", target: "w_la", exact_energy: exactEnergy || "8.4 keV" };
@@ -2327,14 +2404,25 @@ function applyAiFollowupChoice(groupId, choiceId) {
             aiState.extracted.performance = Array.from(selected).slice(-2);
         }
     } else {
-        aiState.extracted[groupId] = choiceId;
         if (groupId === "energy") {
-            if (choiceId === "exact_energy") {
+            if (TARGET_TO_ENERGY_ID[choiceId]) {
+                aiState.extracted.target = choiceId;
+                aiState.extracted.energy = TARGET_TO_ENERGY_ID[choiceId];
+                aiState.extracted.exact_energy = "";
+            } else if (choiceId === "exact_energy") {
+                aiState.extracted.energy = "exact_energy";
+                aiState.extracted.target = null;
                 const value = window.prompt(ui("exactEnergyPrompt"), aiState.extracted.exact_energy || "");
                 aiState.extracted.exact_energy = (value || "").trim();
+            } else if (choiceId === "not_sure_energy") {
+                aiState.extracted.energy = "not_sure_energy";
+                aiState.extracted.target = null;
+                aiState.extracted.exact_energy = "";
             } else {
-                aiState.extracted.exact_energy = aiState.extracted.exact_energy || "";
+                aiState.extracted.energy = choiceId;
             }
+        } else {
+            aiState.extracted[groupId] = choiceId;
         }
     }
 
@@ -2400,6 +2488,22 @@ async function runAiRecommendationPreview() {
             body: JSON.stringify(aiAnswers),
         });
         const data = await response.json();
+
+        if (data.conflict?.has_conflict) {
+            aiState.recommendations = [];
+            aiState.confidence = calculateAiConfidence(aiState.extracted, []);
+            renderAiExtractedInfo();
+            els.aiResultTitle.textContent = ui("aiEngineerReview");
+            els.aiResultNote.textContent = translateBackendText(data.conflict.message);
+            els.aiResultList.innerHTML = `
+                <article class='ai-empty'>
+                    ${renderConflictSummary(data.conflict)}
+                </article>
+            `;
+            translateRenderedEnglishText(els.aiResultCard);
+            return;
+        }
+
         aiState.recommendations = data.recommendations || [];
         aiState.confidence = calculateAiConfidence(aiState.extracted, aiState.recommendations);
         renderAiExtractedInfo();
