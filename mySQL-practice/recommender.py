@@ -176,13 +176,6 @@ CHOICE_GROUPS = {
                 "technical": "Good low-energy response around 5-9 keV.",
             },
             {
-                "id": "standard_xrd",
-                "label": "Standard XRD source",
-                "description": "Common laboratory XRD sources such as Cu-Kalpha or Mo-Kalpha.",
-                "terms": ["xrd", "cu", "mo", "8.04", "17.4", "diffraction", "lab"],
-                "technical": "Standard lab diffraction energy range.",
-            },
-            {
                 "id": "higher_energy_lab",
                 "label": "Higher-energy lab X-ray",
                 "description": "Mo, Rh, Ag, or similar higher-energy targets around 17-22 keV.",
@@ -460,7 +453,7 @@ MISSING_CATEGORY_SCORE = 0.65
 INCOMPATIBLE_CATEGORY_SCORE = 0.12
 
 
-LAB_XRD_ENERGY_IDS = {"low_energy_lab", "standard_xrd", "higher_energy_lab"}
+LAB_XRD_ENERGY_IDS = {"low_energy_lab", "higher_energy_lab"}
 LAB_TARGET_IDS = {"cr_ka", "cu_ka", "w_la", "mo_ka", "rh_ka", "ag_ka"}
 HIGH_HARD_ENERGY_IDS = {"higher_energy_lab", "hard_xray"}
 ENERGY_FIT_WEIGHT = GROUP_WEIGHTS["energy"] + GROUP_WEIGHTS["target"]
@@ -497,12 +490,6 @@ ENERGY_REQUIREMENTS = {
         "range": (5, 9),
         "label": "Low-energy lab X-ray",
         "terms": ["5.4", "8.04", "8.4", "cr", "cu", "w-l", "x-ray", "kev"],
-        "hard_exclude_terms": ["gamma", "neutron", "particle only"],
-    },
-    "standard_xrd": {
-        "range": (8, 18),
-        "label": "Standard XRD source",
-        "terms": ["xrd", "diffraction", "cu", "mo", "8.04", "17.4", "kev"],
         "hard_exclude_terms": ["gamma", "neutron", "particle only"],
     },
     "higher_energy_lab": {
@@ -1020,16 +1007,20 @@ def get_selection_conflict(answers):
             "Review whether the measurement is diffraction, soft X-ray spectroscopy, or EUV imaging.",
         )
 
-    if "single_event" in performance_ids and application_id not in {"radiation_particle", "material_identification"}:
+    if "single_event" in performance_ids and application_id not in {
+        "radiation_particle",
+        "material_identification",
+        "education_demo",
+    }:
         add_conflict_detail(
             details,
             "Priority vs Detector Type",
             f"{answer_label('performance', 'single_event')} + {answer_label('application', application_id)}",
             (
                 "Single photon / particle sensitivity often points toward photon-counting or Timepix-style detectors. "
-                "Some vacuum/EUV spectroscopy workflows still use CCD or sCMOS cameras, but they should be treated as possible matches, not guaranteed single-event detectors."
+                "Some vacuum/EUV spectroscopy workflows still use CCD or sCMOS cameras, but they should be treated as engineering-review options, not automatic recommendations."
             ),
-            "Keep the CCD/sCMOS options as possible vacuum/spectroscopy matches, but ask an engineer if single-event counting is required.",
+            "Revise the application or performance priority, or ask an engineer to confirm whether single-event counting is truly required.",
         )
 
     if not details:
@@ -1043,9 +1034,9 @@ def get_selection_conflict(answers):
 
     return {
         "has_conflict": True,
-        "blocking": False,
-        "title": "Possible matches, but your answers contain conflicts",
-        "message": "Some selected answers point toward different detector families. The products below are possible matches, but their percentages are reduced until the conflicts are reviewed.",
+        "blocking": True,
+        "title": "Selected answers contain a technical conflict",
+        "message": "Automatic product matching is paused. Please review the conflicting answers below before viewing detector recommendations.",
         "details": details,
     }
 
@@ -1491,6 +1482,52 @@ def special_numeric_boost(product, selected_ids):
     return score, reasons, matched_ids
 
 
+def advacam_particle_family_fit(product, answers):
+    if not is_advacam_product(product):
+        return 0, [], False
+
+    selected_performance_ids = set(answers.get("performance") or [])
+    wants_particle_or_radiation = (
+        answers.get("application") in {"radiation_particle", "education_demo"}
+        or answers.get("energy") == "gamma_neutron_particles"
+        or "single_event" in selected_performance_ids
+    )
+    if not wants_particle_or_radiation:
+        return 0, [], False
+
+    text = field_text(
+        product,
+        [
+            "manufacturer",
+            "product_family",
+            "model_name_variant",
+            "detector_principle",
+            "readout_chip_type",
+            "particle_tracking_radiation_type_id",
+            "energy_range",
+            "typical_applications",
+            "industry_tags",
+        ],
+    )
+    particle_terms = [
+        "timepix",
+        "minipix",
+        "advapix",
+        "widepix",
+        "particle",
+        "radiation",
+        "gamma",
+        "neutron",
+        "alpha",
+        "beta",
+        "cosmic",
+    ]
+    if any(term in text for term in particle_terms):
+        return 10, ["ADVACAM particle/radiation detector family fit"], True
+
+    return 3, ["ADVACAM flexible detector platform"], False
+
+
 def score_product(product, answers):
     score = 0
     match_points = 0
@@ -1618,6 +1655,17 @@ def score_product(product, answers):
             score += weight
             breakdown["performance"]["matched"] += weight
             matched_performance_ids.add(performance_id)
+
+    advacam_bonus, advacam_reasons, advacam_single_event_fit = advacam_particle_family_fit(product, answers)
+    if advacam_bonus:
+        tie_breaker += advacam_bonus
+        reasons.extend(advacam_reasons)
+        if advacam_single_event_fit and "single_event" in selected_performance_ids and "single_event" not in matched_performance_ids:
+            weight = GROUP_WEIGHTS["performance"]
+            match_points += weight
+            score += weight
+            breakdown["performance"]["matched"] += weight
+            matched_performance_ids.add("single_event")
 
     if score == 0 and not has_specific_answers(answers):
         score = 1
@@ -1947,6 +1995,9 @@ def select_diverse_environment_candidates(candidates, limit):
 
 def get_recommendations(answers, limit=3):
     conflict = get_selection_conflict(answers)
+    if conflict.get("blocking"):
+        return []
+
     products = get_products()
     candidates = []
     eligible_products = []
