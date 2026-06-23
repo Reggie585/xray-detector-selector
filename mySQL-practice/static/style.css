@@ -514,6 +514,117 @@ body::after {
     }
 }
 
+/* Feedback refinements: clearer summary state, safer text sizing, and contact validation. */
+.hero-copy h1 {
+    font-size: clamp(2rem, 3.1vw, 3.35rem);
+    line-height: 1.06;
+}
+
+.hero-cn {
+    font-size: clamp(1rem, 1.25vw, 1.35rem);
+}
+
+.title-subtitle {
+    font-size: 0.98rem;
+}
+
+.question-block h2 {
+    max-width: 860px;
+    font-size: clamp(1.6rem, 2.35vw, 2.4rem);
+    line-height: 1.12;
+}
+
+.choice-copy strong {
+    font-size: 0.96rem;
+}
+
+.choice-copy small {
+    font-size: 0.8rem;
+}
+
+.review-helper-card {
+    grid-column: 1 / -1;
+    display: grid;
+    gap: 8px;
+    padding: 18px 20px;
+    border: 1px solid rgba(68, 202, 255, 0.24);
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(5, 37, 82, 0.86), rgba(4, 16, 38, 0.76));
+    color: rgba(224, 236, 255, 0.86);
+}
+
+.review-helper-card strong {
+    color: #f7fbff;
+    font-size: 1rem;
+}
+
+.review-helper-card span {
+    color: rgba(212, 224, 248, 0.72);
+    font-size: 0.92rem;
+}
+
+.review-card {
+    position: relative;
+    cursor: default;
+}
+
+.review-card em {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    padding: 4px 9px;
+    border: 1px solid rgba(99, 195, 255, 0.28);
+    border-radius: 999px;
+    color: rgba(181, 220, 255, 0.86);
+    background: rgba(9, 38, 80, 0.56);
+    font-size: 0.7rem;
+    font-style: normal;
+    font-weight: 700;
+}
+
+.review-card strong {
+    padding-right: 74px;
+}
+
+.score {
+    min-width: 98px;
+    max-width: 136px;
+    padding: 9px 12px;
+    align-items: center;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.score strong {
+    font-size: 0.9rem;
+    line-height: 1.1;
+    white-space: nowrap;
+}
+
+.score small {
+    max-width: 100%;
+    line-height: 1.15;
+}
+
+.form-error {
+    display: none;
+    margin: 12px 0 0;
+    color: #ffd6a8;
+    font-size: 0.92rem;
+    font-weight: 700;
+}
+
+.form-error.visible {
+    display: block;
+}
+
+.contact-grid input.invalid,
+.contact-grid textarea.invalid {
+    border-color: rgba(255, 152, 107, 0.78);
+    box-shadow: 0 0 0 1px rgba(255, 152, 107, 0.2), 0 0 22px rgba(255, 116, 77, 0.12);
+}
+
 * {
     box-sizing: border-box;
 }

@@ -47,9 +47,14 @@ const LANGUAGE_TEXT = {
             contactEmail: "Email",
             contactInfo: "Contact info or notes",
             contactInfoPlaceholder: "Phone, company, preferred contact method, or anything the engineer should know",
-            contactNote: "This step only prepares the recommendation for engineer review. Sending is not connected yet.",
+            contactNote: "This demo only prepares the recommendation for engineer review. A production version should save messages in an admin backend or email them to a configured inbox.",
+            contactValidationRequired: "Please add an email address or phone/contact note before finishing.",
+            contactValidationEmail: "Please enter a valid email address, or leave email blank and use the notes field for phone/contact details.",
             reviewTitle: "Recommendation Review",
             reviewCopy: "Review the selected conditions and generate detector matches before leaving contact information.",
+            reviewReadOnlyTitle: "Selected-condition summary",
+            reviewReadOnlyCopy: "These cards are read-only. Use the left flow or Back button to edit earlier answers.",
+            reviewReadOnlyBadge: "Read only",
             nextStep: "Next step",
             engineerCard: "Generate matches first, then add contact details in the final step.",
             showResults: "Show recommended detectors",
@@ -123,9 +128,11 @@ const LANGUAGE_TEXT = {
             aiCheckingTitle: "Checking possible matches",
             aiCheckingCopy: "Using the same strict recommendation endpoint as the manual selector.",
             aiEngineerReview: "Engineer review recommended",
+            aiNeedsConfirmation: "Needs confirmation",
             aiStrongMatch: "Strong match preview",
             aiStrongMatchCopy: "The assistant found enough information to show controlled matches. You can apply these choices to the selector for the full result page.",
             aiNeedsReviewCopy: "Possible matches are shown below, but the information is not strong enough for an automatic final recommendation. Add the missing details or ask an engineer to review the case.",
+            aiConflictClarifyCopy: "Some extracted requirements point in different directions. The AI Helper will not show product matches until those details are confirmed.",
             aiConflictPaused: "Automatic product matching is paused because the selected requirements conflict.",
             aiNoMatch: "No possible product match was found from the current information.",
             aiPossibleDatabaseMatch: "Possible database match",
@@ -196,9 +203,14 @@ const LANGUAGE_TEXT = {
             contactEmail: "邮箱",
             contactInfo: "联系方式或备注",
             contactInfoPlaceholder: "电话、公司、首选联系方式，或工程师需要了解的其他信息",
-            contactNote: "这一步只会为工程师复核准备推荐信息，暂时还没有真正发送。",
+            contactNote: "当前演示版只会准备工程师复核信息，不会真正发送。正式版建议接入后台留言管理，或发送邮件到指定邮箱。",
+            contactValidationRequired: "请至少填写邮箱，或在备注中填写电话 / 公司 / 联系方式。",
+            contactValidationEmail: "邮箱格式不正确。请填写有效邮箱，或留空邮箱并在备注中填写电话 / 联系方式。",
             reviewTitle: "推荐结果确认",
             reviewCopy: "请先确认已选择的条件，并生成探测器匹配结果，然后再留下联系方式。",
+            reviewReadOnlyTitle: "已选条件概览",
+            reviewReadOnlyCopy: "这些卡片只是只读摘要，不是可点击选项；如需修改，请使用左侧流程或返回上一步。",
+            reviewReadOnlyBadge: "只读",
             nextStep: "下一步",
             engineerCard: "先生成匹配结果，最后一步再添加联系方式。",
             showResults: "查看推荐探测器",
@@ -272,9 +284,11 @@ const LANGUAGE_TEXT = {
             aiCheckingTitle: "正在检查可能匹配项",
             aiCheckingCopy: "正在使用与手动选型相同的严格推荐接口。",
             aiEngineerReview: "建议工程师复核",
+            aiNeedsConfirmation: "需要确认信息",
             aiStrongMatch: "强匹配预览",
             aiStrongMatchCopy: "AI 助手已获得足够信息，可以显示受控匹配结果。你可以将这些选择应用到选型流程，查看完整结果页。",
             aiNeedsReviewCopy: "下面会显示可能匹配项，但信息还不足以作为自动最终推荐。请补充缺失信息，或让工程师复核该案例。",
+            aiConflictClarifyCopy: "AI 提取到的需求之间有不一致之处。确认这些信息前，AI 助手不会显示产品匹配结果。",
             aiConflictPaused: "由于所选需求之间存在冲突，自动产品匹配已暂停。",
             aiNoMatch: "根据当前信息，没有找到可能匹配的产品。",
             aiPossibleDatabaseMatch: "数据库中的可能匹配项",
@@ -563,6 +577,7 @@ const els = {
     contactName: document.querySelector("#contact-name"),
     contactEmail: document.querySelector("#contact-email"),
     contactInfo: document.querySelector("#contact-info"),
+    contactValidation: document.querySelector("#contact-validation"),
     exactEnergy: document.querySelector("#exact-energy"),
     energyValue: document.querySelector("#energy-value"),
     reviewPanel: document.querySelector("#review-panel"),
@@ -1714,6 +1729,7 @@ function renderContactStep() {
     els.resultsPanel.classList.remove("visible");
     els.contactPanel.classList.add("visible");
     document.querySelector(".subsection")?.remove();
+    updateContactValidation();
 }
 
 function renderReview() {
@@ -1727,15 +1743,22 @@ function renderReview() {
     els.resultsPanel.classList.remove("visible");
 
     const reviewGroups = ["application", "energy", "pixel_size", "performance", "installation"];
+    const readOnlyIntro = `
+        <article class="review-helper-card">
+            <strong>${ui("reviewReadOnlyTitle")}</strong>
+            <span>${ui("reviewReadOnlyCopy")}</span>
+        </article>
+    `;
     const choiceCards = reviewGroups
         .map((groupId) => {
             const labels = selectedLabels(groupId);
             if (!labels.length) return "";
             const title = groupId === "contact" ? ui("contactTitle") : translatedGroup(groupId).title;
             return `
-                <article class="review-card">
-                    <span>${title}</span>
-                    <strong>${labels.join(", ")}</strong>
+                <article class="review-card" aria-label="${escapeHtml(title)}">
+                    <em>${ui("reviewReadOnlyBadge")}</em>
+                    <span>${escapeHtml(title)}</span>
+                    <strong>${escapeHtml(labels.join(", "))}</strong>
                 </article>
             `;
         })
@@ -1743,12 +1766,12 @@ function renderReview() {
 
     const engineerCard = `
         <article class="review-card engineer-card">
-            <span>${ui("nextStep")}</span>
-            <strong>${ui("engineerCard")}</strong>
+            <span>${escapeHtml(ui("nextStep"))}</span>
+            <strong>${escapeHtml(ui("engineerCard"))}</strong>
         </article>
     `;
 
-    els.reviewGrid.innerHTML = choiceCards + engineerCard;
+    els.reviewGrid.innerHTML = readOnlyIntro + choiceCards + engineerCard;
 }
 
 function specStatusClass(item, key) {
@@ -2006,6 +2029,12 @@ async function loadRecommendations() {
 }
 
 function prepareEngineerRequest() {
+    if (!isContactValid()) {
+        updateContactValidation();
+        els.engineerActionStatus.textContent = contactValidationMessage();
+        return;
+    }
+
     const contactLine = answers.contact_email || answers.contact_name || answers.contact_info;
     const contactHint = contactLine
         ? ui("contactHintWithContact", { contact: contactLine })
@@ -2474,8 +2503,8 @@ async function runAiRecommendationPreview() {
         aiState.recommendations = [];
         aiState.confidence = calculateAiConfidence(aiState.extracted, []);
         renderAiExtractedInfo();
-        els.aiResultTitle.textContent = ui("aiEngineerReview");
-        els.aiResultNote.textContent = translateBackendText(conflict.message);
+        els.aiResultTitle.textContent = ui("aiNeedsConfirmation");
+        els.aiResultNote.textContent = ui("aiConflictClarifyCopy");
         els.aiResultList.innerHTML = `<article class='ai-empty'>${ui("aiConflictPaused")}</article>`;
         translateRenderedEnglishText(els.aiResultCard);
         return;
@@ -2493,8 +2522,8 @@ async function runAiRecommendationPreview() {
             aiState.recommendations = [];
             aiState.confidence = calculateAiConfidence(aiState.extracted, []);
             renderAiExtractedInfo();
-            els.aiResultTitle.textContent = ui("aiEngineerReview");
-            els.aiResultNote.textContent = translateBackendText(data.conflict.message);
+            els.aiResultTitle.textContent = ui("aiNeedsConfirmation");
+            els.aiResultNote.textContent = ui("aiConflictClarifyCopy");
             els.aiResultList.innerHTML = `
                 <article class='ai-empty'>
                     ${renderConflictSummary(data.conflict)}
@@ -2598,10 +2627,42 @@ async function analyzeAiRequest() {
     await runAiRecommendationPreview();
 }
 
+function isValidEmail(value) {
+    const email = String(value || "").trim();
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function contactValidationMessage() {
+    const email = (answers.contact_email || "").trim();
+    const info = (answers.contact_info || "").trim();
+
+    if (!email && !info) return ui("contactValidationRequired");
+    if (email && !isValidEmail(email)) return ui("contactValidationEmail");
+    return "";
+}
+
+function isContactValid() {
+    return contactValidationMessage() === "";
+}
+
+function updateContactValidation() {
+    if (!els.contactValidation) return;
+
+    const isContactStep = steps[currentStep]?.id === "contact";
+    const message = contactValidationMessage();
+    els.contactValidation.textContent = isContactStep ? message : "";
+    els.contactValidation.classList.toggle("visible", isContactStep && Boolean(message));
+
+    const hasEmail = Boolean((answers.contact_email || "").trim());
+    const hasInfo = Boolean((answers.contact_info || "").trim());
+    els.contactEmail?.classList.toggle("invalid", isContactStep && hasEmail && !isValidEmail(answers.contact_email));
+    els.contactInfo?.classList.toggle("invalid", isContactStep && !hasEmail && !hasInfo);
+}
+
 function canGoNext() {
     const step = steps[currentStep];
     if (step.id === "review") return true;
-    if (step.id === "contact") return true;
+    if (step.id === "contact") return isContactValid();
     if (step.id === "energy" && answers.energy === "exact_energy") {
         return Boolean((answers.exact_energy || "").trim());
     }
@@ -2646,7 +2707,7 @@ function render() {
     } else {
         els.nextButton.innerHTML = `${nextStepButtonLabel(steps[currentStep + 1])} <span aria-hidden='true'>→</span>`;
     }
-    els.nextButton.disabled = !canGoNext() && currentStep !== steps.length - 1;
+    els.nextButton.disabled = !canGoNext();
 
     document.querySelector(".subsection")?.remove();
     renderStepOverview();
@@ -2662,6 +2723,7 @@ function render() {
     }
 
     translateRenderedEnglishText();
+    updateContactValidation();
 }
 
 function toggleLanguage() {
@@ -2701,14 +2763,20 @@ els.engineerContact.addEventListener("click", prepareEngineerRequest);
 els.contactName.addEventListener("input", () => {
     answers.contact_name = els.contactName.value.trim();
     renderStepOverview();
+    updateContactValidation();
+    els.nextButton.disabled = !canGoNext();
 });
 els.contactEmail.addEventListener("input", () => {
     answers.contact_email = els.contactEmail.value.trim();
     renderStepOverview();
+    updateContactValidation();
+    els.nextButton.disabled = !canGoNext();
 });
 els.contactInfo.addEventListener("input", () => {
     answers.contact_info = els.contactInfo.value.trim();
     renderStepOverview();
+    updateContactValidation();
+    els.nextButton.disabled = !canGoNext();
 });
 els.energyValue.addEventListener("input", () => {
     answers.exact_energy = els.energyValue.value.trim();
