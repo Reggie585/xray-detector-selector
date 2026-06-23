@@ -514,6 +514,45 @@ body::after {
     }
 }
 
+/* Final compact type-scale override.
+   This stays at the bottom because older layout experiments repeat the same selectors above. */
+.hero-copy h1 {
+    font-size: clamp(2.15rem, 3vw, 3.35rem) !important;
+    line-height: 1.08 !important;
+}
+
+.hero-cn {
+    font-size: clamp(1rem, 1.25vw, 1.35rem) !important;
+    line-height: 1.25 !important;
+}
+
+.title-subtitle {
+    max-width: 760px;
+    font-size: 0.96rem !important;
+    line-height: 1.55 !important;
+}
+
+.question-block h2 {
+    max-width: 780px;
+    font-size: clamp(1.75rem, 2.15vw, 2.35rem) !important;
+    line-height: 1.16 !important;
+}
+
+.question-copy {
+    font-size: 0.95rem !important;
+    line-height: 1.55 !important;
+}
+
+.contact-grid label {
+    font-size: 0.92rem !important;
+}
+
+.contact-grid input,
+.contact-grid textarea {
+    font-size: 0.95rem !important;
+    line-height: 1.45 !important;
+}
+
 /* Feedback refinements: clearer summary state, safer text sizing, and contact validation. */
 .hero-copy h1 {
     font-size: clamp(2rem, 3.1vw, 3.35rem);
@@ -3291,4 +3330,43 @@ body::after {
         min-height: 96px;
         padding-right: 58px;
     }
+}
+
+/* Final compact type-scale override.
+   This must stay at the bottom because older layout blocks repeat these selectors above. */
+.hero-copy h1 {
+    font-size: clamp(2.15rem, 3vw, 3.35rem) !important;
+    line-height: 1.08 !important;
+}
+
+.hero-cn {
+    font-size: clamp(1rem, 1.25vw, 1.35rem) !important;
+    line-height: 1.25 !important;
+}
+
+.title-subtitle {
+    max-width: 760px;
+    font-size: 0.96rem !important;
+    line-height: 1.55 !important;
+}
+
+.question-block h2 {
+    max-width: 780px;
+    font-size: clamp(1.75rem, 2.15vw, 2.35rem) !important;
+    line-height: 1.16 !important;
+}
+
+.question-copy {
+    font-size: 0.95rem !important;
+    line-height: 1.55 !important;
+}
+
+.contact-grid label {
+    font-size: 0.92rem !important;
+}
+
+.contact-grid input,
+.contact-grid textarea {
+    font-size: 0.95rem !important;
+    line-height: 1.45 !important;
 }
