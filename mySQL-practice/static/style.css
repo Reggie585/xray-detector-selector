@@ -517,8 +517,10 @@ body::after {
 /* Final compact type-scale override.
    This stays at the bottom because older layout experiments repeat the same selectors above. */
 .hero-copy h1 {
-    font-size: clamp(2.15rem, 3vw, 3.35rem) !important;
+    font-size: clamp(1.9rem, 2.55vw, 2.85rem) !important;
     line-height: 1.08 !important;
+    word-break: keep-all !important;
+    overflow-wrap: normal !important;
 }
 
 .hero-cn {
@@ -551,6 +553,18 @@ body::after {
 .contact-grid textarea {
     font-size: 0.95rem !important;
     line-height: 1.45 !important;
+}
+
+@media (min-width: 900px) {
+    .hero-copy h1 {
+        white-space: nowrap !important;
+    }
+}
+
+@media (max-width: 899px) {
+    .hero-copy h1 {
+        white-space: normal !important;
+    }
 }
 
 /* Feedback refinements: clearer summary state, safer text sizing, and contact validation. */
@@ -3335,8 +3349,10 @@ body::after {
 /* Final compact type-scale override.
    This must stay at the bottom because older layout blocks repeat these selectors above. */
 .hero-copy h1 {
-    font-size: clamp(2.15rem, 3vw, 3.35rem) !important;
+    font-size: clamp(1.9rem, 2.55vw, 2.85rem) !important;
     line-height: 1.08 !important;
+    word-break: keep-all !important;
+    overflow-wrap: normal !important;
 }
 
 .hero-cn {
@@ -3369,4 +3385,16 @@ body::after {
 .contact-grid textarea {
     font-size: 0.95rem !important;
     line-height: 1.45 !important;
+}
+
+@media (min-width: 900px) {
+    .hero-copy h1 {
+        white-space: nowrap !important;
+    }
+}
+
+@media (max-width: 899px) {
+    .hero-copy h1 {
+        white-space: normal !important;
+    }
 }

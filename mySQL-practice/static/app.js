@@ -156,7 +156,7 @@ const LANGUAGE_TEXT = {
             dialogSave: "Use energy",
         },
         outputTypes: {
-            xrd_saxs_waxs: "Diffraction pattern",
+            xrd_saxs_waxs: "Diffraction / scattering pattern",
             xafs_absorption: "Spectrum / absorption curve",
             euv_soft_xray_spectroscopy: "Spectrum",
             xray_euv_imaging: "2D image",
@@ -312,7 +312,7 @@ const LANGUAGE_TEXT = {
             dialogSave: "使用该能量",
         },
         outputTypes: {
-            xrd_saxs_waxs: "衍射图样",
+            xrd_saxs_waxs: "衍射、散射图样",
             xafs_absorption: "光谱 / 吸收曲线",
             euv_soft_xray_spectroscopy: "光谱",
             xray_euv_imaging: "二维图像",
@@ -329,7 +329,7 @@ const LANGUAGE_TEXT = {
 const CHOICE_TRANSLATIONS = {
     zh: {
         application: {
-            xrd_saxs_waxs: { label: "XRD / SAXS / WAXS", description: "用于粉末、晶体、薄膜、聚合物、合金或结构材料样品的衍射图样。" },
+            xrd_saxs_waxs: { label: "XRD / SAXS / WAXS", description: "用于粉末、晶体、薄膜、聚合物、合金或结构材料样品的衍射、散射图样。" },
             xafs_absorption: { label: "XAFS / 吸收光谱", description: "用于 XANES、EXAFS、吸收边扫描、透射或吸收测量。" },
             euv_soft_xray_spectroscopy: { label: "EUV / 软 X 射线光谱", description: "用于 EUV、VUV、软 X 射线、等离子体发射、HHG 或弱信号光谱。" },
             xray_euv_imaging: { label: "X 射线 / EUV 成像", description: "用于二维图像采集、XRF 成像、CDI、ptychography 或通用科学成像。" },
