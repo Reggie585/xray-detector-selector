@@ -453,18 +453,6 @@ LAB_TARGET_IDS = {"cr_ka", "cu_ka", "w_la", "mo_ka", "rh_ka", "ag_ka"}
 HIGH_HARD_ENERGY_IDS = {"higher_energy_lab", "hard_xray"}
 ENERGY_FIT_WEIGHT = GROUP_WEIGHTS["energy"] + GROUP_WEIGHTS["target"]
 PIXEL_FIT_WEIGHT = GROUP_WEIGHTS["pixel_size"]
-INTERFACE_SUPPORT_TERMS = {
-    "usb",
-    "ethernet",
-    "software",
-    "windows",
-    "sdk",
-    "trigger",
-    "api",
-    "python",
-    "epics",
-    "tango",
-}
 ENERGY_FIELDS = [
     "minimum_energy_threshold",
     "detectable_energy_radiation_range",
@@ -1053,18 +1041,6 @@ def count_term_matches(text, terms):
     return matches
 
 
-def split_interface_support_matches(matches):
-    interface_matches = []
-    environment_matches = []
-    for match in matches:
-        clean_match = normalize(match)
-        if clean_match in INTERFACE_SUPPORT_TERMS:
-            interface_matches.append(match)
-        else:
-            environment_matches.append(match)
-    return interface_matches, environment_matches
-
-
 def first_value(product, *fields):
     for field in fields:
         value = product.get(field)
@@ -1529,7 +1505,6 @@ def score_product(product, answers):
         "energy": {"status": "unknown", "note": "Energy not requested"},
         "pixel": {"status": "unknown", "note": "Pixel size not requested"},
         "active_area": {"status": "unknown", "note": "Not scored by current answers"},
-        "interface": {"status": "unknown", "note": "Not scored by current answers"},
         "software": {"status": "unknown", "note": "Not scored by current answers"},
     }
     selected_performance_ids = set(answers.get("performance") or [])
@@ -1604,10 +1579,6 @@ def score_product(product, answers):
         score += install_fit["matched"]
         breakdown["installation"]["matched"] += install_fit["matched"]
         tie_breaker += install_fit["tie_bonus"]
-        spec_quality["interface"] = {
-            "status": install_fit["status"],
-            "note": install_fit["note"],
-        }
         if install_fit["reason"]:
             reasons.append(install_fit["reason"])
 
@@ -2095,7 +2066,6 @@ def get_recommendations(answers, limit=3):
                 "active_area": product.get("active_sensitive_area"),
                 "energy_range": product.get("detectable_energy_radiation_range"),
                 "frame_rate": product.get("max_frame_rate_readout_speed_hit_rate"),
-                "interface": first_value(product, "data_interface", "connector_type"),
                 "software": first_value(product, "software", "sdk_drivers"),
                 "vacuum": product.get("vacuum_compatibility"),
                 "applications": product.get("typical_applications"),
