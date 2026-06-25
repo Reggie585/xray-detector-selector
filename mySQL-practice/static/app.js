@@ -50,11 +50,16 @@ const LANGUAGE_TEXT = {
             contactNote: "This demo only prepares the recommendation for engineer review. A production version should save messages in an admin backend or email them to a configured inbox.",
             contactValidationRequired: "Please add an email address or phone/contact note before finishing.",
             contactValidationEmail: "Please enter a valid email address, or leave email blank and use the notes field for phone/contact details.",
+            engineerSaving: "Saving the engineer-review request...",
+            engineerSaved: "Saved to the backend review log. Email sending is not connected yet. Backend view: /admin/submissions",
+            engineerSaveFailed: "Could not save the request. Please keep the recommendation on this page and try again later.",
             reviewTitle: "Recommendation Review",
             reviewCopy: "Review the selected conditions and generate detector matches before leaving contact information.",
             reviewReadOnlyTitle: "Selected-condition summary",
             reviewReadOnlyCopy: "These cards are read-only. Use the left flow or Back button to edit earlier answers.",
             reviewReadOnlyBadge: "Read only",
+            reviewEditHint: "To change anything, use the left flow or Back button. This page only confirms what will be scored.",
+            reviewEmptyValue: "Not selected",
             nextStep: "Next step",
             engineerCard: "Generate matches first, then add contact details in the final step.",
             showResults: "Show recommended detectors",
@@ -97,6 +102,8 @@ const LANGUAGE_TEXT = {
             unknownManufacturer: "Unknown manufacturer",
             match: "match",
             notAvailable: "N/A",
+            productLink: "View product page",
+            productLinkPending: "Product link pending",
             contactHintWithContact: "Contact: {contact}.",
             contactHintNoContact: "Add an email or contact note in Step 6 so an engineer can follow up.",
             engineerAlternativePrepared: "Engineering review prepared to discuss alternative ways to reach the measurement goal, because some selected answers point toward different detector families. Sending is not connected yet.",
@@ -206,11 +213,16 @@ const LANGUAGE_TEXT = {
             contactNote: "当前演示版只会准备工程师复核信息，不会真正发送。正式版建议接入后台留言管理，或发送邮件到指定邮箱。",
             contactValidationRequired: "请至少填写邮箱，或在备注中填写电话 / 公司 / 联系方式。",
             contactValidationEmail: "邮箱格式不正确。请填写有效邮箱，或留空邮箱并在备注中填写电话 / 联系方式。",
+            engineerSaving: "正在保存工程师复核请求...",
+            engineerSaved: "已保存到后台留言记录。邮件发送功能尚未接入。后台查看地址：/admin/submissions",
+            engineerSaveFailed: "保存请求失败。请先保留当前推荐页面，稍后再试。",
             reviewTitle: "推荐结果确认",
             reviewCopy: "请先确认已选择的条件，并生成探测器匹配结果，然后再留下联系方式。",
             reviewReadOnlyTitle: "已选条件概览",
             reviewReadOnlyCopy: "这些卡片只是只读摘要，不是可点击选项；如需修改，请使用左侧流程或返回上一步。",
             reviewReadOnlyBadge: "只读",
+            reviewEditHint: "如需修改，请点击左侧流程或返回上一步。本页只用于确认即将参与评分的条件。",
+            reviewEmptyValue: "未选择",
             nextStep: "下一步",
             engineerCard: "先生成匹配结果，最后一步再添加联系方式。",
             showResults: "查看推荐探测器",
@@ -253,6 +265,8 @@ const LANGUAGE_TEXT = {
             unknownManufacturer: "未知厂商",
             match: "匹配",
             notAvailable: "未提供",
+            productLink: "查看产品资料",
+            productLinkPending: "产品链接待补充",
             contactHintWithContact: "联系方式：{contact}。",
             contactHintNoContact: "请在第 6 步添加邮箱或备注，方便工程师后续联系。",
             engineerAlternativePrepared: "已准备工程师复核信息，用于讨论其他实现测量目标的方式。因为部分答案指向不同探测器类型，建议工程师确认。当前还没有真正发送。",
@@ -578,6 +592,7 @@ const els = {
     contactEmail: document.querySelector("#contact-email"),
     contactInfo: document.querySelector("#contact-info"),
     contactValidation: document.querySelector("#contact-validation"),
+    contactSubmitStatus: document.querySelector("#contact-submit-status"),
     exactEnergy: document.querySelector("#exact-energy"),
     energyValue: document.querySelector("#energy-value"),
     reviewPanel: document.querySelector("#review-panel"),
@@ -1743,35 +1758,36 @@ function renderReview() {
     els.resultsPanel.classList.remove("visible");
 
     const reviewGroups = ["application", "energy", "pixel_size", "performance", "installation"];
-    const readOnlyIntro = `
-        <article class="review-helper-card">
-            <strong>${ui("reviewReadOnlyTitle")}</strong>
-            <span>${ui("reviewReadOnlyCopy")}</span>
-        </article>
-    `;
-    const choiceCards = reviewGroups
+    const summaryRows = reviewGroups
         .map((groupId) => {
+            const title = translatedGroup(groupId).title;
             const labels = selectedLabels(groupId);
-            if (!labels.length) return "";
-            const title = groupId === "contact" ? ui("contactTitle") : translatedGroup(groupId).title;
+            const value = labels.length ? labels.join(", ") : ui("reviewEmptyValue");
             return `
-                <article class="review-card" aria-label="${escapeHtml(title)}">
-                    <em>${ui("reviewReadOnlyBadge")}</em>
-                    <span>${escapeHtml(title)}</span>
-                    <strong>${escapeHtml(labels.join(", "))}</strong>
-                </article>
+                <div class="review-summary-row">
+                    <dt>${escapeHtml(title)}</dt>
+                    <dd>${escapeHtml(value)}</dd>
+                </div>
             `;
         })
         .join("");
 
-    const engineerCard = `
-        <article class="review-card engineer-card">
+    els.reviewGrid.innerHTML = `
+        <article class="review-summary-panel">
+            <div class="review-summary-heading">
+                <span>${escapeHtml(ui("reviewReadOnlyBadge"))}</span>
+                <strong>${escapeHtml(ui("reviewReadOnlyTitle"))}</strong>
+                <p>${escapeHtml(ui("reviewEditHint"))}</p>
+            </div>
+            <dl class="review-summary-list">
+                ${summaryRows}
+            </dl>
+        </article>
+        <article class="review-next-panel">
             <span>${escapeHtml(ui("nextStep"))}</span>
             <strong>${escapeHtml(ui("engineerCard"))}</strong>
         </article>
     `;
-
-    els.reviewGrid.innerHTML = readOnlyIntro + choiceCards + engineerCard;
 }
 
 function specStatusClass(item, key) {
@@ -1789,6 +1805,18 @@ function specBlock(item, key, label, value) {
     `;
 }
 
+function productLinkFor(item) {
+    return item.product_url || item.source_url || "";
+}
+
+function renderProductLink(item) {
+    const href = productLinkFor(item);
+    if (href) {
+        return `<a class="product-link" href="${escapeHtml(href)}" target="_blank" rel="noreferrer">${escapeHtml(ui("productLink"))}</a>`;
+    }
+    return `<span class="product-link pending">${escapeHtml(ui("productLinkPending"))}</span>`;
+}
+
 function renderResultCard(item, index) {
     const modelName = item.model_name_variant || item.product_id || ui("notAvailable");
     const maker = item.manufacturer || ui("unknownManufacturer");
@@ -1799,6 +1827,7 @@ function renderResultCard(item, index) {
     const matchLabel = item.match_label ? translateBackendText(item.match_label) : "";
     const reviewLabel = item.engineer_review ? translateBackendText("Engineer Review Recommended") : "";
     const scoreClass = item.engineer_review ? "score review" : "score";
+    const scoreNotes = [matchLabel, reviewLabel].filter(Boolean);
 
     return `
         <article class="result-card">
@@ -1809,11 +1838,12 @@ function renderResultCard(item, index) {
                         <h3>${escapeHtml(title)}</h3>
                         <p>${escapeHtml(makerLine)}</p>
                     </div>
-                    <span class="${scoreClass}">
-                        <strong>${item.match_percent || 0}% ${ui("match")}</strong>
-                        ${matchLabel ? `<small>${escapeHtml(matchLabel)}</small>` : ""}
-                        ${reviewLabel ? `<small>${escapeHtml(reviewLabel)}</small>` : ""}
-                    </span>
+                    <div class="score-wrap">
+                        <span class="${scoreClass}">
+                            <strong>${item.match_percent || 0}% ${ui("match")}</strong>
+                        </span>
+                        ${scoreNotes.length ? `<small class="score-note">${escapeHtml(scoreNotes.join(" / "))}</small>` : ""}
+                    </div>
                 </div>
                 <dl class="spec-grid">
                     ${specBlock(item, "detector", ui("detector"), item.detector_principle)}
@@ -1826,6 +1856,9 @@ function renderResultCard(item, index) {
                 <p class="applications">${escapeHtml(applications)}</p>
                 <div class="reason-list">
                     ${item.reasons.map((reason) => `<span>${escapeHtml(translateBackendText(reason))}</span>`).join("")}
+                </div>
+                <div class="product-actions">
+                    ${renderProductLink(item)}
                 </div>
             </div>
         </article>
@@ -1971,7 +2004,7 @@ async function loadRecommendations() {
     answers.exact_energy = els.energyValue.value.trim();
     els.resultsList.innerHTML = `<p class='loading'>${ui("loading")}</p>`;
     els.compareGrid.innerHTML = "";
-    els.engineerActionStatus.textContent = "";
+    setEngineerStatus("");
     renderConflictCheck(null);
     latestConflict = null;
     const conflict = selectionConflictStatus();
@@ -2028,21 +2061,18 @@ async function loadRecommendations() {
     markResultsGenerated();
 }
 
-function prepareEngineerRequest() {
-    if (!isContactValid()) {
-        updateContactValidation();
-        els.engineerActionStatus.textContent = contactValidationMessage();
-        return;
-    }
+function setEngineerStatus(message, isError = false) {
+    [els.engineerActionStatus, els.contactSubmitStatus].forEach((element) => {
+        if (!element) return;
+        element.textContent = message || "";
+        element.classList.toggle("visible", Boolean(message));
+        element.classList.toggle("error", isError);
+    });
+}
 
-    const contactLine = answers.contact_email || answers.contact_name || answers.contact_info;
-    const contactHint = contactLine
-        ? ui("contactHintWithContact", { contact: contactLine })
-        : ui("contactHintNoContact");
-
+function engineerContextMessage(contactHint) {
     if (latestConflict) {
-        els.engineerActionStatus.textContent = `${contactHint} ${ui("engineerAlternativePrepared")}`;
-        return;
+        return `${contactHint} ${ui("engineerAlternativePrepared")}`;
     }
 
     if (latestRecommendations.length) {
@@ -2050,11 +2080,56 @@ function prepareEngineerRequest() {
             .map((item) => item.model_name_variant || item.product_id)
             .slice(0, 3)
             .join(", ");
-        els.engineerActionStatus.textContent = `${contactHint} ${ui("engineerProductsPrepared", { products })}`;
+        return `${contactHint} ${ui("engineerProductsPrepared", { products })}`;
+    }
+
+    return `${contactHint} ${ui("engineerGenericPrepared")}`;
+}
+
+async function prepareEngineerRequest() {
+    if (!isContactValid()) {
+        updateContactValidation();
+        setEngineerStatus(contactValidationMessage(), true);
         return;
     }
 
-    els.engineerActionStatus.textContent = `${contactHint} ${ui("engineerGenericPrepared")}`;
+    const contactLine = answers.contact_email || answers.contact_name || answers.contact_info;
+    const contactHint = contactLine
+        ? ui("contactHintWithContact", { contact: contactLine })
+        : ui("contactHintNoContact");
+    const statusMessage = engineerContextMessage(contactHint);
+
+    setEngineerStatus(`${statusMessage} ${ui("engineerSaving")}`);
+    try {
+        const response = await fetch("/api/engineer-request", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                contact: {
+                    name: answers.contact_name || "",
+                    email: answers.contact_email || "",
+                    info: answers.contact_info || "",
+                },
+                answers: JSON.parse(JSON.stringify(answers)),
+                recommendations: latestRecommendations.slice(0, 3).map((item) => ({
+                    product_id: item.product_id,
+                    model_name_variant: item.model_name_variant,
+                    manufacturer: item.manufacturer,
+                    product_family: item.product_family,
+                    match_percent: item.match_percent,
+                    engineer_review: item.engineer_review,
+                })),
+                conflict: latestConflict,
+            }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.ok) {
+            throw new Error(data.message || "save failed");
+        }
+        setEngineerStatus(`${statusMessage} ${ui("engineerSaved")}`);
+    } catch (error) {
+        setEngineerStatus(`${statusMessage} ${ui("engineerSaveFailed")}`, true);
+    }
 }
 
 function renderComparison() {
@@ -2499,13 +2574,13 @@ async function runAiRecommendationPreview() {
     els.aiResultList.innerHTML = `<p class='loading'>${ui("loading")}</p>`;
 
     const conflict = selectionConflictStatus(aiAnswers);
-    if (conflict.level === "block") {
+    if (conflict.level !== "ok") {
         aiState.recommendations = [];
         aiState.confidence = calculateAiConfidence(aiState.extracted, []);
         renderAiExtractedInfo();
         els.aiResultTitle.textContent = ui("aiNeedsConfirmation");
         els.aiResultNote.textContent = ui("aiConflictClarifyCopy");
-        els.aiResultList.innerHTML = `<article class='ai-empty'>${ui("aiConflictPaused")}</article>`;
+        els.aiResultList.innerHTML = `<article class='ai-empty'>${escapeHtml(conflict.message || ui("aiConflictPaused"))}</article>`;
         translateRenderedEnglishText(els.aiResultCard);
         return;
     }
@@ -2738,7 +2813,7 @@ els.backButton.addEventListener("click", () => {
     render();
 });
 
-els.nextButton.addEventListener("click", () => {
+els.nextButton.addEventListener("click", async () => {
     if (steps[currentStep].id === "review") {
         if (resultsGenerated) {
             currentStep = Math.min(steps.length - 1, currentStep + 1);
@@ -2749,7 +2824,7 @@ els.nextButton.addEventListener("click", () => {
         return;
     }
     if (steps[currentStep].id === "contact") {
-        prepareEngineerRequest();
+        await prepareEngineerRequest();
         return;
     }
     currentStep = Math.min(steps.length - 1, currentStep + 1);
@@ -2762,18 +2837,21 @@ els.compareTop.addEventListener("click", renderComparison);
 els.engineerContact.addEventListener("click", prepareEngineerRequest);
 els.contactName.addEventListener("input", () => {
     answers.contact_name = els.contactName.value.trim();
+    setEngineerStatus("");
     renderStepOverview();
     updateContactValidation();
     els.nextButton.disabled = !canGoNext();
 });
 els.contactEmail.addEventListener("input", () => {
     answers.contact_email = els.contactEmail.value.trim();
+    setEngineerStatus("");
     renderStepOverview();
     updateContactValidation();
     els.nextButton.disabled = !canGoNext();
 });
 els.contactInfo.addEventListener("input", () => {
     answers.contact_info = els.contactInfo.value.trim();
+    setEngineerStatus("");
     renderStepOverview();
     updateContactValidation();
     els.nextButton.disabled = !canGoNext();
