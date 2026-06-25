@@ -97,7 +97,6 @@ const LANGUAGE_TEXT = {
             energy: "Energy",
             pixel: "Pixel",
             activeArea: "Active area",
-            interface: "Interface",
             software: "Software",
             unknownManufacturer: "Unknown manufacturer",
             match: "match",
@@ -260,7 +259,6 @@ const LANGUAGE_TEXT = {
             energy: "能量",
             pixel: "像素",
             activeArea: "有效面积",
-            interface: "接口",
             software: "软件",
             unknownManufacturer: "未知厂商",
             match: "匹配",
@@ -1037,7 +1035,6 @@ const COMMON_ZH_PHRASES = {
     "Atmospheric fallback": "大气环境备选",
     "Environment fit": "环境匹配",
     "Installation fit": "安装环境匹配",
-    "Interface support": "接口支持",
     "Energy family fit": "能量类型匹配",
     "Pixel family fit": "像素类型匹配",
     "Energy family appears compatible with": "能量类型看起来兼容",
@@ -1224,7 +1221,6 @@ function translateBackendText(value) {
         "Installation environment text matches the selected environment": "安装环境文字与所选环境匹配",
         "Interface/software looks usable, but it has a smaller percentage impact than energy, pixel size, and application": "接口/软件看起来可用，但它对百分比的影响小于能量、像素尺寸和应用场景",
         "Interface/software match is useful, but it is weighted lightly in the total percentage": "接口/软件匹配有参考价值，但在总百分比中的权重较低",
-        "Installation/interface fit is not clearly documented": "未明确记录安装环境 / 接口适配信息",
         "CCD/CMOS camera is possible for vacuum/EUV spectroscopy, but single-event counting may need a different detector family": "CCD/CMOS 相机可用于真空 / EUV 光谱，但单事件计数可能需要不同的探测器类型",
     };
     if (exactMap[text]) return exactMap[text];
@@ -1255,7 +1251,6 @@ function translateBackendText(value) {
         [/^Installation fit: (.+)$/i, "安装环境匹配：$1"],
         [/^Installation & Control: (.+)$/i, "安装环境与控制：$1"],
         [/^Environment fit: (.+)$/i, "使用环境匹配：$1"],
-        [/^Interface support: (.+)$/i, "接口支持：$1"],
         [/^Conflict: (.+)$/i, "冲突：$1"],
     ];
 
@@ -1850,7 +1845,6 @@ function renderResultCard(item, index) {
                     ${specBlock(item, "energy", ui("energy"), item.energy_range)}
                     ${specBlock(item, "pixel", ui("pixel"), item.pixel_size)}
                     ${specBlock(item, "active_area", ui("activeArea"), item.active_area)}
-                    ${specBlock(item, "interface", ui("interface"), item.interface)}
                     ${specBlock(item, "software", ui("software"), item.software)}
                 </dl>
                 <p class="applications">${escapeHtml(applications)}</p>
@@ -2144,7 +2138,6 @@ function renderComparison() {
                     <th>${ui("energy")}</th>
                     <th>${ui("pixel")}</th>
                     <th>${ui("activeArea")}</th>
-                    <th>${ui("interface")}</th>
                 </tr>
             </thead>
             <tbody>
@@ -2155,7 +2148,6 @@ function renderComparison() {
                             <td>${escapeHtml(translateProductText(item.energy_range || ui("notAvailable")))}</td>
                             <td>${escapeHtml(translateProductText(item.pixel_size || ui("notAvailable")))}</td>
                             <td>${escapeHtml(translateProductText(item.active_area || ui("notAvailable")))}</td>
-                            <td>${escapeHtml(translateProductText(item.interface || ui("notAvailable")))}</td>
                         </tr>
                     `)
                     .join("")}
