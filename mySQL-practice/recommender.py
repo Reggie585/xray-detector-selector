@@ -407,11 +407,6 @@ SEARCH_FIELDS = {
         "measurement_outputs",
     ],
     "installation": [
-        "data_interface",
-        "connector_type",
-        "software",
-        "sdk_drivers",
-        "trigger_i_o",
         "cooling_temperature_control",
         "vacuum_compatibility",
         "dimensions",
@@ -1078,6 +1073,14 @@ def first_value(product, *fields):
     return "N/A"
 
 
+def first_url(*values):
+    for value in values:
+        match = re.search(r"https?://[^\s,;，；）)]+", str(value or ""))
+        if match:
+            return match.group(0)
+    return ""
+
+
 def application_fit(product, answers):
     choice = get_choice("application", answers.get("application"))
     if not choice or not choice.get("terms"):
@@ -1263,7 +1266,7 @@ def installation_fit(product, answers):
     weight = GROUP_WEIGHTS["installation"]
     product_text = field_text(product, SEARCH_FIELDS["installation"])
     matches = count_term_matches(product_text, choice["terms"])
-    interface_matches, environment_matches = split_interface_support_matches(matches)
+    environment_matches = matches
     ccd_camera = is_ccd_camera(product)
     cmos_camera = is_cmos_camera(product)
     ccd_or_cmos_camera = ccd_camera or cmos_camera
@@ -1328,16 +1331,6 @@ def installation_fit(product, answers):
                 "status": "good",
                 "note": "Fits atmospheric use",
                 "tie_bonus": 3,
-            }
-
-        if interface_matches:
-            return {
-                "matched": round(weight * 0.42, 2),
-                "possible": weight,
-                "reason": f"Interface support: {', '.join(interface_matches[:3])}",
-                "status": "warn",
-                "note": "Interface/software looks usable, but it has a smaller percentage impact than energy, pixel size, and application",
-                "tie_bonus": 0.5,
             }
 
         if vacuum_product:
@@ -1429,22 +1422,12 @@ def installation_fit(product, answers):
             "tie_bonus": min(len(matches), 3) * 0.1,
         }
 
-    if interface_matches:
-        return {
-            "matched": round(weight * 0.35, 2),
-            "possible": weight,
-            "reason": f"Interface support: {', '.join(interface_matches[:3])}",
-            "status": "warn",
-            "note": "Interface/software match is useful, but it is weighted lightly in the total percentage",
-            "tie_bonus": 0.2,
-        }
-
     return {
         "matched": 0,
         "possible": weight,
         "reason": None,
         "status": "warn",
-        "note": "Installation/interface fit is not clearly documented",
+        "note": "Installation environment fit is not clearly documented",
         "tie_bonus": -1,
     }
 
@@ -2117,6 +2100,11 @@ def get_recommendations(answers, limit=3):
                 "vacuum": product.get("vacuum_compatibility"),
                 "applications": product.get("typical_applications"),
                 "source": product.get("source_document_s"),
+                "source_url": first_url(
+                    product.get("product_url"),
+                    product.get("source_document_s"),
+                    product.get("source_page_notes"),
+                ),
                 "reasons": list(dict.fromkeys(candidate["reasons"]))[:5],
             }
         )
