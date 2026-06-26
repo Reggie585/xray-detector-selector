@@ -3583,3 +3583,14 @@ body::after {
         white-space: normal !important;
     }
 }
+
+.step-card.locked,
+.step-card:disabled {
+    cursor: not-allowed !important;
+    opacity: 0.48 !important;
+}
+
+.step-card.locked .step-number,
+.step-card:disabled .step-number {
+    box-shadow: none !important;
+}

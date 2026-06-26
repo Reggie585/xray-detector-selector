@@ -429,6 +429,7 @@ let currentStep = 0;
 let latestRecommendations = [];
 let latestConflict = null;
 let resultsGenerated = false;
+let contactStepUnlocked = false;
 
 const SIMPLIFIED_INSTALLATION_IDS = ["simple_lab", "vacuum_uhv", "not_sure_installation"];
 
@@ -1562,13 +1563,43 @@ function stepLabelText(step, index) {
     return labels[0] || stepText(step.id, "hint");
 }
 
+function isStepCompleteById(stepId) {
+    if (stepId === "review") return resultsGenerated;
+    if (stepId === "contact") return isContactValid();
+    if (stepId === "energy" && answers.energy === "exact_energy") {
+        return Boolean((answers.exact_energy || "").trim());
+    }
+    const value = answers[stepId];
+    if (Array.isArray(value)) return value.length > 0;
+    return Boolean(value);
+}
+
+function arePreviousStepsComplete(targetIndex) {
+    return steps.slice(0, targetIndex).every((step) => {
+        if (step.id === "review") return resultsGenerated;
+        if (step.id === "contact") return true;
+        return isStepCompleteById(step.id);
+    });
+}
+
+function canNavigateToStep(index) {
+    if (index <= currentStep) return true;
+    const targetStep = steps[index];
+    if (!targetStep) return false;
+    if (targetStep.id === "contact") {
+        return contactStepUnlocked && arePreviousStepsComplete(index);
+    }
+    return arePreviousStepsComplete(index);
+}
+
 function renderStepOverview() {
     els.stepOverview.innerHTML = steps
         .map((step, index) => {
             const done = index < currentStep;
             const active = index === currentStep;
+            const locked = !canNavigateToStep(index);
             return `
-                <button class="step-card ${active ? "active" : ""} ${done ? "done" : ""}" data-step="${index}">
+                <button class="step-card ${active ? "active" : ""} ${done ? "done" : ""} ${locked ? "locked" : ""}" data-step="${index}" ${locked ? "disabled aria-disabled='true'" : ""}>
                     <span class="step-number">${done ? "✓" : index + 1}</span>
                     <span class="step-copy">
                         <strong>${stepText(step.id, "short")}</strong>
@@ -1581,7 +1612,9 @@ function renderStepOverview() {
 
     document.querySelectorAll(".step-card").forEach((button) => {
         button.addEventListener("click", () => {
-            currentStep = Number(button.dataset.step);
+            const requestedStep = Number(button.dataset.step);
+            if (!canNavigateToStep(requestedStep)) return;
+            currentStep = requestedStep;
             render();
         });
     });
@@ -1634,6 +1667,7 @@ function toggleChoice(groupId, choiceId) {
     const group = window.CHOICE_GROUPS[groupId];
     const maxChoices = group.max_choices || 1;
     resultsGenerated = false;
+    contactStepUnlocked = false;
 
     if (groupId === "energy") {
         setSourceTargetChoice(choiceId);
@@ -1798,6 +1832,15 @@ function specBlock(item, key, label, value) {
             <dd>${escapeHtml(displayValue)}</dd>
         </div>
     `;
+}
+
+function hideInterfaceSpecs(root = document) {
+    root.querySelectorAll(".spec-grid div").forEach((spec) => {
+        const label = spec.querySelector("dt")?.textContent.trim().toLowerCase();
+        if (label === "interface" || label === "接口") {
+            spec.remove();
+        }
+    });
 }
 
 function productLinkFor(item) {
@@ -2052,6 +2095,7 @@ async function loadRecommendations() {
     }
     latestRecommendations = data.recommendations || [];
     els.resultsList.innerHTML = latestRecommendations.map(renderResultCard).join("");
+    hideInterfaceSpecs(els.resultsList);
     markResultsGenerated();
 }
 
@@ -2662,6 +2706,7 @@ function applyAiChoicesToSelector() {
     Object.assign(answers, aiState.answers);
     els.energyValue.value = answers.exact_energy || "";
     resultsGenerated = false;
+    contactStepUnlocked = false;
     currentStep = steps.findIndex((step) => step.id === "review");
     closeAiHelper();
     render();
@@ -2808,6 +2853,7 @@ els.backButton.addEventListener("click", () => {
 els.nextButton.addEventListener("click", async () => {
     if (steps[currentStep].id === "review") {
         if (resultsGenerated) {
+            contactStepUnlocked = true;
             currentStep = Math.min(steps.length - 1, currentStep + 1);
             render();
         } else {
@@ -2850,11 +2896,16 @@ els.contactInfo.addEventListener("input", () => {
 });
 els.energyValue.addEventListener("input", () => {
     answers.exact_energy = els.energyValue.value.trim();
+    resultsGenerated = false;
+    contactStepUnlocked = false;
     renderRequirementsSummary();
+    renderStepOverview();
 });
 els.energySave.addEventListener("click", () => {
     answers.exact_energy = els.dialogEnergyValue.value.trim();
     els.energyValue.value = answers.exact_energy;
+    resultsGenerated = false;
+    contactStepUnlocked = false;
     closeExactEnergyDialog();
     render();
 });
