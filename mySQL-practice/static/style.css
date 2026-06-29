@@ -2069,25 +2069,87 @@ h3 {
 .compare-grid {
     margin-top: 18px;
     overflow-x: auto;
+    display: none;
+}
+
+.compare-grid.visible {
+    display: block;
+}
+
+.compare-empty {
+    margin: 0;
+    padding: 18px 20px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    color: var(--muted-2);
+    background: rgba(7, 21, 45, 0.78);
 }
 
 .compare-grid table {
     width: 100%;
     border-collapse: collapse;
     background: rgba(7, 21, 45, 0.88);
+    overflow: hidden;
+    min-width: 860px;
 }
 
 .compare-grid th,
 .compare-grid td {
-    padding: 12px;
+    padding: 16px;
     border: 1px solid var(--line);
     text-align: left;
     vertical-align: top;
+    color: var(--text);
 }
 
 .compare-grid th {
     color: #ffffff;
     background: rgba(0, 109, 255, 0.22);
+}
+
+.compare-grid tbody th {
+    width: 160px;
+    color: #8feaff;
+    font-weight: 900;
+    background: rgba(72, 220, 255, 0.08);
+}
+
+.compare-product-heading {
+    display: grid;
+    gap: 6px;
+    min-width: 190px;
+}
+
+.compare-product-heading span {
+    display: inline-grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    color: #ffffff;
+    background: linear-gradient(180deg, #087bff, #063ed5);
+    box-shadow: 0 0 18px rgba(0, 132, 255, 0.38);
+}
+
+.compare-product-heading strong {
+    font-size: 1rem;
+    line-height: 1.25;
+}
+
+.compare-product-heading small {
+    color: var(--muted-2);
+    font-weight: 800;
+}
+
+.compare-product-heading em {
+    width: fit-content;
+    padding: 5px 10px;
+    border: 1px solid rgba(72, 220, 255, 0.32);
+    border-radius: 999px;
+    color: #dff8ff;
+    font-style: normal;
+    font-weight: 900;
+    background: rgba(72, 220, 255, 0.1);
 }
 
 .loading {

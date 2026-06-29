@@ -70,6 +70,9 @@ const LANGUAGE_TEXT = {
             resultsEyebrow: "Recommendation output",
             resultsTitle: "Best matches",
             compareTop: "Compare top 3",
+            compareHide: "Hide comparison",
+            compareEmpty: "Generate recommendations first, then compare the top products.",
+            compareMetric: "Measurement",
             engineerAction: "Contact engineer to discuss alternative ways",
             previous: "Back",
             next: "Next",
@@ -239,6 +242,9 @@ const LANGUAGE_TEXT = {
             resultsEyebrow: "推荐结果",
             resultsTitle: "最佳匹配",
             compareTop: "对比前三项",
+            compareHide: "收起对比",
+            compareEmpty: "请先生成推荐结果，再对比前三项。",
+            compareMetric: "对比项",
             engineerAction: "联系工程师讨论其他实现方式",
             previous: "上一步",
             next: "下一步",
@@ -472,6 +478,7 @@ let latestRecommendations = [];
 let latestConflict = null;
 let resultsGenerated = false;
 let contactStepUnlocked = false;
+let comparisonVisible = false;
 
 const SIMPLIFIED_INSTALLATION_IDS = ["simple_lab", "vacuum_uhv", "not_sure_installation"];
 
@@ -942,7 +949,7 @@ function renderStaticLanguageText() {
     setText(els.showResults, ui("showResults"));
     setText(els.resultsEyebrow, ui("resultsEyebrow"));
     setText(els.resultsTitle, ui("resultsTitle"));
-    setText(els.compareTop, ui("compareTop"));
+    updateCompareButtonState();
     setText(els.engineerContact, ui("engineerAction"));
     const exactText = exactEnergyDisplayText();
     setText(els.energyValueLabel, exactText.label);
@@ -2236,8 +2243,9 @@ function markResultsGenerated() {
 async function loadRecommendations() {
     renderStaticLanguageText();
     answers.exact_energy = els.energyValue.value.trim();
+    latestRecommendations = [];
+    resetComparison();
     els.resultsList.innerHTML = `<p class='loading'>${ui("loading")}</p>`;
-    els.compareGrid.innerHTML = "";
     setEngineerStatus("");
     renderConflictCheck(null);
     latestConflict = null;
@@ -2293,6 +2301,7 @@ async function loadRecommendations() {
     latestRecommendations = data.recommendations || [];
     els.resultsList.innerHTML = latestRecommendations.map(renderResultCard).join("");
     hideInterfaceSpecs(els.resultsList);
+    updateCompareButtonState();
     markResultsGenerated();
 }
 
@@ -2367,35 +2376,108 @@ async function prepareEngineerRequest() {
     }
 }
 
+function recommendationField(item, key) {
+    const directValue = item?.[key];
+    if (directValue !== undefined && directValue !== null && String(directValue).trim()) {
+        return directValue;
+    }
+
+    const nestedValue = item?.product?.[key];
+    if (nestedValue !== undefined && nestedValue !== null && String(nestedValue).trim()) {
+        return nestedValue;
+    }
+
+    return "";
+}
+
+function compareButtonLabel() {
+    return comparisonVisible ? ui("compareHide") : ui("compareTop");
+}
+
+function updateCompareButtonState() {
+    if (!els.compareTop) return;
+
+    const hasRecommendations = latestRecommendations.length > 0;
+    els.compareTop.disabled = !hasRecommendations;
+    els.compareTop.setAttribute("aria-disabled", String(!hasRecommendations));
+    els.compareTop.title = hasRecommendations ? "" : ui("compareEmpty");
+    setText(els.compareTop, compareButtonLabel());
+}
+
+function resetComparison() {
+    comparisonVisible = false;
+    if (els.compareGrid) {
+        els.compareGrid.innerHTML = "";
+        els.compareGrid.classList.remove("visible");
+    }
+    updateCompareButtonState();
+}
+
+function comparisonValue(item, key) {
+    const value = recommendationField(item, key) || ui("notAvailable");
+    return escapeHtml(translateProductText(value));
+}
+
+function compareProductHeading(item, index) {
+    const modelName = recommendationField(item, "model_name_variant") || recommendationField(item, "product_id") || ui("notAvailable");
+    const maker = recommendationField(item, "manufacturer") || ui("unknownManufacturer");
+    const family = recommendationField(item, "product_family") || "";
+    const makerLine = [maker, family].filter(Boolean).join(" · ");
+
+    return `
+        <div class="compare-product-heading">
+            <span>${index + 1}</span>
+            <strong>${escapeHtml(modelName)}</strong>
+            <small>${escapeHtml(makerLine)}</small>
+            <em>${Number(item.match_percent || 0)}% ${ui("match")}</em>
+        </div>
+    `;
+}
+
 function renderComparison() {
     const top = latestRecommendations.slice(0, 3);
-    if (!top.length) return;
+    if (!top.length) {
+        els.compareGrid.innerHTML = `<p class="compare-empty">${ui("compareEmpty")}</p>`;
+        els.compareGrid.classList.add("visible");
+        return;
+    }
+
+    if (comparisonVisible) {
+        resetComparison();
+        return;
+    }
+
+    const rows = [
+        ["detector_principle", ui("detector")],
+        ["energy_range", ui("energy")],
+        ["pixel_size", ui("pixel")],
+        ["active_area", ui("activeArea")],
+        ["software", ui("software")],
+    ];
 
     els.compareGrid.innerHTML = `
-        <table>
+        <table class="compare-table">
             <thead>
                 <tr>
-                    <th>${ui("product")}</th>
-                    <th>${ui("energy")}</th>
-                    <th>${ui("pixel")}</th>
-                    <th>${ui("activeArea")}</th>
+                    <th>${ui("compareMetric")}</th>
+                    ${top.map((item, index) => `<th>${compareProductHeading(item, index)}</th>`).join("")}
                 </tr>
             </thead>
             <tbody>
-                ${top
-                    .map((item) => `
-                        <tr>
-                            <td>${escapeHtml(item.model_name_variant || item.product_id || ui("notAvailable"))}</td>
-                            <td>${escapeHtml(translateProductText(item.energy_range || ui("notAvailable")))}</td>
-                            <td>${escapeHtml(translateProductText(item.pixel_size || ui("notAvailable")))}</td>
-                            <td>${escapeHtml(translateProductText(item.active_area || ui("notAvailable")))}</td>
-                        </tr>
-                    `)
-                    .join("")}
+                ${rows.map(([key, label]) => `
+                    <tr>
+                        <th scope="row">${escapeHtml(label)}</th>
+                        ${top.map((item) => `<td>${comparisonValue(item, key)}</td>`).join("")}
+                    </tr>
+                `).join("")}
             </tbody>
         </table>
     `;
+    comparisonVisible = true;
+    els.compareGrid.classList.add("visible");
+    updateCompareButtonState();
     translateRenderedEnglishText(els.compareGrid);
+    els.compareGrid.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
 function escapeHtml(value) {
