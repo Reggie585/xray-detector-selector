@@ -162,6 +162,41 @@ CHOICE_GROUPS = {
         "max_choices": 1,
         "choices": [
             {
+                "id": "synchrotron_beamline",
+                "label": "Synchrotron / Beamline",
+                "description": "Tunable EUV or soft X-ray source for spectroscopy, absorption, RIXS, XANES, EXAFS, or beamline experiments.",
+                "terms": ["synchrotron", "beamline", "tunable", "rixs", "xanes", "exafs", "absorption", "soft x-ray", "euv"],
+                "technical": "Tunable EUV/soft X-ray beamline source; vacuum compatibility and spectroscopy performance matter.",
+            },
+            {
+                "id": "hhg_source",
+                "label": "HHG / High-Harmonic Source",
+                "description": "Laser-driven EUV / soft X-ray source for ultrafast spectroscopy or high-harmonic experiments.",
+                "terms": ["hhg", "high harmonic", "high-harmonic", "laser-driven", "ultrafast", "euv", "soft x-ray"],
+                "technical": "Laser-driven EUV/soft X-ray source; high sensitivity and timing/integration notes may matter.",
+            },
+            {
+                "id": "laser_plasma_source",
+                "label": "Laser-Produced Plasma Source",
+                "description": "Plasma-generated EUV / soft X-ray source for imaging, spectroscopy, or EUV optics testing.",
+                "terms": ["laser-produced plasma", "laser plasma", "lpp", "plasma", "euv optics", "euv", "soft x-ray"],
+                "technical": "Plasma EUV/soft X-ray source; vacuum operation, high QE, and source stability should be reviewed.",
+            },
+            {
+                "id": "discharge_plasma_source",
+                "label": "Discharge-Produced Plasma Source",
+                "description": "EUV source often used for EUV lithography-related experiments and source development.",
+                "terms": ["discharge-produced plasma", "discharge plasma", "dpp", "euv lithography", "source development", "euv"],
+                "technical": "EUV lithography/source-development workflow; vacuum and EUV sensitivity are important.",
+            },
+            {
+                "id": "low_energy_soft_xray_tube",
+                "label": "Low-Energy Soft X-ray Tube",
+                "description": "Lab-based soft X-ray source, usually different from normal Cu/Mo XRD tubes.",
+                "terms": ["soft x-ray tube", "low-energy soft x-ray", "lab soft x-ray", "low energy tube", "euv", "soft x-ray"],
+                "technical": "Lab soft-X source; keep below normal Cu/Mo XRD tube assumptions.",
+            },
+            {
                 "id": "euv_vuv_soft",
                 "label": "EUV / VUV / Soft X-ray",
                 "description": "Below about 1 keV, vacuum work, or soft X-ray experiments.",
@@ -450,6 +485,14 @@ INCOMPATIBLE_CATEGORY_SCORE = 0.12
 
 LAB_XRD_ENERGY_IDS = {"low_energy_lab", "higher_energy_lab"}
 LAB_TARGET_IDS = {"cr_ka", "cu_ka", "w_la", "mo_ka", "rh_ka", "ag_ka"}
+SOFT_SOURCE_ENERGY_IDS = {
+    "euv_vuv_soft",
+    "synchrotron_beamline",
+    "hhg_source",
+    "laser_plasma_source",
+    "discharge_plasma_source",
+    "low_energy_soft_xray_tube",
+}
 HIGH_HARD_ENERGY_IDS = {"higher_energy_lab", "hard_xray"}
 ENERGY_FIT_WEIGHT = GROUP_WEIGHTS["energy"] + GROUP_WEIGHTS["target"]
 PIXEL_FIT_WEIGHT = GROUP_WEIGHTS["pixel_size"]
@@ -468,6 +511,42 @@ ENERGY_REQUIREMENTS = {
         "label": "EUV / VUV / Soft X-ray",
         "terms": ["euv", "vuv", "soft x-ray", "sxr", "50 ev", "ev"],
         "hard_exclude_terms": ["gamma", "neutron", "particle only"],
+        "family": "soft",
+    },
+    "synchrotron_beamline": {
+        "range": (0.001, 1),
+        "label": "Synchrotron / Beamline",
+        "terms": ["synchrotron", "beamline", "tunable", "rixs", "xanes", "exafs", "absorption", "euv", "soft x-ray", "ev"],
+        "hard_exclude_terms": ["gamma", "neutron", "particle only"],
+        "family": "soft",
+    },
+    "hhg_source": {
+        "range": (0.001, 1),
+        "label": "HHG / High-Harmonic Source",
+        "terms": ["hhg", "high harmonic", "high-harmonic", "laser-driven", "ultrafast", "euv", "soft x-ray", "ev"],
+        "hard_exclude_terms": ["gamma", "neutron", "particle only"],
+        "family": "soft",
+    },
+    "laser_plasma_source": {
+        "range": (0.001, 1),
+        "label": "Laser-Produced Plasma Source",
+        "terms": ["laser-produced plasma", "laser plasma", "lpp", "plasma", "euv optics", "euv", "soft x-ray", "ev"],
+        "hard_exclude_terms": ["gamma", "neutron", "particle only"],
+        "family": "soft",
+    },
+    "discharge_plasma_source": {
+        "range": (0.001, 1),
+        "label": "Discharge-Produced Plasma Source",
+        "terms": ["discharge-produced plasma", "discharge plasma", "dpp", "euv lithography", "source development", "euv", "soft x-ray", "ev"],
+        "hard_exclude_terms": ["gamma", "neutron", "particle only"],
+        "family": "soft",
+    },
+    "low_energy_soft_xray_tube": {
+        "range": (0.001, 1),
+        "label": "Low-Energy Soft X-ray Tube",
+        "terms": ["soft x-ray tube", "low-energy soft x-ray", "lab soft x-ray", "low energy tube", "euv", "soft x-ray", "ev"],
+        "hard_exclude_terms": ["gamma", "neutron", "particle only"],
+        "family": "soft",
     },
     "low_energy_lab": {
         "range": (5, 9),
@@ -767,6 +846,9 @@ def energy_text_has_only_soft_family(text):
 
 
 def energy_text_has_conflicting_family(text, requirement):
+    if requirement.get("family") == "soft":
+        return bool(re.search(r"\b(30|60|100|150|500|600)\s*kev\b|gamma|neutron", text)) and "euv" not in text and "soft" not in text
+
     energy_label = normalize(requirement.get("label"))
     if "hard" in energy_label or "higher" in energy_label:
         return energy_text_has_only_soft_family(text)
@@ -940,7 +1022,7 @@ def get_selection_conflict(answers):
         or target_id in LAB_TARGET_IDS
         or (exact_energy_kev is not None and 1 <= exact_energy_kev <= 30)
     )
-    is_soft_energy = energy_id == "euv_vuv_soft" or (exact_energy_kev is not None and exact_energy_kev < 1)
+    is_soft_energy = energy_id in SOFT_SOURCE_ENERGY_IDS or (exact_energy_kev is not None and exact_energy_kev < 1)
 
     if pixel_id == "pixel_under_1" and is_high_or_hard_energy:
         energy_label = (
