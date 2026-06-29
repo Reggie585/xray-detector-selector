@@ -373,6 +373,19 @@ const CHOICE_TRANSLATIONS = {
             laser_plasma_source: { label: "激光等离子体源", description: "等离子体产生的 EUV / 软 X 射线源，适用于成像、光谱或 EUV 光学测试。" },
             discharge_plasma_source: { label: "放电等离子体源", description: "常用于 EUV 光刻相关实验和光源开发的 EUV 光源。" },
             low_energy_soft_xray_tube: { label: "低能软 X 射线管", description: "实验室软 X 射线源，通常不同于普通 Cu/Mo XRD 管。" },
+            microfocus_xray_source: { label: "微焦点 X 射线源", description: "用于显微、计量、CT 或需要较小焦点尺寸的成像系统。" },
+            standard_lab_xray_source: { label: "标准实验室 X 射线源", description: "常规实验室 X 射线源，用于标准成像、CT、XRF 或谱学配置。" },
+            high_energy_industrial_xray: { label: "高能工业 X 射线源", description: "用于厚样品、高穿透或工业检测的较高能量 X 射线源。" },
+            photon_counting_energy_resolved_setup: { label: "光子计数 / 能量分辨配置", description: "用于材料识别、能量分辨成像或光谱式 X 射线成像。" },
+            alpha_beta_particles: { label: "Alpha / beta 粒子", description: "用于 α、β 粒子探测或粒子轨迹可视化。" },
+            gamma_source: { label: "Gamma 源", description: "用于伽马成像、辐射监测或源定位。" },
+            neutron_source: { label: "中子源", description: "用于中子探测、转换层或中子成像相关实验。" },
+            cosmic_mixed_radiation: { label: "宇宙射线 / 混合辐射场", description: "用于宇宙射线、混合辐射场或开放式辐射监测。" },
+            ion_particle_beam: { label: "离子束 / 粒子束", description: "用于离子束、粒子束或束流诊断实验。" },
+            education_alpha_beta_gamma: { label: "Alpha / beta / gamma 可视化", description: "用于课堂中的基础辐射可视化实验。" },
+            cosmic_ray_observation: { label: "宇宙射线观测", description: "用于教学或演示中的宇宙射线观察。" },
+            radioactive_sample_demo: { label: "简单放射源演示", description: "用于安全、基础的放射样品演示。" },
+            shielding_experiment: { label: "屏蔽实验", description: "用于比较不同材料的辐射屏蔽效果。" },
             cr_ka: { label: "Cr 靶材", description: "Cr-Kα，约 5.4 keV。" },
             cu_ka: { label: "Cu 靶材", description: "Cu-Kα，约 8.04 keV。" },
             mo_ka: { label: "Mo 靶材", description: "Mo-Kα，约 17.4 keV。" },
@@ -423,8 +436,17 @@ const CHOICE_TRANSLATIONS = {
 const GROUP_TRANSLATIONS = {
     zh: {
         application: { title: "应用与结果", question: "你想测量什么？" },
-        energy: { title: "射线源与靶材", question: "你使用的常用靶材是什么？" },
+        energy: { title: "射线源与能量", question: "你使用的射线源或能量是什么？" },
+        energyXrd: { title: "XRD 靶材 / 能量", question: "你使用的 X 射线靶材或能量是什么？" },
         energyEuv: { title: "EUV / 软 X 射线源", question: "你使用的 EUV / 软 X 射线源或光子能量是什么？" },
+        energyImaging: { title: "成像射线源", question: "你用于成像的射线源或能量范围是什么？" },
+        energyMicroscopy: { title: "显微 / 计量射线源", question: "显微或计量系统使用什么射线源？" },
+        energyCt: { title: "CT / 三维成像射线源", question: "你需要哪种射线源或穿透能力？" },
+        energyNdt: { title: "工业检测射线源", question: "你使用的检测射线源或能量是什么？" },
+        energyMaterial: { title: "材料识别光谱配置", question: "你使用的射线源或光谱配置是什么？" },
+        energyRadiation: { title: "辐射 / 粒子类型", question: "你需要探测哪种辐射或粒子？" },
+        energyEducation: { title: "教学实验类型", question: "计划进行哪种课堂实验？" },
+        energyXafs: { title: "吸收光谱射线源", question: "你用于吸收光谱的射线源或能量是什么？" },
         target: { title: "可选靶材", question: "已知实验室靶材" },
         pixel_size: { title: "像素尺寸", question: "你需要什么像素尺寸范围？" },
         performance: { title: "性能优先级", question: "你的测量最看重什么？" },
@@ -453,16 +475,56 @@ let contactStepUnlocked = false;
 
 const SIMPLIFIED_INSTALLATION_IDS = ["simple_lab", "vacuum_uhv", "not_sure_installation"];
 
-const COMMON_TARGET_SOURCE_IDS = ["cr_ka", "cu_ka", "mo_ka", "rh_ka", "ag_ka", "w_la", "exact_energy", "not_sure_energy"];
-const EUV_SOFT_SOURCE_IDS = [
-    "synchrotron_beamline",
-    "hhg_source",
-    "laser_plasma_source",
-    "discharge_plasma_source",
-    "low_energy_soft_xray_tube",
-    "exact_energy",
-    "not_sure_energy",
-];
+const APPLICATION_ENERGY_CONFIG = {
+    xrd_saxs_waxs: {
+        translationKey: "energyXrd",
+        ids: ["cr_ka", "cu_ka", "w_la", "mo_ka", "rh_ka", "ag_ka", "exact_energy", "not_sure_energy"],
+    },
+    xafs_absorption: {
+        translationKey: "energyXafs",
+        ids: ["synchrotron_beamline", "standard_lab_xray_source", "hard_xray", "exact_energy", "not_sure_energy"],
+    },
+    euv_soft_xray_spectroscopy: {
+        translationKey: "energyEuv",
+        ids: [
+            "synchrotron_beamline",
+            "hhg_source",
+            "laser_plasma_source",
+            "discharge_plasma_source",
+            "low_energy_soft_xray_tube",
+            "exact_energy",
+            "not_sure_energy",
+        ],
+    },
+    xray_euv_imaging: {
+        translationKey: "energyImaging",
+        ids: ["euv_vuv_soft", "low_energy_lab", "microfocus_xray_source", "synchrotron_beamline", "standard_lab_xray_source", "exact_energy", "not_sure_energy"],
+    },
+    microscopy_metrology: {
+        translationKey: "energyMicroscopy",
+        ids: ["low_energy_lab", "microfocus_xray_source", "synchrotron_beamline", "euv_vuv_soft", "exact_energy", "not_sure_energy"],
+    },
+    ct_3d: {
+        translationKey: "energyCt",
+        ids: ["microfocus_xray_source", "standard_lab_xray_source", "hard_xray", "high_energy_industrial_xray", "exact_energy", "not_sure_energy"],
+    },
+    industrial_ndt: {
+        translationKey: "energyNdt",
+        ids: ["microfocus_xray_source", "standard_lab_xray_source", "hard_xray", "high_energy_industrial_xray", "gamma_source", "exact_energy", "not_sure_energy"],
+    },
+    material_identification: {
+        translationKey: "energyMaterial",
+        ids: ["standard_lab_xray_source", "hard_xray", "photon_counting_energy_resolved_setup", "synchrotron_beamline", "exact_energy", "not_sure_energy"],
+    },
+    radiation_particle: {
+        translationKey: "energyRadiation",
+        ids: ["alpha_beta_particles", "gamma_source", "neutron_source", "cosmic_mixed_radiation", "ion_particle_beam", "not_sure_energy"],
+    },
+    education_demo: {
+        translationKey: "energyEducation",
+        ids: ["education_alpha_beta_gamma", "cosmic_ray_observation", "radioactive_sample_demo", "shielding_experiment", "not_sure_energy"],
+    },
+};
 const TARGET_TO_ENERGY_ID = {
     cr_ka: "low_energy_lab",
     cu_ka: "low_energy_lab",
@@ -690,22 +752,60 @@ function stepText(stepId, key) {
 
 function translatedGroup(groupId) {
     const group = window.CHOICE_GROUPS[groupId] || {};
-    const adaptiveTranslationKey =
-        groupId === "energy" && answers.application === "euv_soft_xray_spectroscopy"
-            ? "energyEuv"
-            : groupId;
-    const fallbackEuvGroup = {
-        title: "EUV / Soft X-ray Source",
-        question: "What EUV / soft X-ray source or photon energy are you using?",
+    const energyConfig = APPLICATION_ENERGY_CONFIG[answers.application];
+    const adaptiveTranslationKey = groupId === "energy" && energyConfig ? energyConfig.translationKey : groupId;
+    const fallbackEnergyGroups = {
+        energyXrd: {
+            title: "X-ray Target / Energy",
+            question: "What X-ray target or energy are you using?",
+        },
+        energyXafs: {
+            title: "Absorption Spectroscopy Source",
+            question: "What source or energy are you using for absorption spectroscopy?",
+        },
+        energyEuv: {
+            title: "EUV / Soft X-ray Source",
+            question: "What EUV / soft X-ray source or photon energy are you using?",
+        },
+        energyImaging: {
+            title: "Imaging Source",
+            question: "What source or energy range are you using for imaging?",
+        },
+        energyMicroscopy: {
+            title: "Microscopy / Metrology Source",
+            question: "What source is used for the microscope or metrology setup?",
+        },
+        energyCt: {
+            title: "CT / 3D Source",
+            question: "What kind of source or penetration level is needed?",
+        },
+        energyNdt: {
+            title: "Industrial Inspection Source",
+            question: "What source or inspection energy is used?",
+        },
+        energyMaterial: {
+            title: "Spectral Setup",
+            question: "What source or spectral setup are you using?",
+        },
+        energyRadiation: {
+            title: "Radiation / Particle Type",
+            question: "What radiation or particle type do you need to detect?",
+        },
+        energyEducation: {
+            title: "Classroom Experiment",
+            question: "What type of classroom experiment is planned?",
+        },
     };
     return {
         ...group,
         title:
             GROUP_TRANSLATIONS[currentLanguage]?.[adaptiveTranslationKey]?.title ||
-            (adaptiveTranslationKey === "energyEuv" ? fallbackEuvGroup.title : group.title),
+            fallbackEnergyGroups[adaptiveTranslationKey]?.title ||
+            group.title,
         question:
             GROUP_TRANSLATIONS[currentLanguage]?.[adaptiveTranslationKey]?.question ||
-            (adaptiveTranslationKey === "energyEuv" ? fallbackEuvGroup.question : group.question),
+            fallbackEnergyGroups[adaptiveTranslationKey]?.question ||
+            group.question,
     };
 }
 
@@ -755,30 +855,20 @@ function adaptiveChoiceIds(groupId, source = answers) {
     return null;
 }
 
-function commonTargetSourceChoices() {
+function choicesByIds(ids) {
     const targetChoices = window.CHOICE_GROUPS.target?.choices || [];
     const energyChoices = window.CHOICE_GROUPS.energy?.choices || [];
     const choicesById = new Map([...targetChoices, ...energyChoices].map((choice) => [choice.id, choice]));
 
-    return COMMON_TARGET_SOURCE_IDS
-        .map((id) => choicesById.get(id))
-        .filter(Boolean);
-}
-
-function euvSoftSourceChoices() {
-    const energyChoices = window.CHOICE_GROUPS.energy?.choices || [];
-    const choicesById = new Map(energyChoices.map((choice) => [choice.id, choice]));
-
-    return EUV_SOFT_SOURCE_IDS
+    return ids
         .map((id) => choicesById.get(id))
         .filter(Boolean);
 }
 
 function visibleChoicesForGroup(groupId, source = answers) {
     if (groupId === "energy") {
-        return source.application === "euv_soft_xray_spectroscopy"
-            ? euvSoftSourceChoices()
-            : commonTargetSourceChoices();
+        const config = APPLICATION_ENERGY_CONFIG[source.application] || APPLICATION_ENERGY_CONFIG.xray_euv_imaging;
+        return choicesByIds(config.ids);
     }
     const choices = window.CHOICE_GROUPS[groupId]?.choices || [];
     const ids = adaptiveChoiceIds(groupId, source);
@@ -2426,8 +2516,23 @@ function extractEnergyFromText(text, source = answers) {
     if (/\bag\b|ag-k|22\.2/.test(text)) {
         return { energy: "higher_energy_lab", target: "ag_ka", exact_energy: exactEnergy || "22.2 keV" };
     }
-    if (/gamma|neutron|alpha particle|beta|cosmic|particle/.test(text)) {
-        return { energy: "gamma_neutron_particles", target: null, exact_energy: exactEnergy };
+    if (/alpha|beta/.test(text)) {
+        return { energy: "alpha_beta_particles", target: null, exact_energy: exactEnergy };
+    }
+    if (/neutron/.test(text)) {
+        return { energy: "neutron_source", target: null, exact_energy: exactEnergy };
+    }
+    if (/cosmic|muon|mixed radiation/.test(text)) {
+        return { energy: "cosmic_mixed_radiation", target: null, exact_energy: exactEnergy };
+    }
+    if (/ion beam|particle beam|beam diagnostics/.test(text)) {
+        return { energy: "ion_particle_beam", target: null, exact_energy: exactEnergy };
+    }
+    if (/gamma/.test(text)) {
+        return { energy: "gamma_source", target: null, exact_energy: exactEnergy };
+    }
+    if (/photon[- ]counting|energy[- ]resolved|energy discriminating|spectral setup|medipix|timepix/.test(text)) {
+        return { energy: "photon_counting_energy_resolved_setup", target: null, exact_energy: exactEnergy };
     }
     if (/synchrotron|beamline|rixs|xanes|exafs/.test(text)) {
         return { energy: "synchrotron_beamline", target: null, exact_energy: exactEnergy };
@@ -2446,6 +2551,15 @@ function extractEnergyFromText(text, source = answers) {
     }
     if (/euv|vuv|soft x-ray|sxr/.test(text)) {
         return { energy: "euv_vuv_soft", target: null, exact_energy: exactEnergy };
+    }
+    if (/microfocus|micro-focus|small focus/.test(text)) {
+        return { energy: "microfocus_xray_source", target: null, exact_energy: exactEnergy };
+    }
+    if (/high[- ]energy industrial|industrial x-ray|industrial source/.test(text)) {
+        return { energy: "high_energy_industrial_xray", target: null, exact_energy: exactEnergy };
+    }
+    if (/standard lab|lab x-ray source|x-ray tube|standard x-ray/.test(text)) {
+        return { energy: "standard_lab_xray_source", target: null, exact_energy: exactEnergy };
     }
     if (/hard x-ray|hxr|high penetration|dense metal|30\s*kev|150\s*kev/.test(text)) {
         return { energy: "hard_xray", target: null, exact_energy: exactEnergy };
