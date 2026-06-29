@@ -197,6 +197,97 @@ CHOICE_GROUPS = {
                 "technical": "Lab soft-X source; keep below normal Cu/Mo XRD tube assumptions.",
             },
             {
+                "id": "microfocus_xray_source",
+                "label": "Microfocus X-ray Source",
+                "description": "Small-focus X-ray source for microscopy, metrology, CT, or high-detail imaging.",
+                "terms": ["microfocus", "micro-focus", "microscopy", "metrology", "ct", "small focus", "high resolution"],
+                "technical": "Microfocus X-ray source; resolution, field of view, and imaging geometry matter.",
+            },
+            {
+                "id": "standard_lab_xray_source",
+                "label": "Standard Lab X-ray Source",
+                "description": "General laboratory X-ray source for standard imaging, CT, XRF, or spectroscopy setups.",
+                "terms": ["standard lab", "lab x-ray", "x-ray tube", "xrf", "xrd", "ct", "imaging", "kev"],
+                "technical": "Standard laboratory X-ray source; use broad lab-X energy compatibility rather than a single target.",
+            },
+            {
+                "id": "high_energy_industrial_xray",
+                "label": "High-Energy Industrial X-ray Source",
+                "description": "Higher-energy X-ray source for thick samples, penetration, or industrial inspection.",
+                "terms": ["high energy", "industrial", "penetration", "thick", "dense", "ndt", "inspection", "kev", "mev"],
+                "technical": "High-energy industrial X-ray source; penetration and detector material/thickness matter.",
+            },
+            {
+                "id": "photon_counting_energy_resolved_setup",
+                "label": "Photon-counting / Energy-resolved Setup",
+                "description": "Spectral or energy-discriminating setup for material identification.",
+                "terms": ["photon-counting", "photon counting", "energy-resolved", "energy discriminating", "spectral", "timepix", "medipix", "material"],
+                "technical": "Energy-discriminating configuration; product should show photon-counting, Medipix, Timepix, or spectral capability.",
+            },
+            {
+                "id": "alpha_beta_particles",
+                "label": "Alpha / Beta Particles",
+                "description": "Alpha or beta particle detection and track visualization.",
+                "terms": ["alpha", "beta", "particle", "track", "timepix", "radiation"],
+                "technical": "Alpha/beta particle detection; single-event and radiation-tracking capability matter.",
+            },
+            {
+                "id": "gamma_source",
+                "label": "Gamma Source",
+                "description": "Gamma imaging, radiation monitoring, or source localization.",
+                "terms": ["gamma", "source localization", "radiation", "timepix", "cdte"],
+                "technical": "Gamma/radiation detection; detector material and radiation-monitoring capability matter.",
+            },
+            {
+                "id": "neutron_source",
+                "label": "Neutron Source",
+                "description": "Neutron detection, converter-layer work, or neutron imaging.",
+                "terms": ["neutron", "converter", "radiation", "timepix", "neutron imaging"],
+                "technical": "Neutron work; converter layer or neutron-capable detector setup may be needed.",
+            },
+            {
+                "id": "cosmic_mixed_radiation",
+                "label": "Cosmic Rays / Mixed Radiation Field",
+                "description": "Cosmic rays, mixed radiation fields, or broad radiation monitoring.",
+                "terms": ["cosmic", "mixed radiation", "radiation field", "muon", "alpha", "beta", "gamma", "neutron"],
+                "technical": "Mixed radiation field; broad single-event and particle-tracking capability matters.",
+            },
+            {
+                "id": "ion_particle_beam",
+                "label": "Ion Beam / Particle Beam",
+                "description": "Ion beam, particle beam, or beam-diagnostics experiments.",
+                "terms": ["ion", "particle beam", "beam diagnostics", "beam", "track", "timepix"],
+                "technical": "Particle-beam setup; single-event sensitivity and timing/readout may matter.",
+            },
+            {
+                "id": "education_alpha_beta_gamma",
+                "label": "Alpha / Beta / Gamma Visualization",
+                "description": "Basic radiation visualization for classroom or teaching use.",
+                "terms": ["education", "classroom", "alpha", "beta", "gamma", "visualization", "minipix edu"],
+                "technical": "Education-oriented alpha/beta/gamma visualization; simple software and safety notes matter.",
+            },
+            {
+                "id": "cosmic_ray_observation",
+                "label": "Cosmic Ray Observation",
+                "description": "Classroom or demonstration observation of cosmic rays.",
+                "terms": ["education", "cosmic", "cosmic ray", "muon", "classroom", "minipix"],
+                "technical": "Education-oriented cosmic-ray observation; entry-level portable detector preferred.",
+            },
+            {
+                "id": "radioactive_sample_demo",
+                "label": "Simple Radioactive Sample Demonstration",
+                "description": "Simple demonstration with a radioactive sample.",
+                "terms": ["education", "radioactive sample", "demo", "classroom", "radiation", "minipix"],
+                "technical": "Simple radioactive sample demonstration; entry-level radiation camera preferred.",
+            },
+            {
+                "id": "shielding_experiment",
+                "label": "Shielding Experiment",
+                "description": "Compare shielding behavior of different materials.",
+                "terms": ["education", "shielding", "attenuation", "radiation", "gamma", "beta", "classroom"],
+                "technical": "Shielding demonstration; radiation-monitoring capability and simple operation matter.",
+            },
+            {
                 "id": "euv_vuv_soft",
                 "label": "EUV / VUV / Soft X-ray",
                 "description": "Below about 1 keV, vacuum work, or soft X-ray experiments.",
@@ -483,7 +574,7 @@ MISSING_CATEGORY_SCORE = 0.65
 INCOMPATIBLE_CATEGORY_SCORE = 0.12
 
 
-LAB_XRD_ENERGY_IDS = {"low_energy_lab", "higher_energy_lab"}
+LAB_XRD_ENERGY_IDS = {"low_energy_lab", "higher_energy_lab", "standard_lab_xray_source", "microfocus_xray_source"}
 LAB_TARGET_IDS = {"cr_ka", "cu_ka", "w_la", "mo_ka", "rh_ka", "ag_ka"}
 SOFT_SOURCE_ENERGY_IDS = {
     "euv_vuv_soft",
@@ -493,7 +584,7 @@ SOFT_SOURCE_ENERGY_IDS = {
     "discharge_plasma_source",
     "low_energy_soft_xray_tube",
 }
-HIGH_HARD_ENERGY_IDS = {"higher_energy_lab", "hard_xray"}
+HIGH_HARD_ENERGY_IDS = {"higher_energy_lab", "hard_xray", "high_energy_industrial_xray"}
 ENERGY_FIT_WEIGHT = GROUP_WEIGHTS["energy"] + GROUP_WEIGHTS["target"]
 PIXEL_FIT_WEIGHT = GROUP_WEIGHTS["pixel_size"]
 ENERGY_FIELDS = [
@@ -547,6 +638,85 @@ ENERGY_REQUIREMENTS = {
         "terms": ["soft x-ray tube", "low-energy soft x-ray", "lab soft x-ray", "low energy tube", "euv", "soft x-ray", "ev"],
         "hard_exclude_terms": ["gamma", "neutron", "particle only"],
         "family": "soft",
+    },
+    "microfocus_xray_source": {
+        "range": (5, 60),
+        "label": "Microfocus X-ray Source",
+        "terms": ["microfocus", "micro-focus", "microscopy", "metrology", "ct", "high-resolution", "small pixel", "x-ray", "kev"],
+        "hard_exclude_terms": ["gamma", "neutron", "particle only"],
+    },
+    "standard_lab_xray_source": {
+        "range": (5, 30),
+        "label": "Standard Lab X-ray Source",
+        "terms": ["lab x-ray", "standard lab", "x-ray tube", "xrd", "xrf", "ct", "imaging", "kev", "cu", "mo"],
+        "hard_exclude_terms": ["gamma", "neutron", "particle only"],
+    },
+    "high_energy_industrial_xray": {
+        "range": (60, 450),
+        "label": "High-Energy Industrial X-ray Source",
+        "terms": ["high energy", "industrial", "penetration", "dense", "thick", "ndt", "inspection", "cdte", "hxr", "kev", "mev"],
+        "hard_exclude_terms": ["euv", "vuv", "soft x-ray"],
+    },
+    "photon_counting_energy_resolved_setup": {
+        "range": None,
+        "label": "Photon-counting / Energy-resolved Setup",
+        "terms": ["photon-counting", "photon counting", "energy-resolved", "energy discriminating", "spectral imaging", "medipix", "timepix", "material"],
+        "hard_exclude_terms": ["integrating ccd only", "ccd camera only"],
+        "family": "spectral",
+    },
+    "alpha_beta_particles": {
+        "range": None,
+        "label": "Alpha / Beta Particles",
+        "terms": ["alpha", "beta", "particle", "track", "timepix", "radiation"],
+        "family": "radiation",
+    },
+    "gamma_source": {
+        "range": None,
+        "label": "Gamma Source",
+        "terms": ["gamma", "source localization", "radiation", "timepix", "cdte"],
+        "family": "radiation",
+    },
+    "neutron_source": {
+        "range": None,
+        "label": "Neutron Source",
+        "terms": ["neutron", "converter", "radiation", "timepix", "neutron imaging"],
+        "family": "radiation",
+    },
+    "cosmic_mixed_radiation": {
+        "range": None,
+        "label": "Cosmic Rays / Mixed Radiation Field",
+        "terms": ["cosmic", "muon", "mixed radiation", "radiation field", "alpha", "beta", "gamma", "neutron", "timepix"],
+        "family": "radiation",
+    },
+    "ion_particle_beam": {
+        "range": None,
+        "label": "Ion Beam / Particle Beam",
+        "terms": ["ion", "particle beam", "beam diagnostics", "particle", "track", "timepix"],
+        "family": "radiation",
+    },
+    "education_alpha_beta_gamma": {
+        "range": None,
+        "label": "Alpha / Beta / Gamma Visualization",
+        "terms": ["education", "classroom", "alpha", "beta", "gamma", "visualization", "minipix", "demo"],
+        "family": "education",
+    },
+    "cosmic_ray_observation": {
+        "range": None,
+        "label": "Cosmic Ray Observation",
+        "terms": ["education", "classroom", "cosmic", "cosmic ray", "muon", "minipix", "demo"],
+        "family": "education",
+    },
+    "radioactive_sample_demo": {
+        "range": None,
+        "label": "Simple Radioactive Sample Demonstration",
+        "terms": ["education", "classroom", "radioactive sample", "radiation", "minipix", "demo"],
+        "family": "education",
+    },
+    "shielding_experiment": {
+        "range": None,
+        "label": "Shielding Experiment",
+        "terms": ["education", "classroom", "shielding", "attenuation", "radiation", "gamma", "beta", "minipix"],
+        "family": "education",
     },
     "low_energy_lab": {
         "range": (5, 9),
@@ -874,11 +1044,11 @@ def energy_range_fit(product, answers):
     weight = ENERGY_FIT_WEIGHT
     product_text = field_text(product, ENERGY_FIELDS)
     ranges = extract_energy_ranges(product_text)
-    requested = requirement["range"]
+    requested = requirement.get("range")
     product_range_label = first_value(product, "detectable_energy_radiation_range", "minimum_energy_threshold")
     requested_label = requirement["label"]
 
-    if ranges:
+    if requested and ranges:
         best_overlap = max((overlap_fraction(requested, product_range) for product_range in ranges), default=0)
         if best_overlap >= 0.95 or any(
             requirement.get("exact") is not None and low <= requirement["exact"] <= high
