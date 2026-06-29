@@ -40,6 +40,10 @@ const LANGUAGE_TEXT = {
             exactEnergy: "Custom target or exact energy",
             exactEnergyPlaceholder: "Example: Fe, Co-Kalpha, or 12 keV",
             exactEnergyPrompt: "Enter the non-standard target or exact energy, for example Fe, Co-Kalpha, or 12 keV",
+            exactPhotonEnergy: "I know the exact photon energy",
+            exactPhotonEnergyDescription: "Enter a value in eV or keV.",
+            exactPhotonEnergyPlaceholder: "Example: 92 eV or 0.5 keV",
+            exactPhotonEnergyPrompt: "Enter the photon energy, for example 92 eV or 0.5 keV",
             contactTitle: "Who should the engineer contact?",
             contactCopy: "Leave contact details after reviewing the product matches. Sending is not connected yet.",
             contactName: "Name",
@@ -158,6 +162,9 @@ const LANGUAGE_TEXT = {
             dialogTitle: "Enter the source energy",
             dialogCopy: "Use eV, keV, or MeV. If no unit is typed, the app assumes keV.",
             dialogEnergyLabel: "Energy value",
+            photonDialogTitle: "Enter the photon energy",
+            photonDialogCopy: "Use eV or keV for EUV / soft X-ray sources. If no unit is typed, the app assumes keV.",
+            photonDialogEnergyLabel: "Photon energy",
             dialogCancel: "Cancel",
             dialogSave: "Use energy",
         },
@@ -202,6 +209,10 @@ const LANGUAGE_TEXT = {
             exactEnergy: "非标靶材 / 精确能量",
             exactEnergyPlaceholder: "示例：Fe、Co-Kα 或 12 keV",
             exactEnergyPrompt: "请输入非标靶材或精确能量，例如 Fe、Co-Kα 或 12 keV",
+            exactPhotonEnergy: "我知道精确光子能量",
+            exactPhotonEnergyDescription: "输入 eV 或 keV 数值。",
+            exactPhotonEnergyPlaceholder: "示例：92 eV 或 0.5 keV",
+            exactPhotonEnergyPrompt: "请输入光子能量，例如 92 eV 或 0.5 keV",
             contactTitle: "工程师应该联系谁？",
             contactCopy: "在查看产品匹配结果之后留下联系方式。当前还没有真正发送功能。",
             contactName: "姓名",
@@ -320,6 +331,9 @@ const LANGUAGE_TEXT = {
             dialogTitle: "输入射线源能量",
             dialogCopy: "可使用 eV、keV 或 MeV。如果没有输入单位，系统会默认按 keV 处理。",
             dialogEnergyLabel: "能量数值",
+            photonDialogTitle: "输入光子能量",
+            photonDialogCopy: "EUV / 软 X 射线源请使用 eV 或 keV。如果没有输入单位，系统会默认按 keV 处理。",
+            photonDialogEnergyLabel: "光子能量",
             dialogCancel: "取消",
             dialogSave: "使用该能量",
         },
@@ -354,6 +368,11 @@ const CHOICE_TRANSLATIONS = {
             not_sure_application: { label: "不确定", description: "先保持应用筛选较宽，继续回答后续问题。" },
         },
         energy: {
+            synchrotron_beamline: { label: "同步辐射 / 束线", description: "可调谐 EUV 或软 X 射线源，适用于光谱、吸收、RIXS、XANES、EXAFS 或束线实验。" },
+            hhg_source: { label: "HHG / 高次谐波源", description: "激光驱动的 EUV / 软 X 射线源，适用于超快光谱或高次谐波实验。" },
+            laser_plasma_source: { label: "激光等离子体源", description: "等离子体产生的 EUV / 软 X 射线源，适用于成像、光谱或 EUV 光学测试。" },
+            discharge_plasma_source: { label: "放电等离子体源", description: "常用于 EUV 光刻相关实验和光源开发的 EUV 光源。" },
+            low_energy_soft_xray_tube: { label: "低能软 X 射线管", description: "实验室软 X 射线源，通常不同于普通 Cu/Mo XRD 管。" },
             cr_ka: { label: "Cr 靶材", description: "Cr-Kα，约 5.4 keV。" },
             cu_ka: { label: "Cu 靶材", description: "Cu-Kα，约 8.04 keV。" },
             mo_ka: { label: "Mo 靶材", description: "Mo-Kα，约 17.4 keV。" },
@@ -366,7 +385,7 @@ const CHOICE_TRANSLATIONS = {
             hard_xray: { label: "硬 X 射线 / 高穿透", description: "30-150 keV、厚样品、高密度金属或工业检测。" },
             gamma_neutron_particles: { label: "伽马 / 中子 / 粒子", description: "辐射监测、中子转换、伽马成像或源定位。" },
             exact_energy: { label: "非标靶材 / 自定义输入", description: "输入其他靶材名称，或输入已知 eV、keV、MeV 能量。" },
-            not_sure_energy: { label: "不确定，帮我推荐", description: "不知道靶材时，系统会结合应用、像素和环境进行推荐。" },
+            not_sure_energy: { label: "不确定，帮我推荐", description: "保持能量筛选较宽，并降低置信度；必要时建议工程师复核。" },
         },
         target: {
             cr_ka: { label: "Cr-Kα", description: "5.4 keV" },
@@ -405,6 +424,7 @@ const GROUP_TRANSLATIONS = {
     zh: {
         application: { title: "应用与结果", question: "你想测量什么？" },
         energy: { title: "射线源与靶材", question: "你使用的常用靶材是什么？" },
+        energyEuv: { title: "EUV / 软 X 射线源", question: "你使用的 EUV / 软 X 射线源或光子能量是什么？" },
         target: { title: "可选靶材", question: "已知实验室靶材" },
         pixel_size: { title: "像素尺寸", question: "你需要什么像素尺寸范围？" },
         performance: { title: "性能优先级", question: "你的测量最看重什么？" },
@@ -434,6 +454,15 @@ let contactStepUnlocked = false;
 const SIMPLIFIED_INSTALLATION_IDS = ["simple_lab", "vacuum_uhv", "not_sure_installation"];
 
 const COMMON_TARGET_SOURCE_IDS = ["cr_ka", "cu_ka", "mo_ka", "rh_ka", "ag_ka", "w_la", "exact_energy", "not_sure_energy"];
+const EUV_SOFT_SOURCE_IDS = [
+    "synchrotron_beamline",
+    "hhg_source",
+    "laser_plasma_source",
+    "discharge_plasma_source",
+    "low_energy_soft_xray_tube",
+    "exact_energy",
+    "not_sure_energy",
+];
 const TARGET_TO_ENERGY_ID = {
     cr_ka: "low_energy_lab",
     cu_ka: "low_energy_lab",
@@ -661,14 +690,52 @@ function stepText(stepId, key) {
 
 function translatedGroup(groupId) {
     const group = window.CHOICE_GROUPS[groupId] || {};
+    const adaptiveTranslationKey =
+        groupId === "energy" && answers.application === "euv_soft_xray_spectroscopy"
+            ? "energyEuv"
+            : groupId;
+    const fallbackEuvGroup = {
+        title: "EUV / Soft X-ray Source",
+        question: "What EUV / soft X-ray source or photon energy are you using?",
+    };
     return {
         ...group,
-        title: GROUP_TRANSLATIONS[currentLanguage]?.[groupId]?.title || group.title,
-        question: GROUP_TRANSLATIONS[currentLanguage]?.[groupId]?.question || group.question,
+        title:
+            GROUP_TRANSLATIONS[currentLanguage]?.[adaptiveTranslationKey]?.title ||
+            (adaptiveTranslationKey === "energyEuv" ? fallbackEuvGroup.title : group.title),
+        question:
+            GROUP_TRANSLATIONS[currentLanguage]?.[adaptiveTranslationKey]?.question ||
+            (adaptiveTranslationKey === "energyEuv" ? fallbackEuvGroup.question : group.question),
     };
 }
 
-function translatedChoice(groupId, choice) {
+function isEuvSoftEnergyFlow(source = answers) {
+    return source?.application === "euv_soft_xray_spectroscopy";
+}
+
+function exactEnergyDisplayText(source = answers) {
+    const photonEnergyFlow = isEuvSoftEnergyFlow(source);
+    return {
+        label: ui(photonEnergyFlow ? "exactPhotonEnergy" : "exactEnergy"),
+        description: ui(photonEnergyFlow ? "exactPhotonEnergyDescription" : "exactEnergyPrompt"),
+        placeholder: ui(photonEnergyFlow ? "exactPhotonEnergyPlaceholder" : "exactEnergyPlaceholder"),
+        prompt: ui(photonEnergyFlow ? "exactPhotonEnergyPrompt" : "exactEnergyPrompt"),
+        dialogTitle: ui(photonEnergyFlow ? "photonDialogTitle" : "dialogTitle"),
+        dialogCopy: ui(photonEnergyFlow ? "photonDialogCopy" : "dialogCopy"),
+        dialogEnergyLabel: ui(photonEnergyFlow ? "photonDialogEnergyLabel" : "dialogEnergyLabel"),
+    };
+}
+
+function translatedChoice(groupId, choice, source = answers) {
+    if (groupId === "energy" && choice.id === "exact_energy" && isEuvSoftEnergyFlow(source)) {
+        const exactText = exactEnergyDisplayText(source);
+        return {
+            ...choice,
+            label: exactText.label,
+            description: exactText.description,
+        };
+    }
+
     const translation = CHOICE_TRANSLATIONS[currentLanguage]?.[groupId]?.[choice.id];
     return {
         ...choice,
@@ -679,7 +746,7 @@ function translatedChoice(groupId, choice) {
 
 function translatedChoiceById(groupId, choiceId, source = answers) {
     const choice = visibleChoicesForGroup(groupId, source).find((item) => item.id === choiceId);
-    return choice ? translatedChoice(groupId, choice) : null;
+    return choice ? translatedChoice(groupId, choice, source) : null;
 }
 
 function adaptiveChoiceIds(groupId, source = answers) {
@@ -698,8 +765,21 @@ function commonTargetSourceChoices() {
         .filter(Boolean);
 }
 
+function euvSoftSourceChoices() {
+    const energyChoices = window.CHOICE_GROUPS.energy?.choices || [];
+    const choicesById = new Map(energyChoices.map((choice) => [choice.id, choice]));
+
+    return EUV_SOFT_SOURCE_IDS
+        .map((id) => choicesById.get(id))
+        .filter(Boolean);
+}
+
 function visibleChoicesForGroup(groupId, source = answers) {
-    if (groupId === "energy") return commonTargetSourceChoices();
+    if (groupId === "energy") {
+        return source.application === "euv_soft_xray_spectroscopy"
+            ? euvSoftSourceChoices()
+            : commonTargetSourceChoices();
+    }
     const choices = window.CHOICE_GROUPS[groupId]?.choices || [];
     const ids = adaptiveChoiceIds(groupId, source);
     if (!ids) return choices;
@@ -722,7 +802,10 @@ function sanitizeAdaptiveAnswers() {
     sanitizeInstallationAnswer();
 
     const visibleEnergyIds = new Set(visibleChoicesForGroup("energy").map((choice) => choice.id));
-    const targetDrivenEnergyIsValid = answers.target && TARGET_TO_ENERGY_ID[answers.target] === answers.energy;
+    const targetDrivenEnergyIsValid =
+        answers.target &&
+        TARGET_TO_ENERGY_ID[answers.target] === answers.energy &&
+        visibleEnergyIds.has(answers.target);
     if (answers.energy && !visibleEnergyIds.has(answers.energy) && !targetDrivenEnergyIsValid) {
         answers.energy = null;
         answers.target = null;
@@ -771,8 +854,9 @@ function renderStaticLanguageText() {
     setText(els.resultsTitle, ui("resultsTitle"));
     setText(els.compareTop, ui("compareTop"));
     setText(els.engineerContact, ui("engineerAction"));
-    setText(els.energyValueLabel, ui("exactEnergy"));
-    setPlaceholder(els.energyValue, ui("exactEnergyPlaceholder"));
+    const exactText = exactEnergyDisplayText();
+    setText(els.energyValueLabel, exactText.label);
+    setPlaceholder(els.energyValue, exactText.placeholder);
     setText(els.aiPanelEyebrow, ui("aiPanelEyebrow"));
     setText(els.aiPanelTitle, ui("aiPanelTitle"));
     setText(els.aiPanelCopy, ui("aiPanelCopy"));
@@ -789,16 +873,16 @@ function renderStaticLanguageText() {
     setText(els.aiViewFull, ui("aiViewFull"));
     setText(els.aiAskAgain, ui("aiAskAgain"));
     setText(els.dialogEyebrow, ui("dialogEyebrow"));
-    setText(els.dialogTitle, ui("dialogTitle"));
-    setText(els.dialogCopy, ui("dialogCopy"));
-    setText(els.dialogEnergyLabel, ui("dialogEnergyLabel"));
+    setText(els.dialogTitle, exactText.dialogTitle);
+    setText(els.dialogCopy, exactText.dialogCopy);
+    setText(els.dialogEnergyLabel, exactText.dialogEnergyLabel);
     setText(els.sidebarFlowTitle, ui("flowTitle"));
     setText(els.liveSummaryTitle, ui("summaryTitle"));
     setText(els.summaryApplicationLabel, ui("summaryApplication"));
     setText(els.summaryEnergyLabel, ui("summaryEnergy"));
     setText(els.summaryPixelLabel, ui("summaryPixel"));
     setText(els.summaryInstallationLabel, ui("summaryInstallation"));
-    setPlaceholder(els.dialogEnergyValue, ui("exactEnergyPlaceholder"));
+    setPlaceholder(els.dialogEnergyValue, exactText.placeholder);
     setText(els.energyCancel, ui("dialogCancel"));
     setText(els.energySave, ui("dialogSave"));
     if (els.languageToggle) {
@@ -942,6 +1026,18 @@ const COMMON_ZH_PHRASES = {
     "low-dose X-ray radiography": "低剂量 X 射线摄影",
     "scintigraphy/SPECT/isotope imaging": "闪烁显像 / SPECT / 同位素成像",
     "energy-dispersive XRD/SAXS/WAXS": "能量色散 XRD / SAXS / WAXS",
+    "Synchrotron / Beamline": "同步辐射 / 束线",
+    "HHG / High-Harmonic Source": "HHG / 高次谐波源",
+    "Laser-Produced Plasma Source": "激光等离子体源",
+    "Discharge-Produced Plasma Source": "放电等离子体源",
+    "Low-Energy Soft X-ray Tube": "低能软 X 射线管",
+    "high-harmonic": "高次谐波",
+    "laser-driven": "激光驱动",
+    "ultrafast": "超快",
+    "beamline": "束线",
+    "synchrotron": "同步辐射",
+    "source development": "光源开发",
+    "EUV lithography": "EUV 光刻",
     "particle tracking": "粒子追踪",
     "neutron imaging": "中子成像",
     "Compton camera": "康普顿相机",
@@ -1660,6 +1756,17 @@ function setSourceTargetChoice(choiceId) {
         answers.exact_energy = "";
         if (els.energyValue) els.energyValue.value = "";
         sanitizeAdaptiveAnswers();
+        return;
+    }
+
+    const energyChoiceExists = (window.CHOICE_GROUPS.energy?.choices || []).some((choice) => choice.id === choiceId);
+    if (energyChoiceExists) {
+        const alreadySelected = answers.energy === choiceId;
+        answers.energy = alreadySelected ? null : choiceId;
+        answers.target = null;
+        answers.exact_energy = "";
+        if (els.energyValue) els.energyValue.value = "";
+        sanitizeAdaptiveAnswers();
     }
 }
 
@@ -1731,7 +1838,7 @@ function openExactEnergyDialog() {
     if (typeof els.energyDialog.showModal === "function") {
         els.energyDialog.showModal();
     } else {
-        const value = window.prompt(ui("exactEnergyPrompt"), answers.exact_energy || "");
+        const value = window.prompt(exactEnergyDisplayText().prompt, answers.exact_energy || "");
         if (value !== null) {
             answers.exact_energy = value.trim();
             els.energyValue.value = answers.exact_energy;
@@ -2322,6 +2429,21 @@ function extractEnergyFromText(text, source = answers) {
     if (/gamma|neutron|alpha particle|beta|cosmic|particle/.test(text)) {
         return { energy: "gamma_neutron_particles", target: null, exact_energy: exactEnergy };
     }
+    if (/synchrotron|beamline|rixs|xanes|exafs/.test(text)) {
+        return { energy: "synchrotron_beamline", target: null, exact_energy: exactEnergy };
+    }
+    if (/\bhhg\b|high[- ]harmonic|high harmonic|ultrafast/.test(text)) {
+        return { energy: "hhg_source", target: null, exact_energy: exactEnergy };
+    }
+    if (/laser[- ]produced plasma|\blpp\b|laser plasma/.test(text)) {
+        return { energy: "laser_plasma_source", target: null, exact_energy: exactEnergy };
+    }
+    if (/discharge[- ]produced plasma|\bdpp\b|discharge plasma|euv lithography/.test(text)) {
+        return { energy: "discharge_plasma_source", target: null, exact_energy: exactEnergy };
+    }
+    if (/soft x-ray tube|soft xray tube|lab soft x-ray|low[- ]energy soft/.test(text)) {
+        return { energy: "low_energy_soft_xray_tube", target: null, exact_energy: exactEnergy };
+    }
     if (/euv|vuv|soft x-ray|sxr/.test(text)) {
         return { energy: "euv_vuv_soft", target: null, exact_energy: exactEnergy };
     }
@@ -2506,7 +2628,8 @@ function renderAiFollowups() {
 
     els.aiFollowupList.innerHTML = aiState.missing
         .map((groupId) => {
-            const choices = visibleChoicesForGroup(groupId, aiState.extracted || answers).map((choice) => translatedChoice(groupId, choice));
+            const source = aiState.extracted || answers;
+            const choices = visibleChoicesForGroup(groupId, source).map((choice) => translatedChoice(groupId, choice, source));
             return `
                 <div class="ai-followup-group">
                     <strong>${escapeHtml(aiFollowupQuestion(groupId))}</strong>
@@ -2552,7 +2675,7 @@ function applyAiFollowupChoice(groupId, choiceId) {
             } else if (choiceId === "exact_energy") {
                 aiState.extracted.energy = "exact_energy";
                 aiState.extracted.target = null;
-                const value = window.prompt(ui("exactEnergyPrompt"), aiState.extracted.exact_energy || "");
+                const value = window.prompt(exactEnergyDisplayText(aiState.extracted).prompt, aiState.extracted.exact_energy || "");
                 aiState.extracted.exact_energy = (value || "").trim();
             } else if (choiceId === "not_sure_energy") {
                 aiState.extracted.energy = "not_sure_energy";
